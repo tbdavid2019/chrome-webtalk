@@ -36,11 +36,7 @@
 - **聊天室圖示**（上方）：點擊它，就能開啟聊天室，與其他正在同個網站上的使用者即時聊天！
 - **AI 摘要圖示**（下方黃色）：點擊它，可以快速生成當前網頁內容的 AI 摘要，包含總結、觀點、關鍵字等，幫助你快速了解網頁內容。
 
----
 
-## 🎥 操作影片
-
-https://github.com/user-attachments/assets/e7ac9b8e-1b6c-43fb-8469-7a0a2c09d450
 
 ---
 
@@ -98,11 +94,7 @@ Once installed, two icons will appear on the right side of any website:
 - **Chat icon** (top): Click it to join a shared chatroom with others browsing the same site!
 - **AI Summary icon** (bottom, yellow): Click it to generate an AI-powered summary of the current webpage, including key points, opinions, and keywords to help you quickly understand the content.
 
----
 
-## 🎥 Demo Video
-
-https://github.com/user-attachments/assets/e7ac9b8e-1b6c-43fb-8469-7a0a2c09d450
 
 ---
 
