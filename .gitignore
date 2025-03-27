@@ -1,0 +1,60 @@
+# Node.js modules
+node_modules/
+.pnpm/
+.pnpm-debug.log
+
+# Build outputs
+dist/
+.output/
+.wxt/
+output/
+build/
+stats.html
+
+# VS Code settings and extensions
+.vscode/
+.idea/
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# System files
+*.DS_Store
+*.pem
+*.xpi
+*.crx
+*.zip
+*.local
+*.eslintcache
+
+# WebExt / WXT
+web-ext-config.js
+web-ext.config.ts
+*.browser.js
+*.browser.ts
+
+# Tailwind
+.million/
+
+# TypeScript
+*.tsbuildinfo
+
+# Local environment files
+.env
+.env.*
+.env.local
+
+# Git hooks / commit tooling
+.husky/_/
+.commitlint.config.js
+.commitlintrc*
+
+# Optional: ignore test coverage if using
+coverage/
+
+# Optional: ignore storybook or component playground outputs
+storybook-static/

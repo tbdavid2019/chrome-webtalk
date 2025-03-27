@@ -1,0 +1,211 @@
+import { version } from '@/../package.json'
+// https://www.webfx.com/tools/emoji-cheat-sheet/
+
+export const EMOJI_LIST = [
+  '😀',
+  '😄',
+  '😁',
+  '😆',
+  '😅',
+  '🤣',
+  '😂',
+  '🙂',
+  '🙃',
+  '🫠',
+  '😉',
+  '😊',
+  '😇',
+  '🥰',
+  '😍',
+  '🤩',
+  '😘',
+  '😗',
+  '😚',
+  '😙',
+  '🥲',
+  '😋',
+  '😛',
+  '😜',
+  '🤪',
+  '😝',
+  '🤑',
+  '🤗',
+  '🤭',
+  '🫢',
+  '🫣',
+  '🤫',
+  '🤔',
+  '🫡',
+  '🤐',
+  '🤨',
+  '😐',
+  '😶',
+  '🫥',
+  '😶‍🌫️',
+  '😏',
+  '😒',
+  '🙄',
+  '😬',
+  '😮‍💨',
+  '🤥',
+  '😌',
+  '😔',
+  '😪',
+  '🤤',
+  '😴',
+  '😷',
+  '🤒',
+  '🤕',
+  '🤢',
+  '🤮',
+  '🤧',
+  '🥵',
+  '🥶',
+  '🥴',
+  '😵',
+  '😵‍💫',
+  '🤯',
+  '🤠',
+  '🥳',
+  '🥸',
+  '😎',
+  '🤓',
+  '🧐',
+  '😕',
+  '🫤',
+  '😟',
+  '🙁',
+  '😮',
+  '😯',
+  '😲',
+  '😳',
+  '🥺',
+  '🥹',
+  '😦',
+  '😧',
+  '😨',
+  '😰',
+  '😥',
+  '😢',
+  '😭',
+  '😱',
+  '😖',
+  '😣',
+  '😞',
+  '😓',
+  '😩',
+  '😫',
+  '🥱',
+  '😤',
+  '😡',
+  '😠',
+  '🤬',
+  '😈',
+  '👿',
+  '💀',
+  '☠',
+  '💩',
+  '🤡',
+  '👹',
+  '👺',
+  '👻',
+  '👽',
+  '👾',
+  '🤖',
+  '👀',
+  '😺',
+  '😸',
+  '😹',
+  '😻',
+  '😼',
+  '😽',
+  '🙀',
+  '😿',
+  '😾',
+  '🙈',
+  '🙉',
+  '🙊',
+  '👋',
+  '🤚',
+  '🖐',
+  '✋',
+  '🖖',
+  '🫱',
+  '🫲',
+  '🫳',
+  '🫴',
+  '👌',
+  '🤏',
+  '✌',
+  '🤞',
+  '🫰',
+  '🤟',
+  '🤘',
+  '🤙',
+  '👈',
+  '👉',
+  '👆',
+  '🖕',
+  '👇',
+  '☝',
+  '🫵',
+  '👍',
+  '👎',
+  '✊',
+  '👊',
+  '🤛',
+  '🤜',
+  '👏',
+  '🙌',
+  '🫶',
+  '👐',
+  '🤲',
+  '🤝',
+  '🙏',
+  '✍',
+  '💅'
+] as const
+
+// https://night-tailwindcss.vercel.app/docs/breakpoints
+export const BREAKPOINTS = {
+  sm: 640,
+  // => @media (min-width: 640px) { ... }
+
+  md: 768,
+  // => @media (min-width: 768px) { ... }
+
+  lg: 1024,
+  // => @media (min-width: 1024px) { ... }
+
+  xl: 1280,
+  // => @media (min-width: 1280px) { ... }
+
+  '2xl': 1536
+  // => @media (min-width: 1536px) { ... }
+} as const
+
+export const MESSAGE_MAX_LENGTH = 500 as const
+
+export const STORAGE_NAME = `WEB_TALK_${version}` as const
+
+export const USER_INFO_STORAGE_KEY = 'WEB_TALK_USER_INFO' as const
+
+export const MESSAGE_LIST_STORAGE_KEY = 'WEB_TALK_MESSAGE_LIST' as const
+
+export const APP_STATUS_STORAGE_KEY = 'WEB_TALK_APP_STATUS' as const
+/**
+ * In chrome storage.sync, each key-value pair supports a maximum storage of 8kb
+ * Image is encoded as base64, and the size is increased by about 33%.
+ * 8kb * (1 - 0.33) = 5488 bytes
+ */
+export const MAX_AVATAR_SIZE = 5120 as const
+
+export const SYNC_HISTORY_MAX_DAYS = 3 as const
+
+/**
+ * https://lgrahl.de/articles/demystifying-webrtc-dc-size-limit.html
+ * Message max size is 256KiB; if the message is too large, it will cause the connection to drop.
+ */
+export const WEB_RTC_MAX_MESSAGE_SIZE = 262144 as const
+
+export const VIRTUAL_ROOM_ID = 'WEB_TALK_VIRTUAL_ROOM' as const
