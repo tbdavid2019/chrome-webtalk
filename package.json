@@ -1,7 +1,7 @@
 {
   "name": "web-talk",
   "displayName": "WebTalk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Chat with friends on any website.",
   "type": "module",
   "scripts": {

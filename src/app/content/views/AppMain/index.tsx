@@ -17,7 +17,7 @@ const AppMain: FC<AppMainProps> = ({ children, className }) => {
   // 使用 useResizable 來實現可調整寬度的側邊欄
   const { size, setRef } = useResizable({
     initSize: 375, // 初始寬度
-    maxSize: 500,  // 最大寬度
+    maxSize: 700,  // 最大寬度
     minSize: 300,  // 最小寬度
     direction: 'left' // 向左調整大小
   })

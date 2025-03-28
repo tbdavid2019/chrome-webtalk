@@ -10,7 +10,7 @@ const VersionLink: FC = () => {
       variant="ghost"
       className="fixed right-4 top-2 rounded-full px-3 text-base font-medium text-primary"
     >
-      <Link href="https://github.com/molvqingtai/WebChat/releases">Version: v{version}</Link>
+      <Link href="https://github.com/tbdavid2019/chrome-webtalk">Version: v{version}</Link>
     </Button>
   )
 }

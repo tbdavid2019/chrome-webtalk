@@ -9,7 +9,7 @@ export default defineConfig({
   imports: false,
   entrypointsDir: 'app',
   runner: {
-    startUrls: ['https://www.example.com/']
+    startUrls: ['https://david888.com/']
   },
   manifest: ({ browser }) => {
     const common = {
@@ -32,7 +32,7 @@ export default defineConfig({
         ...common,
         browser_specific_settings: {
           gecko: {
-            id: 'molvqingtai@gmail.com'
+            id: 'cto@david888.com'
           }
         }
       }
