@@ -5,7 +5,7 @@
 這是一款去中心化、無伺服器的瀏覽器聊天擴充功能，透過 WebRTC 實現端對端加密傳輸，保護你的隱私，所有資料皆儲存在本地裝置。
 
 本版本 fork 自 [molvqingtai/WebChat](https://github.com/molvqingtai/WebChat)，並進行以下改進：
-- ✅ 使用自建的 WSS 通訊站台，與原專案用戶分流
+- ✅ 使用其他建的 WSS 通訊站台，與原專案用戶分流
 - 🎨 全新設計的使用者介面，提升操作體驗與可讀性
 - 🧠 新增 AI 摘要功能，一鍵生成網頁內容摘要，提高閱讀效率
 
@@ -16,8 +16,7 @@
 ## 🚀 安裝方式
 
 ### 從瀏覽器擴充商店安裝
-
-（⚠️ 尚未上架，可先使用手動安裝方式）
+https://chromewebstore.google.com/detail/webtalk/hhhdloelamldfadfobnhdhpfmbbdppdb
 
 ### 手動安裝
 
@@ -27,6 +26,14 @@
 4. 開啟瀏覽器的擴充功能管理頁（例如 Chrome 輸入 `chrome://extensions/`）
    - 開啟右上角「開發人員模式」
    - 點選「載入未封裝項目」，選取剛剛解壓縮的資料夾
+
+
+### 原始建構
+
+```
+pnpm build 
+
+```
 
 ---
 
@@ -75,7 +82,7 @@ This fork, hosted at [`tbdavid2019/chrome-webtalk`](https://github.com/tbdavid20
 
 ### From Store
 
-(⚠️ Not yet published – use manual install)
+https://chromewebstore.google.com/detail/webtalk/hhhdloelamldfadfobnhdhpfmbbdppdb
 
 ### Manual Installation
 

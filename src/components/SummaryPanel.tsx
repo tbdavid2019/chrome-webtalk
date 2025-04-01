@@ -204,7 +204,8 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const markedHtml = marked.parse(summary || text.noContent)
 
   return (
-    <div className="w-[480px] h-full border-l bg-white flex flex-col p-4 space-y-4 overflow-hidden">
+    <div className="size-full border-l bg-white flex flex-col px-2 p-4 space-y-4 overflow-hidden">
+
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">{text.title}</h2>
         <div className="flex gap-2">

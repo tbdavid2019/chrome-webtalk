@@ -1,8 +1,8 @@
 {
   "name": "web-talk",
-  "displayName": "WebTalk",
-  "version": "1.0.1",
-  "description": "Chat with friends on any website.",
+  "displayName": "WebTalk - Chat with friends on any website. Summary of the page content.",
+  "version": "1.0.3",
+  "description": "Chat with friends on any website. Summary of the page content. Share your screen with friends. WebRTC P2P.",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/molvqingtai/WebChat.git"
+    "url": "git+https://github.com/tbdavid2019/chrome-webtalk.git"
   },
   "keywords": [
     "WebChat",
@@ -37,12 +37,12 @@
     "P2P",
     "Peer to Peer"
   ],
-  "author": "molvqingtai",
+  "author": "TBdavid2019",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/molvqingtai/WebChat/issues"
+    "url": "https://github.com/tbdavid2019/chrome-webtalk/issues"
   },
-  "homepage": "https://github.com/molvqingtai/WebChat",
+  "homepage": "https://github.com/tbdavid2019/chrome-webtalk",
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@number-flow/react": "^0.3.4",

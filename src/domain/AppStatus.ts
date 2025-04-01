@@ -12,7 +12,7 @@ export interface AppStatus {
 }
 
 export const defaultStatusState = {
-  open: true,  // 修改為 true，使聊天室默認顯示
+  open: false,  // 修改為 true，使聊天室默認顯示
   unread: 0
 }
 
