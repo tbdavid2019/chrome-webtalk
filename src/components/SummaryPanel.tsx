@@ -212,7 +212,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
           <button
             onClick={() => setShowApiSettings(!showApiSettings)}
             className="text-blue-500 hover:text-blue-700"
-            title="API 設置"
+            title="API setting 設置"
           >
             ⚙️
           </button>
@@ -224,7 +224,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
 
       {showApiSettings && (
         <div className="space-y-3 rounded border bg-gray-50 p-4">
-          <h3 className="text-sm font-semibold">API 設置</h3>
+          <h3 className="text-sm font-semibold">API setting</h3>
 
           <div className="space-y-2">
             <Label htmlFor="api-key" className="text-sm">
@@ -233,7 +233,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
             <Input
               id="api-key"
               type="password"
-              placeholder="輸入你的 Gemini API Key"
+              placeholder="your Gemini API Key"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               className="text-sm"
@@ -242,16 +242,16 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
 
           <div className="space-y-2">
             <Label htmlFor="api-base-url" className="text-sm">
-              API 基礎 URL
+              API Base URL
             </Label>
             <Input
               id="api-base-url"
-              placeholder="API 基礎 URL"
+              placeholder="API base URL"
               value={apiBaseURL}
               onChange={(e) => setApiBaseURL(e.target.value)}
               className="text-sm"
             />
-            <p className="text-xs text-gray-500">預設: https://gemini.david888.com/v1</p>
+            <p className="text-xs text-gray-500">預設default: https://gemini.david888.com/v1</p>
           </div>
 
           <div className="space-y-2">
@@ -283,7 +283,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
       )}
 
       <select className="rounded border p-2" value={language} onChange={(e) => setLanguage(e.target.value as Lang)}>
-        <option value="zh_TW">繁體中文</option>
+        <option value="zh_TW">正體中文</option>
         <option value="zh_CN">简体中文</option>
         <option value="en">English</option>
       </select>
@@ -294,7 +294,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
           disabled={loading}
           className="rounded bg-blue-600 px-4 py-2 text-white disabled:bg-gray-300"
         >
-          {!isApiKeySet ? '⚠️ 請先設置 API Key' : loading ? text.loading : text.summarize}
+          {!isApiKeySet ? '⚠️ Please set API Key first' : loading ? text.loading : text.summarize}
         </button>
         {/* <button
           onClick={speak}

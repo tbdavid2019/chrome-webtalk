@@ -3,6 +3,7 @@ import { SettingsIcon, MoonIcon, SunIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
+import { EyeIcon, EyeOffIcon } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { EVENT } from '@/constants/event'
 import UserInfoDomain from '@/domain/UserInfo'
@@ -27,6 +28,7 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
   const send = useRemeshSend()
   const appStatusDomain = useRemeshDomain(AppStatusDomain())
   const appOpenStatus = useRemeshQuery(appStatusDomain.query.OpenQuery())
+  const buttonsHidden = useRemeshQuery(appStatusDomain.query.ButtonsHiddenQuery())
   const hasUnreadQuery = useRemeshQuery(appStatusDomain.query.HasUnreadQuery())
   const userInfoDomain = useRemeshDomain(UserInfoDomain())
   const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
@@ -60,18 +62,20 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
     send(appStatusDomain.command.UpdateOpenCommand(!appOpenStatus))
   }
 
+  const handleToggleButtonsVisibility = () => {
+    send(appStatusDomain.command.UpdateButtonsHiddenCommand(!buttonsHidden))
+    setMenuOpen(false)
+  }
+
   return (
     <div
       ref={appMenuRef}
-      className={cn(
-        'fixed top-1/2 right-0 z-infinity transform -translate-y-1/2 grid gap-y-3 select-none',
-        className
-      )}
+      className={cn('fixed top-1/2 right-0 z-infinity transform -translate-y-1/2 grid gap-y-3 select-none', className)}
     >
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            className="z-10 grid gap-y-3 mr-2"
+            className="z-10 mr-2 grid gap-y-3"
             initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 12 }}
@@ -92,6 +96,14 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
                 <MoonIcon size={20} />
                 <SunIcon size={20} />
               </div>
+            </Button>
+
+            <Button
+              onClick={handleToggleButtonsVisibility}
+              variant="outline"
+              className="size-10 rounded-full p-0 shadow dark:border-slate-600"
+            >
+              {buttonsHidden ? <EyeIcon size={20} /> : <EyeOffIcon size={20} />}
             </Button>
 
             <Button

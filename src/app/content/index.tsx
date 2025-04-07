@@ -25,7 +25,7 @@ import { browser } from 'wxt/browser'
 // 為 window 添加自定義屬性
 declare global {
   interface Window {
-    __webtalkMessageHookRegistered?: boolean;
+    __webtalkMessageHookRegistered?: boolean
   }
 }
 
@@ -33,14 +33,14 @@ export default defineContentScript({
   cssInjectionMode: 'ui',
   runAt: 'document_idle',
   matches: ['https://*/*'],
-  excludeMatches: ['*://localhost/*', '*://127.0.0.1/*', '*://*.csdn.net/*', '*://*.csdn.com/*'],
+  excludeMatches: ['*://localhost/*', '*://127.0.0.1/*'],
   async main(ctx) {
     // 🌈 初始化 CSS 變數
     window.CSS.registerProperty({
       name: '--shimmer-angle',
       syntax: '<angle>',
       inherits: false,
-      initialValue: '0deg',
+      initialValue: '0deg'
     })
 
     // 🧠 初始化 Remesh Store
@@ -53,17 +53,26 @@ export default defineContentScript({
         VirtualRoomImpl,
         ToastImpl,
         DanmakuImpl,
-        NotificationImpl,
-      ],
+        NotificationImpl
+      ]
     })
 
-    // ✅ 建立 message bridge（處理 getPageContent 請求）
+    // ✅ 建立 message bridge（處理 getPageContent 請求和重置按鈕隱藏狀態）
     if (!window.__webtalkMessageHookRegistered) {
       browser.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
         if (message.action === 'getPageContent') {
           console.log('[WebTalk] ✅ 收到 getPageContent 請求')
           sendResponse({ content: document.body.innerText })
           return true
+        }
+
+        if (message.action === 'resetButtonsHidden') {
+          console.log('[WebTalk] ✅ 收到重置按鈕隱藏狀態請求')
+          // 重置按鈕隱藏狀態
+          // 由於我們在消息監聽器中，無法直接使用 useRemeshSend
+          // 我們可以在下一個渲染週期中通過自定義事件來觸發狀態更新
+          const event = new CustomEvent('reset-buttons-hidden')
+          window.dispatchEvent(event)
         }
       })
       window.__webtalkMessageHookRegistered = true
@@ -94,9 +103,9 @@ export default defineContentScript({
       },
       onRemove: (root) => {
         root?.unmount()
-      },
+      }
     })
 
     ui.mount()
-  },
+  }
 })

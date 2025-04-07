@@ -39,6 +39,7 @@ export default function App() {
   const userInfoLoadFinished = useRemeshQuery(userInfoDomain.query.UserInfoLoadIsFinishedQuery())
   const appStatusLoadIsFinished = useRemeshQuery(appStatusDomain.query.StatusLoadIsFinishedQuery())
   const appOpenStatus = useRemeshQuery(appStatusDomain.query.OpenQuery())
+  const buttonsHidden = useRemeshQuery(appStatusDomain.query.ButtonsHiddenQuery())
   const chatRoomJoinIsFinished = useRemeshQuery(chatRoomDomain.query.JoinIsFinishedQuery())
   const virtualRoomJoinIsFinished = useRemeshQuery(virtualRoomDomain.query.JoinIsFinishedQuery())
   const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
@@ -58,10 +59,19 @@ export default function App() {
 
   // 🧠 綁定事件：接收「toggle-ai-summary-panel」來顯示／關閉面板
   useEffect(() => {
-    const handler = () => setShowSummary(prev => !prev)
+    const handler = () => setShowSummary((prev) => !prev)
     window.addEventListener('toggle-ai-summary-panel', handler)
     return () => window.removeEventListener('toggle-ai-summary-panel', handler)
   }, [])
+
+  // 🧠 綁定事件：接收「reset-buttons-hidden」來重置按鈕隱藏狀態
+  useEffect(() => {
+    const handler = () => {
+      send(appStatusDomain.command.UpdateButtonsHiddenCommand(false))
+    }
+    window.addEventListener('reset-buttons-hidden', handler)
+    return () => window.removeEventListener('reset-buttons-hidden', handler)
+  }, [send, appStatusDomain])
 
   useEffect(() => {
     if (messageListLoadFinished) {
@@ -107,11 +117,9 @@ export default function App() {
         <>
           <AppMain>
             <Header />
-            <div className="flex w-full h-full flex-1 overflow-hidden">
+            <div className="flex size-full flex-1 overflow-hidden">
               <Main key="chat-main" />
-              {showSummary && (
-                <SummaryPanel key="summary-panel" onClose={() => setShowSummary(false)} />
-              )}
+              {showSummary && <SummaryPanel key="summary-panel" onClose={() => setShowSummary(false)} />}
             </div>
             <Footer />
             {notUserInfo && <Setup />}
@@ -122,18 +130,20 @@ export default function App() {
               visibleToasts={1}
               toastOptions={{
                 classNames: {
-                  toast: 'dark:bg-slate-950 border dark:border-slate-600',
-                },
+                  toast: 'dark:bg-slate-950 border dark:border-slate-600'
+                }
               }}
               position="top-center"
             />
           </AppMain>
 
-          {/* ✅ 浮動按鈕們：暫時移除條件，讓按鈕始終顯示 */}
-          <>
-            <AppButton />
-            <AppSummaryButton />
-          </>
+          {/* ✅ 浮動按鈕們：根據 buttonsHidden 狀態決定是否顯示 */}
+          {!buttonsHidden && (
+            <>
+              <AppButton />
+              <AppSummaryButton />
+            </>
+          )}
         </>
       )}
       <DanmakuContainer ref={danmakuContainerRef} />

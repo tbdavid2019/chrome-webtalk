@@ -18,7 +18,7 @@ const AppMain: FC<AppMainProps> = ({ children, className }) => {
   const { size, setRef } = useResizable({
     initSize: 420, // 初始寬度
     maxSize: 800, // 最大寬度
-    minSize: 350, // 最小寬度
+    minSize: 360, // 最小寬度
     direction: 'left' // 向左調整大小
   })
 
