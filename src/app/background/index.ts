@@ -14,7 +14,6 @@ export default defineBackground({
     messenger.onMessage(EVENT.OPTIONS_PAGE_OPEN, () => {
       browser.runtime.openOptionsPage()
     })
-    
 
     messenger.onMessage(EVENT.NOTIFICATION_PUSH, async ({ data: message, sender }) => {
       // Check if there is an active tab on the same site
@@ -66,15 +65,26 @@ export default defineBackground({
     })
 
     // ✅ 取代舊的 browser.runtime.onMessage.addListener
+    // browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    //   if (message.action === 'getPageContent') {
+    //     if (sender.tab?.id) {
+    //       browser.tabs.sendMessage(sender.tab.id, { action: 'getPageContent' }).then(sendResponse)
+    //       return true // 必須加這個，否則 response 會無效
+    //     }
+    //   }
+    // })
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.action === 'getPageContent') {
-        if (sender.tab?.id) {
-          browser.tabs.sendMessage(sender.tab.id, { action: 'getPageContent' }).then(sendResponse)
-          return true // 必須加這個，否則 response 會無效
+      if (typeof message === 'object' && message !== null && 'action' in message) {
+        const typedMessage = message as { action: string }
+
+        if (typedMessage.action === 'getPageContent') {
+          if (sender.tab?.id) {
+            browser.tabs.sendMessage(sender.tab.id, { action: 'getPageContent' }).then(sendResponse)
+            return true // 必須加這個，否則 response 會無效
+          }
         }
       }
     })
-
 
     browser.notifications.onClosed.addListener(async (id) => {
       historyNotificationTabs.delete(id)
