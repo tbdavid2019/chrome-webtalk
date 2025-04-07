@@ -9,11 +9,13 @@ import { map } from 'rxjs'
 export interface AppStatus {
   open: boolean
   unread: number
+  buttonsHidden: boolean
 }
 
 export const defaultStatusState = {
-  open: false,  // 修改為 true，使聊天室默認顯示
-  unread: 0
+  open: false, // 修改為 true，使聊天室默認顯示
+  unread: 0,
+  buttonsHidden: false
 }
 
 const AppStatusDomain = Remesh.domain({
@@ -63,6 +65,13 @@ const AppStatusDomain = Remesh.domain({
       }
     })
 
+    const ButtonsHiddenQuery = domain.query({
+      name: 'AppStatus.ButtonsHiddenQuery',
+      impl: ({ get }) => {
+        return get(StatusState()).buttonsHidden
+      }
+    })
+
     const UpdateOpenCommand = domain.command({
       name: 'AppStatus.UpdateOpenCommand',
       impl: ({ get }, value: boolean) => {
@@ -82,6 +91,17 @@ const AppStatusDomain = Remesh.domain({
         return UpdateStatusCommand({
           ...status,
           unread: value
+        })
+      }
+    })
+
+    const UpdateButtonsHiddenCommand = domain.command({
+      name: 'AppStatus.UpdateButtonsHiddenCommand',
+      impl: ({ get }, value: boolean) => {
+        const status = get(StatusState())
+        return UpdateStatusCommand({
+          ...status,
+          buttonsHidden: value
         })
       }
     })
@@ -129,11 +149,13 @@ const AppStatusDomain = Remesh.domain({
         OpenQuery,
         UnreadQuery,
         HasUnreadQuery,
-        StatusLoadIsFinishedQuery
+        StatusLoadIsFinishedQuery,
+        ButtonsHiddenQuery
       },
       command: {
         UpdateOpenCommand,
-        UpdateUnreadCommand
+        UpdateUnreadCommand,
+        UpdateButtonsHiddenCommand
       },
       event: {
         SyncToStorageEvent

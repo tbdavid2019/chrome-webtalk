@@ -16,9 +16,9 @@ const AppMain: FC<AppMainProps> = ({ children, className }) => {
 
   // 使用 useResizable 來實現可調整寬度的側邊欄
   const { size, setRef } = useResizable({
-    initSize: 375, // 初始寬度
-    maxSize: 700,  // 最大寬度
-    minSize: 300,  // 最小寬度
+    initSize: 420, // 初始寬度
+    maxSize: 800, // 最大寬度
+    minSize: 350, // 最小寬度
     direction: 'left' // 向左調整大小
   })
 
@@ -31,7 +31,7 @@ const AppMain: FC<AppMainProps> = ({ children, className }) => {
           exit={{ opacity: 0, x: '100%' }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           style={{
-            width: `${size}px`,
+            width: `${size}px`
           }}
           className={cn(
             'fixed top-0 right-0 z-infinity h-full grid grid-rows-[auto_1fr_auto] bg-slate-50 dark:bg-slate-950 font-sans shadow-2xl',
@@ -41,7 +41,7 @@ const AppMain: FC<AppMainProps> = ({ children, className }) => {
           {children}
           <div
             ref={setRef}
-            className="absolute inset-y-0 -left-1 z-infinity w-2 cursor-ew-resize rounded-l-md bg-slate-200 dark:bg-slate-600 opacity-0 hover:opacity-100 transition-opacity"
+            className="absolute inset-y-0 -left-1 z-infinity w-2 cursor-ew-resize rounded-l-md bg-slate-200 opacity-0 transition-opacity hover:opacity-100 dark:bg-slate-600"
           ></div>
         </motion.div>
       )}

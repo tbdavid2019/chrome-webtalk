@@ -36,7 +36,7 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     exportFail: '❌ 匯出區塊未找到',
     pageFail: '❗ 無法取得頁面內容',
     noText: '⚠️ 沒有取得頁面文字，無法進行摘要',
-    close: '✕',
+    close: '✕'
   },
   zh_CN: {
     title: '🧠 AI 摘要',
@@ -53,7 +53,7 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     exportFail: '❌ 导出区域未找到',
     pageFail: '❗ 无法获取页面内容',
     noText: '⚠️ 没有获取页面文字，无法进行摘要',
-    close: '✕',
+    close: '✕'
   },
   en: {
     title: '🧠 AI Summary',
@@ -70,8 +70,8 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     exportFail: '❌ Export target not found',
     pageFail: '❗ Failed to get page content',
     noText: '⚠️ No page content found',
-    close: '✕',
-  },
+    close: '✕'
+  }
 }
 
 export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
@@ -87,8 +87,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
 
   // 檢查是否已經設置了 API key
   useEffect(() => {
-    browser.storage.sync.get(['groqApiKey', 'groqApiBaseURL', 'groqModelName'])
-      .then((result: {groqApiKey?: string, groqApiBaseURL?: string, groqModelName?: string}) => {
+    browser.storage.sync
+      .get(['groqApiKey', 'groqApiBaseURL', 'groqModelName'])
+      .then((result: { groqApiKey?: string; groqApiBaseURL?: string; groqModelName?: string }) => {
         if (result.groqApiKey) {
           setApiKey(result.groqApiKey)
           setIsApiKeySet(true)
@@ -107,11 +108,12 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
 
   // 保存 API 設置
   const saveApiSettings = () => {
-    browser.storage.sync.set({
-      groqApiKey: apiKey,
-      groqApiBaseURL: apiBaseURL,
-      groqModelName: apiModelName
-    })
+    browser.storage.sync
+      .set({
+        groqApiKey: apiKey,
+        groqApiBaseURL: apiBaseURL,
+        groqModelName: apiModelName
+      })
       .then(() => {
         setIsApiKeySet(!!apiKey)
         setShowApiSettings(false)
@@ -131,9 +133,10 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
       setPageText(content)
     } catch (error) {
       console.error('[WebTalk] ❌ 直接獲取頁面內容失敗', error)
-      
+
       // 備用方案：通過 message 獲取
-      browser.runtime.sendMessage({ action: 'getPageContent' })
+      browser.runtime
+        .sendMessage({ action: 'getPageContent' })
         .then((response: any) => {
           console.log('[WebTalk] ✅ 收到頁面內容 (前 100 字)', response?.content?.slice?.(0, 100))
           if (response?.content) {
@@ -143,7 +146,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
             alert(text.pageFail)
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('[WebTalk] ❌ 發送消息失敗', error)
           alert(text.pageFail)
         })
@@ -156,18 +159,16 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
       alert('請先設置 API key')
       return
     }
-    
+
     if (pageText) summarize(pageText, language)
     else alert(text.noText)
   }
   const speak = () => {
     if (!summary) return
     const utterance = new SpeechSynthesisUtterance(summary)
-    utterance.lang =
-      language === 'zh_TW' ? 'zh-TW' :
-      language === 'zh_CN' ? 'zh-CN' : 'en-US'
+    utterance.lang = language === 'zh_TW' ? 'zh-TW' : language === 'zh_CN' ? 'zh-CN' : 'en-US'
     const voices = speechSynthesis.getVoices()
-    const match = voices.find(v => v.lang === utterance.lang)
+    const match = voices.find((v) => v.lang === utterance.lang)
     if (match) utterance.voice = match
     else utterance.lang = 'en-US'
     speechSynthesis.cancel()
@@ -204,9 +205,8 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const markedHtml = marked.parse(summary || text.noContent)
 
   return (
-    <div className="size-full border-l bg-white flex flex-col px-2 p-4 space-y-4 overflow-hidden">
-
-      <div className="flex justify-between items-center">
+    <div className="flex size-full flex-col space-y-4 overflow-hidden border-l bg-white p-0 px-2">
+      <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">{text.title}</h2>
         <div className="flex gap-2">
           <button
@@ -216,14 +216,16 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
           >
             ⚙️
           </button>
-          <button onClick={onClose} className="text-gray-500 hover:text-black">{text.close}</button>
+          <button onClick={onClose} className="text-gray-500 hover:text-black">
+            {text.close}
+          </button>
         </div>
       </div>
 
       {showApiSettings && (
-        <div className="border p-4 rounded bg-gray-50 space-y-3">
-          <h3 className="font-semibold text-sm">API 設置</h3>
-          
+        <div className="space-y-3 rounded border bg-gray-50 p-4">
+          <h3 className="text-sm font-semibold">API 設置</h3>
+
           <div className="space-y-2">
             <Label htmlFor="api-key" className="text-sm">
               Gemini API Key <span className="text-red-500">*</span>
@@ -237,7 +239,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
               className="text-sm"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="api-base-url" className="text-sm">
               API 基礎 URL
@@ -251,7 +253,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
             />
             <p className="text-xs text-gray-500">預設: https://gemini.david888.com/v1</p>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="api-model-name" className="text-sm">
               模型名稱
@@ -265,82 +267,75 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
             />
             <p className="text-xs text-gray-500">預設: gemini-2.0-flash-exp</p>
           </div>
-          
+
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setShowApiSettings(false)}
-              className="bg-gray-300 text-black px-3 py-1 rounded text-sm"
+              className="rounded bg-gray-300 px-3 py-1 text-sm text-black"
             >
               取消
             </button>
-            <button
-              onClick={saveApiSettings}
-              className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
-            >
+            <button onClick={saveApiSettings} className="rounded bg-blue-600 px-3 py-1 text-sm text-white">
               保存
             </button>
           </div>
         </div>
       )}
 
-      <select
-        className="border p-2 rounded"
-        value={language}
-        onChange={(e) => setLanguage(e.target.value as Lang)}
-      >
+      <select className="rounded border p-2" value={language} onChange={(e) => setLanguage(e.target.value as Lang)}>
         <option value="zh_TW">繁體中文</option>
         <option value="zh_CN">简体中文</option>
         <option value="en">English</option>
       </select>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={onClickSummarize}
           disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
+          className="rounded bg-blue-600 px-4 py-2 text-white disabled:bg-gray-300"
         >
-          {!isApiKeySet ? "⚠️ 請先設置 API Key" : loading ? text.loading : text.summarize}
+          {!isApiKeySet ? '⚠️ 請先設置 API Key' : loading ? text.loading : text.summarize}
         </button>
-        <button
+        {/* <button
           onClick={speak}
           disabled={!summary}
           className="bg-green-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
         >
           🔈 {text.speaking}
-        </button>
+        </button> */}
         <button
           onClick={copy}
           disabled={!summary}
-          className="bg-gray-700 text-white px-4 py-2 rounded disabled:bg-gray-300"
+          className="rounded bg-gray-700 px-4 py-2 text-white disabled:bg-gray-300"
         >
           📋 {text.copy}
         </button>
-        <button
+        {/* <button
           onClick={exportImage}
           disabled={!summary}
           className="bg-yellow-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
         >
           🖼️ {text.image}
-        </button>
+        </button> */}
         <button
           onClick={exportMarkdown}
           disabled={!summary}
-          className="bg-purple-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
+          className="rounded bg-purple-600 px-4 py-2 text-white disabled:bg-gray-300"
         >
           💾 {text.markdown}
         </button>
-        <button
+        {/* <button
           onClick={onClickSummarize}
           disabled={loading || !summary}
           className="bg-orange-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
         >
           🔁 {text.retry}
-        </button>
+        </button> */}
       </div>
 
       <div
         id="summary-content"
-        className="overflow-y-auto border p-2 rounded text-sm whitespace-pre-wrap bg-gray-50 flex-1"
+        className="flex-1 overflow-y-auto whitespace-pre-wrap rounded border bg-gray-50 p-0.5 text-sm"
         dangerouslySetInnerHTML={{ __html: markedHtml }}
       />
     </div>
