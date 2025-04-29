@@ -62,7 +62,7 @@
     "@radix-ui/react-switch": "^1.1.1",
     "@resreq/event-hub": "^1.6.0",
     "@resreq/timer": "^1.1.6",
-    "@rtco/client": "^0.2.17",
+    "@rtco/client": "^0.3.2",
     "@tailwindcss/typography": "^0.5.15",
     "@webcomponents/custom-elements": "^1.6.0",
     "@webext-core/messaging": "^2.1.0",
