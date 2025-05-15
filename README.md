@@ -34,6 +34,8 @@ https://chromewebstore.google.com/detail/webtalk/hhhdloelamldfadfobnhdhpfmbbdppd
 pnpm build 
 
 ```
+會產出 .output 
+
 
 ---
 
