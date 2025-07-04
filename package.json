@@ -67,7 +67,7 @@
     "@webcomponents/custom-elements": "^1.6.0",
     "@webext-core/messaging": "^2.1.0",
     "@webext-core/proxy-service": "^1.2.0",
-    "class-variance-authority": "^0.7.0",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "danmu": "^0.14.0",
     "date-fns": "^4.1.0",
