@@ -8,9 +8,11 @@ import { cn } from '@/utils'
 export interface AppMainProps {
   children?: ReactNode
   className?: string
+  zIndex?: number
+  onMouseDown?: React.MouseEventHandler<HTMLDivElement>
 }
 
-const AppMain: FC<AppMainProps> = ({ children, className }) => {
+const AppMain: FC<AppMainProps> = ({ children, className, zIndex, onMouseDown }) => {
   const appStatusDomain = useRemeshDomain(AppStatusDomain())
   const appOpenStatus = useRemeshQuery(appStatusDomain.query.OpenQuery())
 
@@ -31,12 +33,14 @@ const AppMain: FC<AppMainProps> = ({ children, className }) => {
           exit={{ opacity: 0, x: '100%' }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           style={{
-            width: `${size}px`
+            width: `${size}px`,
+            zIndex: zIndex
           }}
           className={cn(
             'fixed top-0 right-0 z-infinity h-full grid grid-rows-[auto_1fr_auto] bg-slate-50 dark:bg-slate-950 font-sans shadow-2xl',
             className
           )}
+          onMouseDown={onMouseDown}
         >
           {children}
           <div
