@@ -1,5 +1,5 @@
 import { clamp, isInRange } from '@/utils'
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { startTransition, useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 export interface DargOptions {
   initX: number
@@ -15,14 +15,17 @@ const useDraggable = (options: DargOptions) => {
 
   const mousePosition = useRef({ x: 0, y: 0 })
 
-  const [position, setPosition] = useState({ x: clamp(initX, minX, maxX), y: clamp(initY, minY, maxY) })
+  const positionRef = useRef({ x: clamp(initX, minX, maxX), y: clamp(initY, minY, maxY) })
+
+  const [position, setPosition] = useState(positionRef.current)
 
   useLayoutEffect(() => {
     const newPosition = { x: clamp(initX, minX, maxX), y: clamp(initY, minY, maxY) }
     if (JSON.stringify(newPosition) !== JSON.stringify(position)) {
+      positionRef.current = newPosition
       setPosition(newPosition)
     }
-  }, [initX, initY, maxX, minX, maxY, minY])
+  }, [initX, initY, maxX, minX, maxY, minY, position])
 
   const isMove = useRef(false)
 
@@ -30,12 +33,13 @@ const useDraggable = (options: DargOptions) => {
     (e: MouseEvent) => {
       if (isMove.current) {
         const { clientX, clientY } = e
+        const prev = positionRef.current
         const delta = {
-          x: position.x + clientX - mousePosition.current.x,
-          y: position.y + clientY - mousePosition.current.y
+          x: prev.x + clientX - mousePosition.current.x,
+          y: prev.y + clientY - mousePosition.current.y
         }
 
-        const hasChanged = delta.x !== position.x || delta.y !== position.y
+        const hasChanged = delta.x !== prev.x || delta.y !== prev.y
 
         if (isInRange(delta.x, minX, maxX)) {
           mousePosition.current.x = clientX
@@ -44,15 +48,16 @@ const useDraggable = (options: DargOptions) => {
           mousePosition.current.y = clientY
         }
         if (hasChanged) {
-          setPosition(() => {
-            const x = clamp(delta.x, minX, maxX)
-            const y = clamp(delta.y, minY, maxY)
-            return { x, y }
+          const x = clamp(delta.x, minX, maxX)
+          const y = clamp(delta.y, minY, maxY)
+          positionRef.current = { x, y }
+          startTransition(() => {
+            setPosition({ x, y })
           })
         }
       }
     },
-    [minX, maxX, minY, maxY, position]
+    [minX, maxX, minY, maxY]
   )
 
   const handleEnd = useCallback(() => {
