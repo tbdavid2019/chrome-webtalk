@@ -31,7 +31,9 @@ https://chromewebstore.google.com/detail/webtalk/hhhdloelamldfadfobnhdhpfmbbdppd
 ### 原始建構
 
 ```
-pnpm build 
+sudo npm install -g pnpm
+pnpm install
+pnpm build
 
 ```
 會產出 .output 
