@@ -81,7 +81,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const [pageText, setPageText] = useState('')
   const [apiKey, setApiKey] = useState('')
   const [apiBaseURL, setApiBaseURL] = useState('https://gemini.david888.com/v1')
-  const [apiModelName, setApiModelName] = useState('gemini-2.0-flash')
+  const [apiModelName, setApiModelName] = useState('gemini-2.5-flash')
   const [isApiKeySet, setIsApiKeySet] = useState(false)
   const [showApiSettings, setShowApiSettings] = useState(false)
   const text = LANG_MAP[language]
@@ -271,7 +271,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                   onChange={(e) => setApiModelName(e.target.value)}
                   className="text-sm"
                 />
-                <p className="text-xs text-gray-500">預設: gemini-2.0-flash</p>
+                <p className="text-xs text-gray-500">預設: gemini-2.5-flash</p>
               </div>
               <div className="flex justify-end gap-2">
                 <button
