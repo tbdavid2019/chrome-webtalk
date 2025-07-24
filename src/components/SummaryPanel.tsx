@@ -5,6 +5,7 @@ import html2canvas from 'html2canvas'
 import { browser } from 'wxt/browser'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type SummaryPanelProps = {
   onClose: () => void
@@ -205,139 +206,145 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const markedHtml = marked.parse(summary || text.noContent)
 
   return (
-    <div className="flex size-full flex-col space-y-4 overflow-hidden border-l bg-white p-0 px-2">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{text.title}</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowApiSettings(!showApiSettings)}
-            className="text-blue-500 hover:text-blue-700"
-            title="API setting 設置"
-          >
-            ⚙️
-          </button>
-          <button onClick={onClose} className="text-gray-500 hover:text-black">
-            {text.close}
-          </button>
-        </div>
-      </div>
-
-      {showApiSettings && (
-        <div className="space-y-3 rounded border bg-gray-50 p-4">
-          <h3 className="text-sm font-semibold">API setting</h3>
-
-          <div className="space-y-2">
-            <Label htmlFor="api-key" className="text-sm">
-              Gemini API Key <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="api-key"
-              type="password"
-              placeholder="your Gemini API Key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="text-sm"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="api-base-url" className="text-sm">
-              API Base URL
-            </Label>
-            <Input
-              id="api-base-url"
-              placeholder="API base URL"
-              value={apiBaseURL}
-              onChange={(e) => setApiBaseURL(e.target.value)}
-              className="text-sm"
-            />
-            <p className="text-xs text-gray-500">預設default: https://gemini.david888.com/v1</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="api-model-name" className="text-sm">
-              模型名稱
-            </Label>
-            <Input
-              id="api-model-name"
-              placeholder="模型名稱"
-              value={apiModelName}
-              onChange={(e) => setApiModelName(e.target.value)}
-              className="text-sm"
-            />
-            <p className="text-xs text-gray-500">預設: gemini-2.0-flash</p>
-          </div>
-
-          <div className="flex justify-end gap-2">
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, x: '100%' }}
+        animate={{ opacity: 1, x: '0%' }}
+        exit={{ opacity: 0, x: '100%' }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="fixed top-0 right-0 z-infinity h-full w-[420px] max-w-[800px] min-w-[360px] grid grid-rows-[auto_1fr_auto] bg-white dark:bg-slate-950 font-sans shadow-2xl border-l"
+      >
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-lg font-semibold">{text.title}</h2>
+          <div className="flex gap-2">
             <button
-              onClick={() => setShowApiSettings(false)}
-              className="rounded bg-gray-300 px-3 py-1 text-sm text-black"
+              onClick={() => setShowApiSettings(!showApiSettings)}
+              className="text-blue-500 hover:text-blue-700"
+              title="API setting 設置"
             >
-              取消
+              ⚙️
             </button>
-            <button onClick={saveApiSettings} className="rounded bg-blue-600 px-3 py-1 text-sm text-white">
-              保存
+            <button onClick={onClose} className="text-gray-500 hover:text-black">
+              {text.close}
             </button>
           </div>
         </div>
-      )}
 
-      <select className="rounded border p-2" value={language} onChange={(e) => setLanguage(e.target.value as Lang)}>
-        <option value="zh_TW">正體中文</option>
-        <option value="zh_CN">简体中文</option>
-        <option value="en">English</option>
-      </select>
+        <div className="flex-1 flex flex-col space-y-4 p-4 overflow-y-auto">
+          {showApiSettings && (
+            <div className="space-y-3 rounded border bg-gray-50 p-4">
+              <h3 className="text-sm font-semibold">API setting</h3>
+              <div className="space-y-2">
+                <Label htmlFor="api-key" className="text-sm">
+                  Gemini API Key <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="api-key"
+                  type="password"
+                  placeholder="your Gemini API Key"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="api-base-url" className="text-sm">
+                  API Base URL
+                </Label>
+                <Input
+                  id="api-base-url"
+                  placeholder="API base URL"
+                  value={apiBaseURL}
+                  onChange={(e) => setApiBaseURL(e.target.value)}
+                  className="text-sm"
+                />
+                <p className="text-xs text-gray-500">預設default: https://gemini.david888.com/v1</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="api-model-name" className="text-sm">
+                  模型名稱
+                </Label>
+                <Input
+                  id="api-model-name"
+                  placeholder="模型名稱"
+                  value={apiModelName}
+                  onChange={(e) => setApiModelName(e.target.value)}
+                  className="text-sm"
+                />
+                <p className="text-xs text-gray-500">預設: gemini-2.0-flash</p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowApiSettings(false)}
+                  className="rounded bg-gray-300 px-3 py-1 text-sm text-black"
+                >
+                  取消
+                </button>
+                <button onClick={saveApiSettings} className="rounded bg-blue-600 px-3 py-1 text-sm text-white">
+                  保存
+                </button>
+              </div>
+            </div>
+          )}
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={onClickSummarize}
-          disabled={loading}
-          className="rounded bg-blue-600 px-4 py-2 text-white disabled:bg-gray-300"
-        >
-          {!isApiKeySet ? '⚠️ Please set API Key first' : loading ? text.loading : text.summarize}
-        </button>
-        {/* <button
-          onClick={speak}
-          disabled={!summary}
-          className="bg-green-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
-        >
-          🔈 {text.speaking}
-        </button> */}
-        <button
-          onClick={copy}
-          disabled={!summary}
-          className="rounded bg-gray-700 px-4 py-2 text-white disabled:bg-gray-300"
-        >
-          📋 {text.copy}
-        </button>
-        {/* <button
-          onClick={exportImage}
-          disabled={!summary}
-          className="bg-yellow-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
-        >
-          🖼️ {text.image}
-        </button> */}
-        <button
-          onClick={exportMarkdown}
-          disabled={!summary}
-          className="rounded bg-purple-600 px-4 py-2 text-white disabled:bg-gray-300"
-        >
-          💾 {text.markdown}
-        </button>
-        {/* <button
-          onClick={onClickSummarize}
-          disabled={loading || !summary}
-          className="bg-orange-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
-        >
-          🔁 {text.retry}
-        </button> */}
-      </div>
+          <select className="rounded border p-2" value={language} onChange={(e) => setLanguage(e.target.value as Lang)}>
+            <option value="zh_TW">正體中文</option>
+            <option value="zh_CN">简体中文</option>
+            <option value="en">English</option>
+          </select>
 
-      <div
-        id="summary-content"
-        className="flex-1 overflow-y-auto whitespace-pre-wrap rounded border bg-gray-50 p-0.5 text-sm"
-        dangerouslySetInnerHTML={{ __html: markedHtml }}
-      />
-    </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={onClickSummarize}
+              disabled={loading}
+              className="rounded bg-blue-600 px-4 py-2 text-white disabled:bg-gray-300"
+            >
+              {!isApiKeySet ? '⚠️ Please set API Key first' : loading ? text.loading : text.summarize}
+            </button>
+            {/* <button
+              onClick={speak}
+              disabled={!summary}
+              className="bg-green-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
+            >
+              🔈 {text.speaking}
+            </button> */}
+            <button
+              onClick={copy}
+              disabled={!summary}
+              className="rounded bg-gray-700 px-4 py-2 text-white disabled:bg-gray-300"
+            >
+              📋 {text.copy}
+            </button>
+            {/* <button
+              onClick={exportImage}
+              disabled={!summary}
+              className="bg-yellow-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
+            >
+              🖼️ {text.image}
+            </button> */}
+            <button
+              onClick={exportMarkdown}
+              disabled={!summary}
+              className="rounded bg-purple-600 px-4 py-2 text-white disabled:bg-gray-300"
+            >
+              💾 {text.markdown}
+            </button>
+            {/* <button
+              onClick={onClickSummarize}
+              disabled={loading || !summary}
+              className="bg-orange-600 text-white px-4 py-2 rounded disabled:bg-gray-300"
+            >
+              🔁 {text.retry}
+            </button> */}
+          </div>
+
+          <div
+            id="summary-content"
+            className="flex-1 overflow-y-auto whitespace-pre-wrap rounded border bg-gray-50 p-0.5 text-sm"
+            dangerouslySetInnerHTML={{ __html: markedHtml }}
+          />
+        </div>
+      </motion.div>
+    </AnimatePresence>
   )
 }
