@@ -46,6 +46,7 @@ export default function App() {
   const notUserInfo = userInfoLoadFinished && !userInfoSetFinished
 
   const [showSummary, setShowSummary] = useState(false)
+  const [topPanel, setTopPanel] = useState<'main' | 'summary' | null>(null)
 
   const joinRoom = () => {
     send(chatRoomDomain.command.JoinRoomCommand())
@@ -115,11 +116,10 @@ export default function App() {
     <div id="app" className={cn('contents', themeMode)}>
       {appStatusLoadIsFinished && (
         <>
-          <AppMain>
+          <AppMain zIndex={topPanel === 'main' ? 1001 : 1000} onMouseDown={() => setTopPanel('main')}>
             <Header />
             <div className="flex size-full flex-1 overflow-hidden">
               <Main key="chat-main" />
-              {showSummary && <SummaryPanel key="summary-panel" onClose={() => setShowSummary(false)} />}
             </div>
             <Footer />
             {notUserInfo && <Setup />}
@@ -136,14 +136,28 @@ export default function App() {
               position="top-center"
             />
           </AppMain>
-
-          {/* ✅ 浮動按鈕們：根據 buttonsHidden 狀態決定是否顯示 */}
-          {!buttonsHidden && (
-            <>
-              <AppButton />
-              <AppSummaryButton />
-            </>
-          )}
+        </>
+      )}
+      {showSummary && (
+        <div
+          onMouseDown={() => setTopPanel('summary')}
+          style={{
+            zIndex: topPanel === 'summary' ? 1001 : 1000,
+            position: 'fixed',
+            top: 0,
+            right: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'auto'
+          }}
+        >
+          <SummaryPanel key="summary-panel" onClose={() => setShowSummary(false)} />
+        </div>
+      )}
+      {!buttonsHidden && (
+        <>
+          <AppButton />
+          <AppSummaryButton />
         </>
       )}
       <DanmakuContainer ref={danmakuContainerRef} />
