@@ -16,14 +16,9 @@ const AppSummaryButton: FC<AppSummaryButtonProps> = ({ className }) => {
 
   // 點擊後派發自訂事件
   const handleClick = () => {
-    // 先確保主視窗打開
-    send(appStatusDomain.command.UpdateOpenCommand(true))
-    
-    // 然後派發摘要面板切換事件
-    setTimeout(() => {
-      const event = new CustomEvent('toggle-ai-summary-panel')
-      window.dispatchEvent(event)
-    }, 100)
+    // 只派發摘要面板切換事件，不再強制打開主彈窗
+    const event = new CustomEvent('toggle-ai-summary-panel')
+    window.dispatchEvent(event)
   }
 
   return (
