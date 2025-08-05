@@ -7,7 +7,7 @@ import UserInfoDomain from '@/domain/UserInfo'
 import { desert, getTextByteSize, upsert } from '@/utils'
 import { nanoid } from 'nanoid'
 import StatusModule from '@/domain/modules/Status'
-import { SYNC_HISTORY_MAX_DAYS, WEB_RTC_MAX_MESSAGE_SIZE } from '@/constants/config'
+import { SYNC_HISTORY_MAX_DAYS, WEB_RTC_MAX_MESSAGE_SIZE, SYNC_MESSAGES_BATCH_SIZE, SYNC_BATCH_DELAY_MS, SYNC_MESSAGE_DELAY_MS } from '@/constants/config'
 import * as v from 'valibot'
 
 export { MessageType }
@@ -164,7 +164,12 @@ const ChatRoomDomain = Remesh.domain({
     const SelfUserQuery = domain.query({
       name: 'Room.SelfUserQuery',
       impl: ({ get }) => {
-        return get(UserListQuery()).find((user) => user.peerIds.includes(chatRoomExtern.peerId))!
+        const user = get(UserListQuery()).find((user) => user.peerIds.includes(chatRoomExtern.peerId))
+        if (!user) {
+          console.error('SelfUser not found in user list. PeerId:', chatRoomExtern.peerId, 'UserList:', get(UserListQuery()))
+          return null
+        }
+        return user
       }
     })
 
@@ -229,6 +234,12 @@ const ChatRoomDomain = Remesh.domain({
       name: 'Room.SendTextMessageCommand',
       impl: ({ get }, message: string | { body: string; atUsers: AtUser[] }) => {
         const self = get(SelfUserQuery())
+        
+        // 檢查用戶是否已經加入房間
+        if (!self) {
+          console.error('Cannot send message: User not joined to room yet')
+          return []
+        }
 
         const textMessage: TextMessage = {
           ...self,
@@ -248,8 +259,22 @@ const ChatRoomDomain = Remesh.domain({
           atUsers: typeof message === 'string' ? [] : message.atUsers
         }
 
-        chatRoomExtern.sendMessage(textMessage)
-        return [messageListDomain.command.CreateItemCommand(listMessage), SendTextMessageEvent(textMessage)]
+        // 檢查消息大小是否超過 WebRTC 限制
+        const messageSize = getTextByteSize(JSON.stringify(textMessage))
+        if (messageSize >= WEB_RTC_MAX_MESSAGE_SIZE) {
+          console.error('Message too large to send:', messageSize, 'bytes')
+          // 可以選擇發送一個錯誤事件給用戶界面
+          return []
+        }
+
+        try {
+          chatRoomExtern.sendMessage(textMessage)
+          return [messageListDomain.command.CreateItemCommand(listMessage), SendTextMessageEvent(textMessage)]
+        } catch (error) {
+          console.error('Failed to send message:', error)
+          // 消息發送失敗時，不添加到本地列表
+          return []
+        }
       }
     })
 
@@ -257,6 +282,11 @@ const ChatRoomDomain = Remesh.domain({
       name: 'Room.SendLikeMessageCommand',
       impl: ({ get }, messageId: string) => {
         const self = get(SelfUserQuery())
+        if (!self) {
+          console.error('Cannot send like: User not joined to room yet')
+          return []
+        }
+        
         const localMessage = get(messageListDomain.query.ItemQuery(messageId)) as NormalMessage
 
         const likeMessage: LikeMessage = {
@@ -278,6 +308,11 @@ const ChatRoomDomain = Remesh.domain({
       name: 'Room.SendHateMessageCommand',
       impl: ({ get }, messageId: string) => {
         const self = get(SelfUserQuery())
+        if (!self) {
+          console.error('Cannot send hate: User not joined to room yet')
+          return []
+        }
+        
         const localMessage = get(messageListDomain.query.ItemQuery(messageId)) as NormalMessage
 
         const hateMessage: HateMessage = {
@@ -299,6 +334,11 @@ const ChatRoomDomain = Remesh.domain({
       name: 'Room.SendSyncUserMessageCommand',
       impl: ({ get }, peerId: string) => {
         const self = get(SelfUserQuery())
+        if (!self) {
+          console.error('Cannot send sync user message: User not joined to room yet')
+          return []
+        }
+        
         const lastMessageTime = get(LastMessageTimeQuery())
 
         const syncUserMessage: SyncUserMessage = {
@@ -338,6 +378,10 @@ const ChatRoomDomain = Remesh.domain({
       name: 'Room.SendSyncHistoryMessageCommand',
       impl: ({ get }, { peerId, lastMessageTime }: { peerId: string; lastMessageTime: number }) => {
         const self = get(SelfUserQuery())
+        if (!self) {
+          console.error('Cannot send history sync: User not joined to room yet')
+          return []
+        }
 
         const historyMessages = get(messageListDomain.query.ListQuery()).filter(
           (message) =>
@@ -346,37 +390,72 @@ const ChatRoomDomain = Remesh.domain({
             message.sendTime - Date.now() <= SYNC_HISTORY_MAX_DAYS * 24 * 60 * 60 * 1000
         )
 
+        if (historyMessages.length === 0) {
+          return []
+        }
+
+        console.log(`Syncing ${historyMessages.length} history messages to peer ${peerId}`)
+
         /**
-         * Message chunking to ensure that each message does not exceed WEB_RTC_MAX_MESSAGE_SIZE
-         * If the message itself exceeds the size limit, skip syncing that message directly.
+         * 分批同步歷史消息，避免一次性發送過多消息阻塞連接
+         * 每批發送 SYNC_MESSAGES_BATCH_SIZE 條消息，批次間有延遲
          */
-        const pushHistoryMessageList = historyMessages.reduce<SyncHistoryMessage[]>((acc, cur) => {
-          const pushHistoryMessage: SyncHistoryMessage = {
+        const batches: NormalMessage[][] = []
+        for (let i = 0; i < historyMessages.length; i += SYNC_MESSAGES_BATCH_SIZE) {
+          batches.push(historyMessages.slice(i, i + SYNC_MESSAGES_BATCH_SIZE) as NormalMessage[])
+        }
+
+        const pushHistoryMessageList: SyncHistoryMessage[] = []
+
+        batches.forEach((batch, batchIndex) => {
+          // 每個批次內的消息打包成單個 SyncHistoryMessage
+          const batchMessage: SyncHistoryMessage = {
             ...self,
             id: nanoid(),
             sendTime: Date.now(),
             type: SendType.SyncHistory,
-            messages: [cur as NormalMessage]
+            messages: batch
           }
-          const pushHistoryMessageByteSize = getTextByteSize(JSON.stringify(pushHistoryMessage))
 
-          if (pushHistoryMessageByteSize < WEB_RTC_MAX_MESSAGE_SIZE) {
-            if (acc.length) {
-              const mergedSize = getTextByteSize(JSON.stringify(acc[acc.length - 1])) + pushHistoryMessageByteSize
-              if (mergedSize < WEB_RTC_MAX_MESSAGE_SIZE) {
-                acc[acc.length - 1].messages.push(cur as NormalMessage)
-              } else {
-                acc.push(pushHistoryMessage)
+          // 檢查批次消息大小
+          const batchMessageSize = getTextByteSize(JSON.stringify(batchMessage))
+          
+          if (batchMessageSize < WEB_RTC_MAX_MESSAGE_SIZE) {
+            pushHistoryMessageList.push(batchMessage)
+          } else {
+            // 如果批次太大，將其分解為更小的批次
+            batch.forEach((message) => {
+              const singleMessage: SyncHistoryMessage = {
+                ...self,
+                id: nanoid(),
+                sendTime: Date.now(),
+                type: SendType.SyncHistory,
+                messages: [message]
               }
-            } else {
-              acc.push(pushHistoryMessage)
-            }
+              
+              const singleMessageSize = getTextByteSize(JSON.stringify(singleMessage))
+              if (singleMessageSize < WEB_RTC_MAX_MESSAGE_SIZE) {
+                pushHistoryMessageList.push(singleMessage)
+              } else {
+                console.warn('Skipping large message in history sync:', singleMessageSize, 'bytes')
+              }
+            })
           }
-          return acc
-        }, [])
+        })
 
-        return pushHistoryMessageList.map((message) => {
-          chatRoomExtern.sendMessage(message, peerId)
+        // 使用延遲發送，避免阻塞主線程和網絡
+        return pushHistoryMessageList.map((message, index) => {
+          const batchIndex = Math.floor(index / SYNC_MESSAGES_BATCH_SIZE)
+          const delay = batchIndex * SYNC_BATCH_DELAY_MS + (index % SYNC_MESSAGES_BATCH_SIZE) * SYNC_MESSAGE_DELAY_MS
+          
+          setTimeout(() => {
+            try {
+              chatRoomExtern.sendMessage(message, peerId)
+            } catch (error) {
+              console.error('Failed to send history message:', error)
+            }
+          }, delay)
+          
           return SendSyncHistoryMessageEvent(message)
         })
       }
@@ -509,7 +588,7 @@ const ChatRoomDomain = Remesh.domain({
 
                   // If a new user joins after the current user has entered the room, a join log message needs to be created.
                   const existUser = get(UserListQuery()).find((user) => user.userId === message.userId)
-                  const isNewJoinUser = !existUser && message.joinTime > selfUser.joinTime
+                  const isNewJoinUser = !existUser && selfUser && message.joinTime > selfUser.joinTime
 
                   const lastMessageTime = get(LastMessageTimeQuery())
                   const needSyncHistory = lastMessageTime > message.lastMessageTime
@@ -518,7 +597,7 @@ const ChatRoomDomain = Remesh.domain({
                     UpdateUserListCommand({ type: 'create', user: message }),
                     // 移除 "joined the chat" 訊息
                     null,
-                    needSyncHistory
+                    needSyncHistory && selfUser
                       ? SendSyncHistoryMessageCommand({
                           peerId: message.peerId,
                           lastMessageTime: message.lastMessageTime

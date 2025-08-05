@@ -203,6 +203,21 @@ export const MAX_AVATAR_SIZE = 5120 as const
 export const SYNC_HISTORY_MAX_DAYS = 3 as const
 
 /**
+ * 歷史消息同步的批次大小，每批發送的消息數量
+ */
+export const SYNC_MESSAGES_BATCH_SIZE = 50 as const
+
+/**
+ * 歷史消息同步的批次間隔（毫秒），每批之間的延遲
+ */
+export const SYNC_BATCH_DELAY_MS = 500 as const
+
+/**
+ * 歷史消息同步時單個消息的延遲間隔（毫秒）
+ */
+export const SYNC_MESSAGE_DELAY_MS = 50 as const
+
+/**
  * https://lgrahl.de/articles/demystifying-webrtc-dc-size-limit.html
  * Message max size is 256KiB; if the message is too large, it will cause the connection to drop.
  */
