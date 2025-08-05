@@ -56,11 +56,29 @@ class VirtualRoom extends EventHub {
         if (!this.room) {
           this.emit('error', new Error('Room not joined'))
         } else {
-          this.room.send(JSONR.stringify(message)!, id)
+          try {
+            const serializedMessage = JSONR.stringify(message)
+            if (!serializedMessage) {
+              this.emit('error', new Error('Failed to serialize message'))
+              return
+            }
+            this.room.send(serializedMessage, id)
+          } catch (error) {
+            this.emit('error', new Error(`Failed to send message: ${error}`))
+          }
         }
       })
     } else {
-      this.room.send(JSONR.stringify(message)!, id)
+      try {
+        const serializedMessage = JSONR.stringify(message)
+        if (!serializedMessage) {
+          this.emit('error', new Error('Failed to serialize message'))
+          return this
+        }
+        this.room.send(serializedMessage, id)
+      } catch (error) {
+        this.emit('error', new Error(`Failed to send message: ${error}`))
+      }
     }
     return this
   }
