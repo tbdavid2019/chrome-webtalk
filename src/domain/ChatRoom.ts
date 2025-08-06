@@ -238,7 +238,7 @@ const ChatRoomDomain = Remesh.domain({
         // 檢查用戶是否已經加入房間
         if (!self) {
           console.error('Cannot send message: User not joined to room yet')
-          return []
+          return [OnErrorEvent(new Error('Please wait for connection to be established.'))]
         }
 
         const textMessage: TextMessage = {
@@ -263,8 +263,7 @@ const ChatRoomDomain = Remesh.domain({
         const messageSize = getTextByteSize(JSON.stringify(textMessage))
         if (messageSize >= WEB_RTC_MAX_MESSAGE_SIZE) {
           console.error('Message too large to send:', messageSize, 'bytes')
-          // 可以選擇發送一個錯誤事件給用戶界面
-          return []
+          return [OnErrorEvent(new Error('Message size cannot exceed 256KiB.'))]
         }
 
         try {
@@ -272,8 +271,8 @@ const ChatRoomDomain = Remesh.domain({
           return [messageListDomain.command.CreateItemCommand(listMessage), SendTextMessageEvent(textMessage)]
         } catch (error) {
           console.error('Failed to send message:', error)
-          // 消息發送失敗時，不添加到本地列表
-          return []
+          // 發送錯誤事件給用戶界面
+          return [OnErrorEvent(error instanceof Error ? error : new Error(String(error)))]
         }
       }
     })

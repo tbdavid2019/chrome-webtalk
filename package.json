@@ -1,7 +1,7 @@
 {
   "name": "web-talk",
   "displayName": "WebTalk - Chat with friends on any website. Summary of the page content.",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Chat with friends on any website. Summary of the page content. Share your screen with friends. WebRTC P2P.",
   "type": "module",
   "scripts": {
