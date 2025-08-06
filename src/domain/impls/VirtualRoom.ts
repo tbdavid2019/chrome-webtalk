@@ -35,7 +35,8 @@ class VirtualRoom extends EventHub {
 
   joinRoom() {
     if (this.room) {
-      this.room = this.peer.join(this.roomId)
+      // 房間已經存在，直接觸發 action 事件
+      this.emit('action')
     } else {
       if (this.peer.state === 'ready') {
         this.room = this.peer.join(this.roomId)
@@ -54,7 +55,7 @@ class VirtualRoom extends EventHub {
     if (!this.room) {
       this.once('action', () => {
         if (!this.room) {
-          this.emit('error', new Error('Room not joined'))
+          this.emit('error', new Error('Connection is not established yet.'))
         } else {
           try {
             const serializedMessage = JSONR.stringify(message)
@@ -69,6 +70,12 @@ class VirtualRoom extends EventHub {
         }
       })
     } else {
+      // 檢查 peer 連線狀態
+      if (this.peer.state !== 'ready') {
+        this.emit('error', new Error('Connection is not established yet.'))
+        return this
+      }
+      
       try {
         const serializedMessage = JSONR.stringify(message)
         if (!serializedMessage) {
