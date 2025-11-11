@@ -68,10 +68,12 @@ export default defineContentScript({
 
         if (message.action === 'resetButtonsHidden') {
           console.log('[WebTalk] ✅ 收到重置按鈕隱藏狀態請求')
-          // 重置按鈕隱藏狀態
-          // 由於我們在消息監聽器中，無法直接使用 useRemeshSend
-          // 我們可以在下一個渲染週期中通過自定義事件來觸發狀態更新
           const event = new CustomEvent('reset-buttons-hidden')
+          window.dispatchEvent(event)
+        }
+        if (message.action === 'toggleButtonsHidden') {
+          console.log('[WebTalk] ✅ 收到切換按鈕隱藏狀態請求')
+          const event = new CustomEvent('toggle-buttons-hidden')
           window.dispatchEvent(event)
         }
       })

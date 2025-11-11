@@ -31,14 +31,23 @@ export const useSummarize = () => {
       'groqModelName'
     ])
 
-    const res = await fetch(`${groqApiBaseURL || 'https://gemini.david888.com/v1'}/chat/completions`, {
+    const apiKey = groqApiKey || import.meta.env.VITE_GEMINI_API_KEY || ''
+    const baseURL = groqApiBaseURL || import.meta.env.VITE_GEMINI_API_BASE_URL || 'https://gemini.david888.com/v1'
+    const modelName = groqModelName || import.meta.env.VITE_GEMINI_MODEL_NAME || 'gemini-2.0-flash'
+
+    if (!apiKey) {
+      setLoading(false)
+      throw new Error('API key is required')
+    }
+
+    const res = await fetch(`${baseURL}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: groqModelName || 'gemini-2.0-flash-exp',
+        model: modelName || 'gemini-2.0-flash-exp',
         messages: [
           { role: 'system', content: prompt },
           { role: 'user', content: pageText }

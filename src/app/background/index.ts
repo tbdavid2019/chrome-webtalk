@@ -7,13 +7,11 @@ export default defineBackground({
   type: 'module',
   main() {
     browser.action.onClicked.addListener(async () => {
-      // 當用戶點擊擴展圖標時，確保漂浮按鈕可見
+      // 點擊擴充圖示時切換漂浮按鈕顯示狀態
       const tabs = await browser.tabs.query({ active: true, currentWindow: true })
       if (tabs[0]?.id) {
-        // 向當前活動標籤頁發送消息，重置按鈕隱藏狀態
-        browser.tabs.sendMessage(tabs[0].id, { action: 'resetButtonsHidden' })
+        browser.tabs.sendMessage(tabs[0].id, { action: 'toggleButtonsHidden' })
       }
-      browser.runtime.openOptionsPage()
     })
 
     const historyNotificationTabs = new Map<string, Tabs.Tab>()

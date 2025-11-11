@@ -22,7 +22,7 @@ const AvatarSelect = React.forwardRef<HTMLInputElement, AvatarSelectProps>(
       const file = e.target.files?.[0]
       if (file) {
         if (!/image\/(png|jpeg|webp)/.test(file.type)) {
-          onWarning?.(new Error('Only PNG, JPEG and WebP image are supported.'))
+          onWarning?.(new Error('Only PNG, JPEG and WebP image are supported. / 僅支援 PNG、JPEG、WebP 圖檔'))
           return
         }
 

@@ -1,4 +1,4 @@
-import { type FC, useState, type MouseEvent } from 'react'
+import { type FC, useState, type MouseEvent, useEffect } from 'react'
 import { SettingsIcon, MoonIcon, SunIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -19,6 +19,7 @@ import LogoIcon6 from '@/assets/images/logo-6.svg'
 import AppStatusDomain from '@/domain/AppStatus'
 import { getDay } from 'date-fns'
 import { messenger } from '@/messenger'
+import useDraggable from '@/hooks/useDraggable'
 
 export interface AppButtonProps {
   className?: string
@@ -38,6 +39,23 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
   const isDarkMode = userInfo?.themeMode === 'dark' ? true : userInfo?.themeMode === 'light' ? false : checkDarkMode()
 
   const [menuOpen, setMenuOpen] = useState(false)
+  const [viewportHeight, setViewportHeight] = useState(() => (typeof window === 'undefined' ? 800 : window.innerHeight))
+
+  useEffect(() => {
+    const handleResize = () => setViewportHeight(window.innerHeight)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const verticalLimit = Math.max(0, viewportHeight / 2 - 80)
+  const { setRef: dragRef, y } = useDraggable({
+    initX: 0,
+    initY: 0,
+    minX: 0,
+    maxX: 0,
+    minY: -verticalLimit,
+    maxY: verticalLimit
+  })
 
   const { setRef: appMenuRef } = useTriggerAway(['click'], () => setMenuOpen(false))
 
@@ -67,10 +85,16 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
     setMenuOpen(false)
   }
 
+  const handleRef = (node: HTMLDivElement | null) => {
+    appMenuRef(node)
+    dragRef(node)
+  }
+
   return (
     <div
-      ref={appMenuRef}
-      className={cn('fixed top-1/2 right-0 z-infinity transform -translate-y-1/2 grid gap-y-3 select-none', className)}
+      ref={handleRef}
+      className={cn('fixed top-1/2 right-0 z-infinity grid gap-y-3 select-none transform', className)}
+      style={{ transform: `translateY(calc(-50% + ${y}px))` }}
     >
       <AnimatePresence>
         {menuOpen && (
@@ -119,7 +143,7 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
       <Button
         onClick={handleToggleApp}
         onContextMenu={handleToggleMenu}
-        className="relative z-20 size-11 rounded-l-full rounded-r-none p-0 text-xs shadow-lg shadow-slate-500/50 after:absolute after:-inset-0.5 after:z-10 after:animate-[shimmer_2s_linear_infinite] after:rounded-l-full after:rounded-r-none after:bg-[conic-gradient(from_var(--shimmer-angle),theme(colors.slate.500)_0%,theme(colors.white)_10%,theme(colors.slate.500)_20%)]"
+        className="relative z-20 size-11 rounded-l-full rounded-r-none border border-white/60 bg-sky-200/90 p-0 text-xs text-slate-900 shadow-lg shadow-sky-200/70 transition-colors hover:bg-sky-200 dark:bg-sky-400/80 dark:text-slate-900 after:absolute after:-inset-0.5 after:z-10 after:animate-[shimmer_2s_linear_infinite] after:rounded-l-full after:rounded-r-none after:bg-[conic-gradient(from_var(--shimmer-angle),theme(colors.sky.200)_0%,theme(colors.white)_10%,theme(colors.sky.300)_20%)]"
       >
         <AnimatePresence>
           {hasUnreadQuery && (
