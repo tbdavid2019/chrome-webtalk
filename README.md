@@ -49,6 +49,24 @@ pnpm build
 
 ---
 
+## ⚙️ WebRTC 架構速記
+
+- **Signaling**：擴充功能的 `Peer` 直接繼承 `@rtco/client` 的 `Artico`（`src/domain/impls/Peer.ts`），未覆寫任何設定，因此會連到 Artico 預設的 Socket signaling 伺服器 `https://0.artico.dev:443`，用來交換 SDP 與 ICE candidate。
+- **STUN / TURN**：`@rtco/client` 內建的 `RTCConfiguration` 只列出 Google 的公開 STUN（`stun:stun.l.google.com:19302`、`stun:stun1.l.google.com:19302`），僅協助取得公網位址並不會中繼資料；目前未設定 TURN，所以遇到嚴格 NAT 可能需要自備 coturn。
+- **RTCConfiguration**：所有 `RTCPeerConnection` 都沿用 `Artico` 的預設 `rtcConfig`；若要指定自家 STUN/TURN 或自架 signaling，可在 `Peer.createInstance` 之外新增參數並傳給 `Artico`。
+- **為什麼要關心**：免費 signaling 僅適合開發／測試，正式環境仍建議自建或評估商用服務，以取得可控的節點數、SLA 與資安策略。
+
+---
+
+## 🧱 聊天運作流程
+
+- **房間如何形成**：內容腳本會把 `location.host` 轉十六進位作為房號（`src/domain/impls/ChatRoom.ts`），同一個網域的使用者都連到同一房間。
+- **即時傳輸**：`ChatRoom` 透過 WebRTC DataChannel 序列化訊息並廣播給房內 peer（`src/domain/impls/ChatRoom.ts`），完全端對端。
+- **歷史同步**：每個節點本地保留完整訊息；新 peer 加入時，舊 peer 依最後訊息時間批次推送近 `SYNC_HISTORY_MAX_DAYS`（預設 3 天）的紀錄，避免漏掉談話（`src/domain/ChatRoom.ts:332-470`）。
+- **本地儲存**：使用 `unstorage` 驅動的 IndexedDB/LocalStorage 保存訊息與設定（`src/domain/impls/Storage.ts`），即使離線或重新載入也能保留記錄，再由其他節點補齊差異。
+
+---
+
 ## 🙌 技術來源與致敬
 
 本專案建立在以下開源技術之上，特此致敬：
