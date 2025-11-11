@@ -6,6 +6,7 @@ import Layout from './components/Layout'
 import VersionLink from './components/VersionLink'
 import { useRemeshDomain, useRemeshQuery } from 'remesh-react'
 import UserInfoDomain from '@/domain/UserInfo'
+import ApiSettingsForm from './components/ApiSettingsForm'
 
 function App() {
   const userInfoDomain = useRemeshDomain(UserInfoDomain())
@@ -16,6 +17,7 @@ function App() {
         <VersionLink></VersionLink>
         <Main>
           <ProfileForm></ProfileForm>
+          <ApiSettingsForm />
           <Toaster
             richColors
             position="top-center"

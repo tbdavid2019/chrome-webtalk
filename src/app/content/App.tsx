@@ -74,6 +74,15 @@ export default function App() {
     return () => window.removeEventListener('reset-buttons-hidden', handler)
   }, [send, appStatusDomain])
 
+  // 🧠 綁定事件：接收「toggle-buttons-hidden」來切換按鈕隱藏狀態
+  useEffect(() => {
+    const handler = () => {
+      send(appStatusDomain.command.UpdateButtonsHiddenCommand(!buttonsHidden))
+    }
+    window.addEventListener('toggle-buttons-hidden', handler)
+    return () => window.removeEventListener('toggle-buttons-hidden', handler)
+  }, [send, appStatusDomain, buttonsHidden])
+
   useEffect(() => {
     if (messageListLoadFinished) {
       if (userInfoSetFinished) {

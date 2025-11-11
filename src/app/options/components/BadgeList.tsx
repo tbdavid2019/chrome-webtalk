@@ -9,7 +9,7 @@ const BadgeList: FC = () => {
       <Button asChild size="lg" variant="ghost" className="rounded-full px-3 text-xl font-semibold text-primary">
         <Link href="https://github.com/tbdavid2019/chrome-webtalk">
           <GitHubLogoIcon className="mr-1 size-6"></GitHubLogoIcon>
-          Github
+          GitHub / 開源專案
         </Link>
       </Button>
     </div>

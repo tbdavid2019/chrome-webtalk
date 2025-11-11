@@ -38,21 +38,27 @@ const formSchema = v.object({
   name: v.pipe(
     v.string(),
     v.trim(),
-    v.minBytes(1, 'Please enter your username.'),
-    v.maxBytes(20, 'Your username cannot exceed 20 bytes.')
+    v.minBytes(1, 'Please enter your username. / 請輸入暱稱'),
+    v.maxBytes(20, 'Your username cannot exceed 20 bytes. / 暱稱長度最多 20 位元組')
   ),
   avatar: v.pipe(
     v.string(),
-    v.notLength(0, 'Please select your avatar.'),
-    v.maxBytes(8 * 1024, `Your avatar cannot exceed 8kb.`)
+    v.notLength(0, 'Please select your avatar. / 請選擇頭像'),
+    v.maxBytes(8 * 1024, `Your avatar cannot exceed 8kb. / 頭像檔案不可超過 8KB`)
   ),
   themeMode: v.pipe(
     v.string(),
-    v.union([v.literal('system'), v.literal('light'), v.literal('dark')], 'Please select extension theme mode.')
+    v.union(
+      [v.literal('system'), v.literal('light'), v.literal('dark')],
+      'Please select extension theme mode. / 請選擇擴充主題模式'
+    )
   ),
   danmakuEnabled: v.boolean(),
   notificationEnabled: v.boolean(),
-  notificationType: v.pipe(v.string(), v.union([v.literal('all'), v.literal('at')], 'Please select notification type.'))
+  notificationType: v.pipe(
+    v.string(),
+    v.union([v.literal('all'), v.literal('at')], 'Please select notification type. / 請選擇通知種類')
+  )
 })
 const ProfileForm: FC = () => {
   const send = useRemeshSend()
@@ -73,7 +79,7 @@ const ProfileForm: FC = () => {
 
   const handleSubmit = (userInfo: UserInfo) => {
     send(userInfoDomain.command.UpdateUserInfoCommand(userInfo))
-    toast.success('Saved successfully!')
+    toast.success('Saved successfully! / 儲存成功！')
   }
 
   const handleWarning = (error: Error) => {
@@ -119,7 +125,7 @@ const ProfileForm: FC = () => {
                     onClick={handleRefreshAvatar}
                   >
                     <RefreshCcwIcon size={14} />
-                    Ugly Avatar
+                    Ugly Avatar 醜萌頭像
                   </Button>
                 </div>
               </FormControl>
@@ -133,11 +139,11 @@ const ProfileForm: FC = () => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-semibold">Username</FormLabel>
+              <FormLabel className="font-semibold">Username 使用者名稱</FormLabel>
               <FormControl>
-                <Input placeholder="Please enter your username" {...field} />
+                <Input placeholder="Please enter your username / 請輸入暱稱" {...field} />
               </FormControl>
-              <FormDescription>This is your public display name.</FormDescription>
+              <FormDescription>This is your public display name. / 這是顯示給其他人的暱稱。</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -156,12 +162,12 @@ const ProfileForm: FC = () => {
                     checked={field.value}
                   />
                   <FormLabel className="cursor-pointer font-semibold" htmlFor="enable-danmaku">
-                    Enable Danmaku
+                    Enable Danmaku 開啟彈幕
                   </FormLabel>
                 </div>
               </FormControl>
               <FormDescription>
-                Enabling this option will display scrolling messages on the website.
+                Enabling this option will display scrolling messages on the website. / 開啟後會在頁面上顯示彈幕訊息。
                 <Link className="ml-2 text-primary" href="https://en.wikipedia.org/wiki/Danmaku_subtitling">
                   Wikipedia
                 </Link>
@@ -190,7 +196,7 @@ const ProfileForm: FC = () => {
                           checked={field.value}
                         />
                         <FormLabel className="cursor-pointer font-semibold" htmlFor="enable-notification">
-                          Enable Notification
+                          Enable Notification 開啟桌面通知
                         </FormLabel>
                       </div>
                     </FormControl>
@@ -214,7 +220,7 @@ const ProfileForm: FC = () => {
                       )}
                       htmlFor="all"
                     >
-                      All message
+                      All message 全部訊息
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -226,12 +232,14 @@ const ProfileForm: FC = () => {
                       )}
                       htmlFor="at"
                     >
-                      Only @self
+                      Only @self 只在 @ 我時
                     </Label>
                   </div>
                 </RadioGroup>
               </FormControl>
-              <FormDescription>Enabling this option will display desktop notifications for messages.</FormDescription>
+              <FormDescription>
+                Enabling this option will display desktop notifications for messages. / 開啟後會顯示桌面通知。
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -241,38 +249,38 @@ const ProfileForm: FC = () => {
           name="themeMode"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-semibold">Theme Mode</FormLabel>
+              <FormLabel className="font-semibold">Theme Mode 主題模式</FormLabel>
               <FormControl>
                 <RadioGroup className="flex gap-x-4" onValueChange={field.onChange} value={field.value}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="system" id="system" />
                     <Label className="cursor-pointer" htmlFor="system">
-                      System
+                      System 系統
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="light" id="light" />
                     <Label className="cursor-pointer" htmlFor="light">
-                      Light
+                      Light 亮色
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="dark" id="dark" />
                     <Label className="cursor-pointer" htmlFor="dark">
-                      Dark
+                      Dark 暗色
                     </Label>
                   </div>
                 </RadioGroup>
               </FormControl>
               <FormDescription>
-                The theme mode of the extension. If you choose the system, will follow the system theme.
+                The theme mode of the extension. If you choose the system, will follow the system theme. / 套件顯示的主題模式；選擇「系統」即跟隨作業系統設定。
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
         <Button className="w-full" type="submit">
-          Save
+          Save 保存
         </Button>
       </form>
     </Form>
