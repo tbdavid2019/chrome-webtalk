@@ -273,7 +273,8 @@ const ProfileForm: FC = () => {
                 </RadioGroup>
               </FormControl>
               <FormDescription>
-                The theme mode of the extension. If you choose the system, will follow the system theme. / 套件顯示的主題模式；選擇「系統」即跟隨作業系統設定。
+                The theme mode of the extension. If you choose the system, will follow the system theme. /
+                套件顯示的主題模式；選擇「系統」即跟隨作業系統設定。
               </FormDescription>
               <FormMessage />
             </FormItem>

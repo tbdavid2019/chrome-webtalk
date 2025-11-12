@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { browser } from 'wxt/browser'
+import { FALLBACK_GROQ_API_KEY, FALLBACK_GROQ_BASE_URL, FALLBACK_GROQ_MODEL } from '@/constants/apiDefaults'
 
 export const useSummarize = () => {
   const [loading, setLoading] = useState(false)
@@ -7,12 +8,13 @@ export const useSummarize = () => {
 
   const summarize = async (pageText: string, language: 'zh_TW' | 'zh_CN' | 'en') => {
     setLoading(true)
-    const targetLanguage =
-      language === 'zh_TW' ? '繁體中文' :
-      language === 'zh_CN' ? '简体中文' : 'English'
+    const targetLanguage = language === 'zh_TW' ? '繁體中文' : language === 'zh_CN' ? '简体中文' : 'English'
     const bulletPointInstruction =
-      language === 'zh_TW' ? '請使用項目符號。' :
-      language === 'zh_CN' ? '请使用项目符号。' : 'Please use bullet points.'
+      language === 'zh_TW'
+        ? '請使用項目符號。'
+        : language === 'zh_CN'
+          ? '请使用项目符号。'
+          : 'Please use bullet points.'
 
     const prompt = `將以下内容總結為${targetLanguage}。无论原文是什么语言，请确保摘要使用${targetLanguage}。
   將以下原文總結為五個部分：
@@ -23,7 +25,7 @@ export const useSummarize = () => {
 5.問題測驗 (FAQ)：根據內容產出**三題選擇題**，每題有 A、B、C、D 四個選項，並在每題後附上正確答案及簡短解釋。題目應涵蓋內容的重要概念或關鍵知識點。
   ${bulletPointInstruction}
   将输出格式化为 Markdown 。
-  原文内容：\n\n${pageText}`;
+  原文内容：\n\n${pageText}`
 
     const { groqApiKey, groqApiBaseURL, groqModelName } = await browser.storage.sync.get([
       'groqApiKey',
@@ -31,9 +33,9 @@ export const useSummarize = () => {
       'groqModelName'
     ])
 
-    const apiKey = groqApiKey || import.meta.env.VITE_GEMINI_API_KEY || ''
-    const baseURL = groqApiBaseURL || import.meta.env.VITE_GEMINI_API_BASE_URL || 'https://gemini.david888.com/v1'
-    const modelName = groqModelName || import.meta.env.VITE_GEMINI_MODEL_NAME || 'gemini-2.0-flash'
+    const apiKey = groqApiKey || import.meta.env.VITE_GEMINI_API_KEY || FALLBACK_GROQ_API_KEY
+    const baseURL = groqApiBaseURL || import.meta.env.VITE_GEMINI_API_BASE_URL || FALLBACK_GROQ_BASE_URL
+    const modelName = groqModelName || import.meta.env.VITE_GEMINI_MODEL_NAME || FALLBACK_GROQ_MODEL
 
     if (!apiKey) {
       setLoading(false)
@@ -43,7 +45,7 @@ export const useSummarize = () => {
     const res = await fetch(`${baseURL}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

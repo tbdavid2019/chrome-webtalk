@@ -1,7 +1,7 @@
 {
   "name": "web-talk-333",
   "displayName": "WebTalk 333 - Chat and Summarize on any website.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Chat with friends on any website. Summary of the page content. WebRTC P2P.",
   "type": "module",
   "scripts": {
@@ -13,7 +13,6 @@
     "pack": "cross-env NODE_ENV=production run-p pack:*",
     "pack:chrome": "wxt zip -b chrome",
     "pack:firefox": "wxt zip -b firefox",
-    "lint": "eslint --fix --flag unstable_ts_config",
     "clear": "rimraf .output",
     "check": "tsc --noEmit",
     "prepare": "husky",
@@ -96,14 +95,9 @@
     "valibot": "1.0.0-beta.0"
   },
   "devDependencies": {
-    "@eslint-react/eslint-plugin": "^1.16.1",
-    "@eslint/js": "^9.15.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@types/eslint": "^9.6.1",
-    "@types/eslint-plugin-tailwindcss": "^3.17.0",
-    "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
@@ -111,14 +105,9 @@
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
-    "eslint": "^9.15.0",
-    "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-prettier": "^5.2.1",
-    "eslint-plugin-tailwindcss": "^3.17.5",
     "globals": "^15.12.0",
     "husky": "^9.1.6",
     "jiti": "^2.4.0",
-    "lint-staged": "^15.2.10",
     "npm-run-all": "^4.1.5",
     "postcss": "^8.4.49",
     "postcss-rem-to-responsive-pixel": "^6.0.2",
@@ -128,13 +117,9 @@
     "tailwindcss": "^3.4.15",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.14.0",
     "vite-plugin-svgr": "^4.3.0",
     "webext-bridge": "^6.0.1",
     "wxt": "^0.19.16"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": "eslint --fix --flag unstable_ts_config"
   },
   "engines": {
     "node": ">=20.0.0"

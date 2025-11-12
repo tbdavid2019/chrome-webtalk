@@ -20,6 +20,8 @@ import AppStatusDomain from '@/domain/AppStatus'
 import { getDay } from 'date-fns'
 import { messenger } from '@/messenger'
 import useDraggable from '@/hooks/useDraggable'
+import { useFloatingDockOffset } from '@/hooks/useFloatingDockOffset'
+import { clamp } from '@/utils'
 
 export interface AppButtonProps {
   className?: string
@@ -40,6 +42,7 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [viewportHeight, setViewportHeight] = useState(() => (typeof window === 'undefined' ? 800 : window.innerHeight))
+  const [offset, setOffset] = useFloatingDockOffset()
 
   useEffect(() => {
     const handleResize = () => setViewportHeight(window.innerHeight)
@@ -48,13 +51,23 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
   }, [])
 
   const verticalLimit = Math.max(0, viewportHeight / 2 - 80)
+  const clampedOffset = clamp(offset, -verticalLimit, verticalLimit)
+
+  useEffect(() => {
+    if (clampedOffset !== offset) {
+      setOffset(clampedOffset)
+    }
+  }, [clampedOffset, offset, setOffset])
+
   const { setRef: dragRef, y } = useDraggable({
     initX: 0,
-    initY: 0,
+    initY: clampedOffset,
     minX: 0,
     maxX: 0,
     minY: -verticalLimit,
-    maxY: verticalLimit
+    maxY: verticalLimit,
+    value: clampedOffset,
+    onChange: ({ y }) => setOffset(y)
   })
 
   const { setRef: appMenuRef } = useTriggerAway(['click'], () => setMenuOpen(false))
@@ -143,7 +156,7 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
       <Button
         onClick={handleToggleApp}
         onContextMenu={handleToggleMenu}
-        className="relative z-20 size-11 rounded-l-full rounded-r-none border border-white/60 bg-sky-200/90 p-0 text-xs text-slate-900 shadow-lg shadow-sky-200/70 transition-colors hover:bg-sky-200 dark:bg-sky-400/80 dark:text-slate-900 after:absolute after:-inset-0.5 after:z-10 after:animate-[shimmer_2s_linear_infinite] after:rounded-l-full after:rounded-r-none after:bg-[conic-gradient(from_var(--shimmer-angle),theme(colors.sky.200)_0%,theme(colors.white)_10%,theme(colors.sky.300)_20%)]"
+        className="relative z-20 size-11 rounded-l-full rounded-r-none border border-white/60 bg-sky-200/90 p-0 text-xs text-slate-900 shadow-lg shadow-sky-200/70 transition-colors after:absolute after:-inset-0.5 after:z-10 after:animate-[shimmer_2s_linear_infinite] after:rounded-l-full after:rounded-r-none after:bg-[conic-gradient(from_var(--shimmer-angle),theme(colors.sky.200)_0%,theme(colors.white)_10%,theme(colors.sky.300)_20%)] hover:bg-sky-200 dark:bg-sky-400/80 dark:text-slate-900"
       >
         <AnimatePresence>
           {hasUnreadQuery && (

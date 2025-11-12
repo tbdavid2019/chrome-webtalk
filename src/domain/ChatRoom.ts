@@ -7,7 +7,13 @@ import UserInfoDomain from '@/domain/UserInfo'
 import { desert, getTextByteSize, upsert } from '@/utils'
 import { nanoid } from 'nanoid'
 import StatusModule from '@/domain/modules/Status'
-import { SYNC_HISTORY_MAX_DAYS, WEB_RTC_MAX_MESSAGE_SIZE, SYNC_MESSAGES_BATCH_SIZE, SYNC_BATCH_DELAY_MS, SYNC_MESSAGE_DELAY_MS } from '@/constants/config'
+import {
+  SYNC_HISTORY_MAX_DAYS,
+  WEB_RTC_MAX_MESSAGE_SIZE,
+  SYNC_MESSAGES_BATCH_SIZE,
+  SYNC_BATCH_DELAY_MS,
+  SYNC_MESSAGE_DELAY_MS
+} from '@/constants/config'
 import * as v from 'valibot'
 
 export { MessageType }
@@ -166,7 +172,12 @@ const ChatRoomDomain = Remesh.domain({
       impl: ({ get }) => {
         const user = get(UserListQuery()).find((user) => user.peerIds.includes(chatRoomExtern.peerId))
         if (!user) {
-          console.error('SelfUser not found in user list. PeerId:', chatRoomExtern.peerId, 'UserList:', get(UserListQuery()))
+          console.error(
+            'SelfUser not found in user list. PeerId:',
+            chatRoomExtern.peerId,
+            'UserList:',
+            get(UserListQuery())
+          )
           return null
         }
         return user
@@ -234,7 +245,7 @@ const ChatRoomDomain = Remesh.domain({
       name: 'Room.SendTextMessageCommand',
       impl: ({ get }, message: string | { body: string; atUsers: AtUser[] }) => {
         const self = get(SelfUserQuery())
-        
+
         // 檢查用戶是否已經加入房間
         if (!self) {
           console.error('Cannot send message: User not joined to room yet')
@@ -285,7 +296,7 @@ const ChatRoomDomain = Remesh.domain({
           console.error('Cannot send like: User not joined to room yet')
           return []
         }
-        
+
         const localMessage = get(messageListDomain.query.ItemQuery(messageId)) as NormalMessage
 
         const likeMessage: LikeMessage = {
@@ -311,7 +322,7 @@ const ChatRoomDomain = Remesh.domain({
           console.error('Cannot send hate: User not joined to room yet')
           return []
         }
-        
+
         const localMessage = get(messageListDomain.query.ItemQuery(messageId)) as NormalMessage
 
         const hateMessage: HateMessage = {
@@ -337,7 +348,7 @@ const ChatRoomDomain = Remesh.domain({
           console.error('Cannot send sync user message: User not joined to room yet')
           return []
         }
-        
+
         const lastMessageTime = get(LastMessageTimeQuery())
 
         const syncUserMessage: SyncUserMessage = {
@@ -418,7 +429,7 @@ const ChatRoomDomain = Remesh.domain({
 
           // 檢查批次消息大小
           const batchMessageSize = getTextByteSize(JSON.stringify(batchMessage))
-          
+
           if (batchMessageSize < WEB_RTC_MAX_MESSAGE_SIZE) {
             pushHistoryMessageList.push(batchMessage)
           } else {
@@ -431,7 +442,7 @@ const ChatRoomDomain = Remesh.domain({
                 type: SendType.SyncHistory,
                 messages: [message]
               }
-              
+
               const singleMessageSize = getTextByteSize(JSON.stringify(singleMessage))
               if (singleMessageSize < WEB_RTC_MAX_MESSAGE_SIZE) {
                 pushHistoryMessageList.push(singleMessage)
@@ -446,7 +457,7 @@ const ChatRoomDomain = Remesh.domain({
         return pushHistoryMessageList.map((message, index) => {
           const batchIndex = Math.floor(index / SYNC_MESSAGES_BATCH_SIZE)
           const delay = batchIndex * SYNC_BATCH_DELAY_MS + (index % SYNC_MESSAGES_BATCH_SIZE) * SYNC_MESSAGE_DELAY_MS
-          
+
           setTimeout(() => {
             try {
               chatRoomExtern.sendMessage(message, peerId)
@@ -454,7 +465,7 @@ const ChatRoomDomain = Remesh.domain({
               console.error('Failed to send history message:', error)
             }
           }, delay)
-          
+
           return SendSyncHistoryMessageEvent(message)
         })
       }

@@ -4,13 +4,14 @@ import { Label } from '@/components/ui/Label'
 import { Button } from '@/components/ui/Button'
 import { browser } from 'wxt/browser'
 import { ToastImpl } from '@/domain/impls/Toast'
+import { FALLBACK_GROQ_API_KEY, FALLBACK_GROQ_BASE_URL, FALLBACK_GROQ_MODEL } from '@/constants/apiDefaults'
 
-const DEFAULT_BASE_URL = 'https://api.groq.com/openai/v1'
-const DEFAULT_MODEL = 'moonshotai/kimi-k2-instruct-0905'
+const DEFAULT_BASE_URL = FALLBACK_GROQ_BASE_URL
+const DEFAULT_MODEL = FALLBACK_GROQ_MODEL
 
 const ApiSettingsForm: FC = () => {
   const toast = ToastImpl.value
-  const [apiKey, setApiKey] = useState('')
+  const [apiKey, setApiKey] = useState(FALLBACK_GROQ_API_KEY)
   const [apiBaseURL, setApiBaseURL] = useState(DEFAULT_BASE_URL)
   const [apiModelName, setApiModelName] = useState(DEFAULT_MODEL)
   const [loading, setLoading] = useState(false)
@@ -25,7 +26,7 @@ const ApiSettingsForm: FC = () => {
       .get(['groqApiKey', 'groqApiBaseURL', 'groqModelName'])
       .then(({ groqApiKey, groqApiBaseURL, groqModelName }) => {
         const nextValues = {
-          apiKey: groqApiKey ?? '',
+          apiKey: groqApiKey ?? FALLBACK_GROQ_API_KEY,
           apiBaseURL: groqApiBaseURL ?? DEFAULT_BASE_URL,
           apiModelName: groqModelName ?? DEFAULT_MODEL
         }
@@ -77,14 +78,12 @@ const ApiSettingsForm: FC = () => {
     <section className="w-[450px] space-y-6 rounded-xl border border-slate-200 bg-white/70 p-8 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/60">
       <div>
         <h2 className="text-xl font-semibold">API setting / AI 服務設定</h2>
-        <p className="text-sm text-muted-foreground">
-          設定 Gemini/GROQ API Key 與模型參數，供 AI 摘要功能使用。
-        </p>
+        <p className="text-sm text-muted-foreground">設定 Gemini/GROQ API Key 與模型參數，供 AI 摘要功能使用。</p>
       </div>
 
       <div className="space-y-2">
         <Label className="font-semibold">
-          Gemini API Key <span className="text-red-500">*</span>
+          LLM API Key <span className="text-red-500">*</span>
         </Label>
         <Input
           type="password"

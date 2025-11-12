@@ -1,17 +1,31 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useSummarize } from '@/hooks/useSummarize'
 import { marked } from 'marked'
 import html2canvas from 'html2canvas'
 import { browser } from 'wxt/browser'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
+import { Textarea } from '@/components/ui/Textarea'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { motion, AnimatePresence } from 'framer-motion'
+import { FALLBACK_GROQ_API_KEY, FALLBACK_GROQ_BASE_URL, FALLBACK_GROQ_MODEL } from '@/constants/apiDefaults'
+
+const DEFAULT_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || FALLBACK_GROQ_API_KEY
+const DEFAULT_API_BASE_URL = import.meta.env.VITE_GEMINI_API_BASE_URL || FALLBACK_GROQ_BASE_URL
+const DEFAULT_MODEL_NAME = import.meta.env.VITE_GEMINI_MODEL_NAME || FALLBACK_GROQ_MODEL
 
 type SummaryPanelProps = {
   onClose: () => void
 }
 
 type Lang = 'zh_TW' | 'zh_CN' | 'en'
+
+type ChatMessage = {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+}
 
 const detectBrowserLang = (): Lang => {
   const lang = navigator.language
@@ -37,7 +51,14 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     exportFail: '❌ 匯出區塊未找到',
     pageFail: '❗ 無法取得頁面內容',
     noText: '⚠️ 沒有取得頁面文字，無法進行摘要',
-    close: '✕'
+    close: '✕',
+    chatTitle: '續問 AI',
+    chatPlaceholder: '就這個頁面提問...',
+    chatSend: '送出',
+    chatEmpty: '目前沒有續問紀錄',
+    chatNeedSummary: '請先產生摘要後再提問',
+    chatThinking: 'AI 思考中...',
+    chatError: '⚠️ 無法取得回覆，請稍後再試'
   },
   zh_CN: {
     title: '🧠 AI 摘要',
@@ -54,7 +75,14 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     exportFail: '❌ 导出区域未找到',
     pageFail: '❗ 无法获取页面内容',
     noText: '⚠️ 没有获取页面文字，无法进行摘要',
-    close: '✕'
+    close: '✕',
+    chatTitle: '继续追问',
+    chatPlaceholder: '就这个页面发问...',
+    chatSend: '发送',
+    chatEmpty: '目前没有追问记录',
+    chatNeedSummary: '请先生成摘要后再提问',
+    chatThinking: 'AI 思考中...',
+    chatError: '⚠️ 暂时无法回应，请稍后再试'
   },
   en: {
     title: '🧠 AI Summary',
@@ -71,7 +99,14 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     exportFail: '❌ Export target not found',
     pageFail: '❗ Failed to get page content',
     noText: '⚠️ No page content found',
-    close: '✕'
+    close: '✕',
+    chatTitle: 'Follow-up Chat',
+    chatPlaceholder: 'Ask something about this page...',
+    chatSend: 'Send',
+    chatEmpty: 'No follow-up questions yet',
+    chatNeedSummary: 'Generate a summary first before asking',
+    chatThinking: 'AI is typing...',
+    chatError: '⚠️ Unable to fetch a reply, please try again'
   }
 }
 
@@ -79,26 +114,29 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const [language, setLanguage] = useState<Lang>(detectBrowserLang())
   const { summarize, loading, summary } = useSummarize()
   const [pageText, setPageText] = useState('')
-  const [apiKey, setApiKey] = useState('')  //預設 groq API key
-  const [apiBaseURL, setApiBaseURL] = useState('https://api.groq.com/openai/v1')
-  const [apiModelName, setApiModelName] = useState('moonshotai/kimi-k2-instruct-0905')
-  const [isApiKeySet, setIsApiKeySet] = useState(false)
+  const [apiKey, setApiKey] = useState(DEFAULT_API_KEY)
+  const [apiBaseURL, setApiBaseURL] = useState(DEFAULT_API_BASE_URL)
+  const [apiModelName, setApiModelName] = useState(DEFAULT_MODEL_NAME)
   const [showApiSettings, setShowApiSettings] = useState(false)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
+  const chatListRef = useRef<HTMLDivElement | null>(null)
   const text = LANG_MAP[language]
+  const hasApiKey = Boolean(apiKey.trim())
 
   // 檢查是否已經設置了 API key
   useEffect(() => {
     browser.storage.sync
       .get(['groqApiKey', 'groqApiBaseURL', 'groqModelName'])
       .then((result: { groqApiKey?: string; groqApiBaseURL?: string; groqModelName?: string }) => {
-        if (result.groqApiKey) {
+        if (typeof result.groqApiKey === 'string') {
           setApiKey(result.groqApiKey)
-          setIsApiKeySet(true)
         }
-        if (result.groqApiBaseURL) {
+        if (typeof result.groqApiBaseURL === 'string') {
           setApiBaseURL(result.groqApiBaseURL)
         }
-        if (result.groqModelName) {
+        if (typeof result.groqModelName === 'string') {
           setApiModelName(result.groqModelName)
         }
       })
@@ -116,7 +154,6 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
         groqModelName: apiModelName
       })
       .then(() => {
-        setIsApiKeySet(!!apiKey)
         setShowApiSettings(false)
         alert('✅ API 設置已保存')
       })
@@ -154,12 +191,23 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
     }
   }, [text.pageFail])
 
+  useEffect(() => {
+    if (!chatListRef.current) return
+    chatListRef.current.scrollTo({
+      top: chatListRef.current.scrollHeight,
+      behavior: 'smooth'
+    })
+  }, [chatMessages, chatLoading])
+
   const onClickSummarize = () => {
-    if (!isApiKeySet) {
+    if (!hasApiKey) {
       setShowApiSettings(true)
       alert('請先設置 API key')
       return
     }
+
+    setChatMessages([])
+    setChatInput('')
 
     if (pageText) summarize(pageText, language)
     else alert(text.noText)
@@ -203,7 +251,96 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
     link.click()
   }
 
+  const sendFollowUpQuestion = async () => {
+    const question = chatInput.trim()
+    if (!question) return
+
+    if (!hasApiKey) {
+      setShowApiSettings(true)
+      alert('請先設置 API key')
+      return
+    }
+
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: question
+    }
+
+    setChatInput('')
+    setChatMessages((prev) => [...prev, userMessage])
+    setChatLoading(true)
+
+    try {
+      const { groqApiKey, groqApiBaseURL, groqModelName } = await browser.storage.sync.get([
+        'groqApiKey',
+        'groqApiBaseURL',
+        'groqModelName'
+      ])
+
+      const resolvedApiKey = groqApiKey || apiKey || DEFAULT_API_KEY
+      const resolvedBaseURL = groqApiBaseURL || apiBaseURL || DEFAULT_API_BASE_URL
+      const resolvedModelName = groqModelName || apiModelName || DEFAULT_MODEL_NAME
+
+      if (!resolvedApiKey) {
+        alert('請先設置 API key')
+        setChatLoading(false)
+        return
+      }
+
+      const chatHistory = [...chatMessages, userMessage].map((msg) => ({
+        role: msg.role,
+        content: msg.content
+      }))
+
+      const summaryForPrompt = summary || text.noContent
+      const systemPrompt = `你是一個AI助理，請根據提供的原始頁面內容以及（若有的話）摘要來回答使用者的追問，語氣清楚、友善，必要時引用列表或重點。
+原始內容：
+${pageText.slice(0, 6000)}
+----
+摘要：
+${summaryForPrompt}`
+
+      const response = await fetch(`${resolvedBaseURL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resolvedApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: resolvedModelName || 'gemini-2.0-flash',
+          messages: [{ role: 'system', content: systemPrompt }, ...chatHistory]
+        })
+      })
+
+      const data = await response.json()
+      const answer = data.choices?.[0]?.message?.content?.trim()
+
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: answer || text.chatError
+        }
+      ])
+    } catch (error) {
+      console.error('[WebTalk] ❌ 續問失敗', error)
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: text.chatError
+        }
+      ])
+    } finally {
+      setChatLoading(false)
+    }
+  }
+
   const markedHtml = marked.parse(summary || text.noContent)
+  const canChat = !loading
 
   return (
     <AnimatePresence>
@@ -212,9 +349,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
         animate={{ opacity: 1, x: '0%' }}
         exit={{ opacity: 0, x: '100%' }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="fixed top-0 right-0 z-infinity h-full w-[420px] max-w-[800px] min-w-[360px] grid grid-rows-[auto_1fr_auto] bg-white dark:bg-slate-950 font-sans shadow-2xl border-l"
+        className="fixed right-0 top-0 z-infinity grid h-full w-[420px] min-w-[360px] max-w-[800px] grid-rows-[auto_1fr_auto] border-l bg-white font-sans shadow-2xl dark:bg-slate-950"
       >
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between border-b p-4">
           <h2 className="text-lg font-semibold">{text.title}</h2>
           <div className="flex gap-2">
             <button
@@ -230,7 +367,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col space-y-4 p-4 overflow-y-auto">
+        <div className="flex flex-1 flex-col space-y-4 overflow-y-auto p-4">
           {showApiSettings && (
             <div className="space-y-3 rounded border bg-gray-50 p-4">
               <h3 className="text-sm font-semibold">API setting</h3>
@@ -299,7 +436,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
               disabled={loading}
               className="rounded bg-blue-600 px-4 py-2 text-white disabled:bg-gray-300"
             >
-              {!isApiKeySet ? '⚠️ Please set API Key first' : loading ? text.loading : text.summarize}
+              {!hasApiKey ? '⚠️ Please set API Key first' : loading ? text.loading : text.summarize}
             </button>
             {/* <button
               onClick={speak}
@@ -340,9 +477,69 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
 
           <div
             id="summary-content"
-            className="flex-1 overflow-y-auto whitespace-pre-wrap rounded border bg-gray-50 p-0.5 text-sm"
+            className="flex-1 overflow-y-auto whitespace-pre-wrap rounded border bg-gray-50 p-2 text-sm"
             dangerouslySetInnerHTML={{ __html: markedHtml }}
           />
+
+          <div className="shrink-0 rounded border bg-white dark:bg-slate-900">
+            <div className="border-b px-3 py-2 text-sm font-semibold">{text.chatTitle}</div>
+            <div ref={chatListRef} className="max-h-60 space-y-3 overflow-y-auto px-3 py-2 text-sm">
+              {chatMessages.length === 0 ? (
+                <p className="text-xs text-gray-500">{text.chatEmpty}</p>
+              ) : (
+                chatMessages.map((message) => {
+                  const isUser = message.role === 'user'
+                  return (
+                    <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                      <div
+                        className={`max-w-[90%] rounded px-3 py-2 text-sm shadow ${
+                          isUser
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-900 dark:bg-slate-800 dark:text-gray-100'
+                        }`}
+                      >
+                        {isUser ? (
+                          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                        ) : (
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            className="prose prose-sm prose-slate dark:prose-invert prose-a:underline"
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+              {chatLoading && <p className="text-xs text-blue-500">{text.chatThinking}</p>}
+            </div>
+            <div className="space-y-2 border-t px-3 py-2">
+              <Textarea
+                value={chatInput}
+                placeholder={text.chatPlaceholder}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    sendFollowUpQuestion()
+                  }
+                }}
+                disabled={chatLoading || !canChat}
+                className="text-sm"
+              />
+              <div className="flex justify-end">
+                <button
+                  onClick={sendFollowUpQuestion}
+                  disabled={chatLoading || !chatInput.trim() || !canChat}
+                  className="rounded bg-purple-600 px-4 py-2 text-white disabled:bg-gray-300"
+                >
+                  {chatLoading ? text.chatThinking : text.chatSend}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </motion.div>
     </AnimatePresence>
