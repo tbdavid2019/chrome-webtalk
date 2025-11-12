@@ -75,7 +75,7 @@ class VirtualRoom extends EventHub {
         this.emit('error', new Error('Connection is not established yet.'))
         return this
       }
-      
+
       try {
         const serializedMessage = JSONR.stringify(message)
         if (!serializedMessage) {

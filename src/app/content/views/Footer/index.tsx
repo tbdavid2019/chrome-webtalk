@@ -21,6 +21,7 @@ import { AvatarImage } from '@radix-ui/react-avatar'
 import ToastDomain from '@/domain/Toast'
 import ImageButton from '../../components/ImageButton'
 import { nanoid } from 'nanoid'
+import type { AtUser } from '@/domain/MessageList'
 
 const Footer: FC = () => {
   const send = useRemeshSend()
@@ -43,6 +44,7 @@ const Footer: FC = () => {
   const isComposing = useRef(false)
   const virtuosoRef = useRef<VirtuosoHandle>(null)
   const [inputLoading, setInputLoading] = useState(false)
+  const [isSending, setIsSending] = useState(false)
 
   const shareRef = useShareRef(inputRef, setRef)
 
@@ -125,28 +127,66 @@ const Footer: FC = () => {
   }
 
   const handleSend = async () => {
-    if (!`${message}`.trim()) {
+    if (isSending) return
+
+    const currentMessage = message
+
+    if (!`${currentMessage}`.trim()) {
       return send(toastDomain.command.WarningCommand('Message cannot be empty.'))
     }
-    const transformedMessage = await transformMessage(message)
+
+    setIsSending(true)
+
     const atUsers = [...atUserRecord.current]
       .map(([userId, positions]) => {
         const user = userList.find((user) => user.userId === userId)
-        return (user ? { ...user, positions: [...positions] } : undefined)!
+        return user ? { ...user, positions: [...positions] } : undefined
       })
-      .filter(Boolean)
+      .filter(Boolean) as AtUser[]
 
-    const newMessage = { body: transformedMessage, atUsers }
-    const byteSize = getTextByteSize(JSON.stringify(newMessage))
+    const atUserSnapshot = new Map(atUserRecord.current)
+    const imageSnapshot = new Map(imageRecord.current)
+    let inputCleared = false
 
-    if (byteSize > WEB_RTC_MAX_MESSAGE_SIZE) {
-      return send(toastDomain.command.WarningCommand('Message size cannot exceed 256KiB.'))
+    try {
+      const transformedMessage = await transformMessage(currentMessage)
+      const newMessage = { body: transformedMessage, atUsers }
+      const byteSize = getTextByteSize(JSON.stringify(newMessage))
+
+      if (byteSize > WEB_RTC_MAX_MESSAGE_SIZE) {
+        send(toastDomain.command.WarningCommand('Message size cannot exceed 256KiB.'))
+        return
+      }
+
+      send(messageInputDomain.command.ClearCommand())
+      setAutoCompleteListShow(false)
+      inputCleared = true
+      atUserRecord.current.clear()
+      imageRecord.current.clear()
+      requestAnimationFrame(() => {
+        inputRef.current?.focus()
+      })
+
+      // 發送消息
+      send(chatRoomDomain.command.SendTextMessageCommand(newMessage))
+    } catch (error) {
+      console.error('[WebTalk] Failed to send message', error)
+      if (inputCleared) {
+        atUserRecord.current = new Map(atUserSnapshot)
+        imageRecord.current = new Map(imageSnapshot)
+        send(messageInputDomain.command.InputCommand(currentMessage))
+        requestAnimationFrame(() => {
+          inputRef.current?.focus()
+        })
+      }
+      send(
+        toastDomain.command.ErrorCommand(
+          error instanceof Error ? error.message : 'Failed to send message. Please try again.'
+        )
+      )
+    } finally {
+      setIsSending(false)
     }
-
-    // 發送消息
-    send(chatRoomDomain.command.SendTextMessageCommand({ body: transformedMessage, atUsers }))
-    
-    send(messageInputDomain.command.ClearCommand())
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -181,6 +221,10 @@ const Footer: FC = () => {
     }
 
     if (e.key === 'Enter' && !(e.shiftKey || e.ctrlKey || e.altKey || e.metaKey)) {
+      if (isSending) {
+        e.preventDefault()
+        return
+      }
       if (isComposing.current) return
 
       if (autoCompleteListShow && autoCompleteList.length) {
@@ -364,7 +408,7 @@ const Footer: FC = () => {
       <div className="flex items-center">
         <EmojiButton onSelect={handleInjectEmoji}></EmojiButton>
         <ImageButton disabled={inputLoading} onSelect={handleInjectImage}></ImageButton>
-        <Button className="ml-auto" size="sm" onClick={handleSend}>
+        <Button className="ml-auto" size="sm" disabled={isSending || inputLoading} onClick={handleSend}>
           <span className="mr-2">Send</span>
           <CornerDownLeftIcon className="text-slate-400" size={12}></CornerDownLeftIcon>
         </Button>

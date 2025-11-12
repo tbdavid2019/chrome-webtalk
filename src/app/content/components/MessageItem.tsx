@@ -52,11 +52,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
         props.className
       )}
     >
-      <Avatar
-        className="cursor-pointer"
-        onClick={() => props.onAvatarClick?.(props.data)}
-        title="點擊開始私聊"
-      >
+      <Avatar className="cursor-pointer" onClick={() => props.onAvatarClick?.(props.data)} title="點擊開始私聊">
         <AvatarImage src={props.data.userAvatar} className="size-full" alt="avatar" />
         <AvatarFallback>{props.data.username.at(0)}</AvatarFallback>
       </Avatar>

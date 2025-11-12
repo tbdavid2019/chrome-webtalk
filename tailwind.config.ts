@@ -15,7 +15,8 @@ export default {
         '2xs': '0.625rem'
       },
       zIndex: {
-        infinity: 'calc(infinity)'
+        // Use an extremely high value so the extension always floats above site content
+        infinity: '2147483647'
       },
       colors: {
         border: 'hsl(var(--border))',
