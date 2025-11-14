@@ -61,7 +61,10 @@ export const useSummarize = () => {
     const content = json.choices?.[0]?.message?.content || '無摘要結果'
     setSummary(content)
     setLoading(false)
+    return content
   }
 
-  return { summarize, loading, summary }
+  const clearSummary = () => setSummary('')
+
+  return { summarize, loading, summary, clearSummary }
 }

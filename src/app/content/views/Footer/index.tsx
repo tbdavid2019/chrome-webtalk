@@ -1,5 +1,5 @@
 import { ChangeEvent, useMemo, useRef, useState, KeyboardEvent, type FC, ClipboardEvent } from 'react'
-import { CornerDownLeftIcon } from 'lucide-react'
+import { CornerDownLeftIcon, LinkIcon, BotIcon } from 'lucide-react'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import MessageInput from '../../components/MessageInput'
 import EmojiButton from '../../components/EmojiButton'
@@ -236,7 +236,7 @@ const Footer: FC = () => {
     }
   }
 
-  const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const currentMessage = e.target.value
 
     if (autoCompleteListShow) {
@@ -291,6 +291,28 @@ const Footer: FC = () => {
       inputRef.current?.setSelectionRange(end, end)
       inputRef.current?.focus()
     })
+  }
+
+  const handleInsertPageUrl = () => {
+    const url = window.location.href
+    if (!url) return
+    const newMessage = `${message.slice(0, selectionEnd)}${url}${message.slice(selectionEnd)}`
+
+    const start = selectionStart
+    const end = selectionEnd + newMessage.length - message.length
+
+    updateAtUserAtRecord(newMessage, start, end, 0)
+    send(messageInputDomain.command.InputCommand(newMessage))
+
+    requestIdleCallback(() => {
+      inputRef.current?.setSelectionRange(end, end)
+      inputRef.current?.focus()
+    })
+  }
+
+  const handleAskAi = () => {
+    const event = new CustomEvent('open-ai-summary-panel')
+    window.dispatchEvent(event)
   }
 
   const handleInjectImage = async (file: File) => {
@@ -399,15 +421,37 @@ const Footer: FC = () => {
       <MessageInput
         ref={shareRef}
         value={message}
-        onInput={handleInput}
+        onChange={handleChange}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
         loading={inputLoading}
         onPaste={handlePaste}
         onKeyDown={handleKeyDown}
         maxLength={MESSAGE_MAX_LENGTH}
       ></MessageInput>
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <EmojiButton onSelect={handleInjectEmoji}></EmojiButton>
         <ImageButton disabled={inputLoading} onSelect={handleInjectImage}></ImageButton>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="text-slate-500"
+          onClick={handleInsertPageUrl}
+          title="插入目前頁面連結"
+        >
+          <LinkIcon size={18} />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="rounded-full border-slate-200 text-xs font-semibold text-slate-600"
+          onClick={handleAskAi}
+        >
+          <BotIcon className="mr-1" size={14} />
+          問 AI
+        </Button>
         <Button className="ml-auto" size="sm" disabled={isSending || inputLoading} onClick={handleSend}>
           <span className="mr-2">Send</span>
           <CornerDownLeftIcon className="text-slate-400" size={12}></CornerDownLeftIcon>
@@ -420,3 +464,10 @@ const Footer: FC = () => {
 Footer.displayName = 'Footer'
 
 export default Footer
+  const handleCompositionStart = () => {
+    isComposing.current = true
+  }
+
+  const handleCompositionEnd = () => {
+    isComposing.current = false
+  }

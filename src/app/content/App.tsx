@@ -19,6 +19,8 @@ import AppStatusDomain from '@/domain/AppStatus'
 import { checkDarkMode, cn } from '@/utils'
 import VirtualRoomDomain from '@/domain/VirtualRoom'
 
+const OVERLAY_BASE_Z_INDEX = 2147482000
+
 if (import.meta.env.FIREFOX) {
   window.requestAnimationFrame = window.requestAnimationFrame.bind(window)
 }
@@ -64,6 +66,33 @@ export default function App() {
     window.addEventListener('toggle-ai-summary-panel', handler)
     return () => window.removeEventListener('toggle-ai-summary-panel', handler)
   }, [])
+
+  useEffect(() => {
+    const handler = () => setShowSummary(true)
+    window.addEventListener('open-ai-summary-panel', handler)
+    return () => window.removeEventListener('open-ai-summary-panel', handler)
+  }, [])
+
+  useEffect(() => {
+    if (!showSummary) {
+      return
+    }
+    setTopPanel('summary')
+    if (appOpenStatus) {
+      send(appStatusDomain.command.UpdateOpenCommand(false))
+    }
+  }, [showSummary, appOpenStatus, appStatusDomain, send])
+
+  const previousAppOpenStatusRef = useRef(appOpenStatus)
+
+  useEffect(() => {
+    const previous = previousAppOpenStatusRef.current
+    previousAppOpenStatusRef.current = appOpenStatus
+
+    if (!previous && appOpenStatus && showSummary) {
+      setShowSummary(false)
+    }
+  }, [appOpenStatus, showSummary])
 
   // 🧠 綁定事件：接收「reset-buttons-hidden」來重置按鈕隱藏狀態
   useEffect(() => {
@@ -120,12 +149,14 @@ export default function App() {
         ? 'dark'
         : 'light'
       : (userInfo?.themeMode ?? (checkDarkMode() ? 'dark' : 'light'))
+  const getPanelZIndex = (panel: 'main' | 'summary') =>
+    (topPanel === panel ? OVERLAY_BASE_Z_INDEX + 1 : OVERLAY_BASE_Z_INDEX)
 
   return (
     <div id="app" className={cn('contents', themeMode)}>
       {appStatusLoadIsFinished && (
         <>
-          <AppMain zIndex={topPanel === 'main' ? 1001 : 1000} onMouseDown={() => setTopPanel('main')}>
+          <AppMain zIndex={getPanelZIndex('main')} onMouseDown={() => setTopPanel('main')}>
             <Header />
             <div className="flex size-full flex-1 overflow-hidden">
               <Main key="chat-main" />
@@ -151,7 +182,7 @@ export default function App() {
         <div
           onMouseDown={() => setTopPanel('summary')}
           style={{
-            zIndex: topPanel === 'summary' ? 1001 : 1000,
+            zIndex: getPanelZIndex('summary'),
             position: 'fixed',
             top: 0,
             right: 0,
