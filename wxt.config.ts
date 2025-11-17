@@ -22,13 +22,19 @@ export default defineConfig({
         '48': 'logo.png',
         '128': 'logo.png'
       },
-      action: {}
-    }
-    return {
-      chrome: {
-        ...common
+      action: {},
+      content_security_policy: {
+        extension_pages: "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline';"
       },
-      firefox: {
+      web_accessible_resources: [
+        {
+          resources: ["history.html", "options.html"],
+          matches: ["<all_urls>"]
+        }
+      ]
+    }
+    if (browser === 'firefox') {
+      return {
         ...common,
         browser_specific_settings: {
           gecko: {
@@ -36,10 +42,11 @@ export default defineConfig({
           }
         }
       }
-    }[browser]
+    }
+    return common
   },
 
-  vite: (env) => ({
+  vite: (env: any) => ({
     define: {
       __DEV__: env.mode === 'development',
       __NAME__: JSON.stringify(name)

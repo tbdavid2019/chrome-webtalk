@@ -40,11 +40,11 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     summarySectionHint: '幫你抓重點',
     chatSectionTitle: '問 AI',
     chatSectionHint: '延伸追問',
-    summarize: '開始摘要',
+    summarize: '濃縮',
     speaking: '朗讀',
     copy: '複製',
     image: '匯出圖片',
-    markdown: '匯出 .md',
+    markdown: 'markdown',
     retry: '重新摘要',
     loading: '摘要中...',
     noContent: '請先點上方按鈕開始摘要...',
@@ -71,11 +71,11 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     summarySectionHint: '轻鬆掌握重點',
     chatSectionTitle: '问 AI',
     chatSectionHint: '继续追问',
-    summarize: '开始摘要',
+    summarize: '浓缩',
     speaking: '朗读',
     copy: '复制',
     image: '导出图片',
-    markdown: '导出 .md',
+    markdown: 'markdown',
     retry: '重新摘要',
     loading: '摘要中...',
     noContent: '请先点击上方按钮开始摘要...',
@@ -102,11 +102,11 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     summarySectionHint: 'Capture key ideas',
     chatSectionTitle: 'Ask AI',
     chatSectionHint: 'Follow-up questions',
-    summarize: 'Summarize',
+    summarize: 'Condense',
     speaking: 'Speak',
     copy: 'Copy',
     image: 'Export Image',
-    markdown: 'Export .md',
+    markdown: 'Markdown',
     retry: 'Retry',
     loading: 'Summarizing...',
     noContent: 'Click the button above to generate summary...',
@@ -461,6 +461,15 @@ ${summaryForPrompt}`
             <p className="text-xs text-slate-400">{text.panelSubtitle}</p>
           </div>
           <div className="flex items-center gap-2">
+            <select
+              className="rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-xs font-medium text-slate-700 focus:border-slate-400 focus:ring-slate-400"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as Lang)}
+            >
+              <option value="zh_TW">正體中文</option>
+              <option value="zh_CN">简体中文</option>
+              <option value="en">English</option>
+            </select>
             <button
               onClick={handleOpenHistory}
               className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
@@ -562,37 +571,27 @@ ${summaryForPrompt}`
               </div>
             </div>
             <div className="space-y-4 p-5">
-              <select
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-sm font-medium text-slate-700 focus:border-slate-400 focus:ring-slate-400"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as Lang)}
-              >
-                <option value="zh_TW">正體中文</option>
-                <option value="zh_CN">简体中文</option>
-                <option value="en">English</option>
-              </select>
-
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={onClickSummarize}
                   disabled={loading}
-                  className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm disabled:bg-slate-400"
+                  className="rounded-full bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm disabled:bg-slate-400"
                 >
                   {!hasApiKey ? '⚠️ Please set API Key first' : loading ? text.loading : text.summarize}
                 </button>
                 <button
                   onClick={copy}
                   disabled={!summary}
-                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
                 >
-                  📋 {text.copy}
+                  {text.copy}
                 </button>
                 <button
                   onClick={exportMarkdown}
                   disabled={!summary}
-                  className="rounded-full bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 transition hover:bg-amber-200 disabled:opacity-40"
+                  className="rounded-full bg-amber-100 px-3 py-2 text-sm font-medium text-amber-800 transition hover:bg-amber-200 disabled:opacity-40"
                 >
-                  💾 {text.markdown}
+                  {text.markdown}
                 </button>
               </div>
 
@@ -604,7 +603,7 @@ ${summaryForPrompt}`
             </div>
           </section>
 
-          <section className="rounded-3xl border border-slate-100 bg-white shadow-sm">
+          <section className="flex min-h-0 flex-1 flex-col rounded-3xl border border-slate-100 bg-white shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{text.chatSectionTitle}</p>
@@ -612,10 +611,10 @@ ${summaryForPrompt}`
               </div>
               <span className="text-xs font-medium text-slate-400">{new Date().toLocaleDateString()}</span>
             </div>
-            <div className="space-y-4 p-5">
+            <div className="flex min-h-0 flex-1 flex-col space-y-4 p-5">
               <div
                 ref={chatListRef}
-                className="max-h-60 space-y-3 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/60 p-3 text-sm"
+                className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/60 p-3 text-sm"
               >
                 {chatMessages.length === 0 ? (
                   <p className="text-xs text-slate-500">{text.chatEmpty}</p>
@@ -646,7 +645,7 @@ ${summaryForPrompt}`
                 )}
                 {chatLoading && <p className="text-xs text-blue-500">{text.chatThinking}</p>}
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-wrap items-end gap-3">
                 <Textarea
                   value={chatInput}
                   placeholder={text.chatPlaceholder}
@@ -667,17 +666,15 @@ ${summaryForPrompt}`
                     chatInputIsComposingRef.current = false
                   }}
                   disabled={chatLoading || !canChat}
-                  className="rounded-2xl border border-slate-200 bg-white p-3 text-sm shadow-sm focus-visible:ring-slate-400"
+                  className="flex-1 rounded-2xl border border-slate-200 bg-white p-3 text-sm shadow-sm focus-visible:ring-slate-400"
                 />
-                <div className="flex justify-end">
-                  <button
-                    onClick={sendFollowUpQuestion}
-                    disabled={chatLoading || !chatInput.trim() || !canChat}
-                    className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 disabled:bg-slate-300"
-                  >
-                    {chatLoading ? text.chatThinking : text.chatSend}
-                  </button>
-                </div>
+                <button
+                  onClick={sendFollowUpQuestion}
+                  disabled={chatLoading || !chatInput.trim() || !canChat}
+                  className="shrink-0 rounded-full bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 disabled:bg-slate-300"
+                >
+                  {chatLoading ? text.chatThinking : text.chatSend}
+                </button>
               </div>
             </div>
           </section>

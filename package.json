@@ -1,7 +1,7 @@
 {
   "name": "web-talk-333",
   "displayName": "WebTalk 333 - Chat and Summarize on any website.",
-  "version": "1.2.1",
+  "version": "1.2.3",
   "description": "Chat with friends on any website. Summary of the page content. WebRTC P2P.",
   "type": "module",
   "scripts": {
