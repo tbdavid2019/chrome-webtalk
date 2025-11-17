@@ -4,6 +4,11 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY } from '@/types/summaryHistory'
 
+// 確保在擴充套件環境中運行
+if (typeof browser === 'undefined' || !browser.storage) {
+  console.error('此頁面只能在 Chrome 擴充套件環境中運行')
+}
+
 const sortEntries = (entries: SummaryHistoryEntry[]) =>
   [...entries].sort((a, b) => b.createdAt - a.createdAt)
 
@@ -20,7 +25,7 @@ const HistoryApp = () => {
 
   useEffect(() => {
     loadHistory()
-    const listener = (changes: Record<string, browser.Storage.StorageChange>, areaName: string) => {
+    const listener = (changes: Record<string, any>, areaName: string) => {
       if (areaName === 'local' && HISTORY_STORAGE_KEY in changes) {
         loadHistory()
       }
