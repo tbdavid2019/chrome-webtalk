@@ -12,6 +12,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { nanoid } from 'nanoid'
 import { FALLBACK_GROQ_API_KEY, FALLBACK_GROQ_BASE_URL, FALLBACK_GROQ_MODEL } from '@/constants/apiDefaults'
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY, HISTORY_LIMIT } from '@/types/summaryHistory'
+import { useRemeshDomain, useRemeshSend } from 'remesh-react'
+import AppStatusDomain from '@/domain/AppStatus'
+import { XIcon } from 'lucide-react'
 
 const DEFAULT_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || FALLBACK_GROQ_API_KEY
 const DEFAULT_API_BASE_URL = import.meta.env.VITE_GEMINI_API_BASE_URL || FALLBACK_GROQ_BASE_URL
@@ -34,11 +37,11 @@ const detectBrowserLang = (): Lang => {
 
 const LANG_MAP: Record<Lang, Record<string, string>> = {
   zh_TW: {
-    title: 'AI 工具',
+    title: 'AI 空間',
     panelSubtitle: '智慧摘要與對談',
     summarySectionTitle: '摘要',
     summarySectionHint: '幫你抓重點',
-    chatSectionTitle: '問 AI',
+    chatSectionTitle: '追問與對話',
     chatSectionHint: '延伸追問',
     summarize: '濃縮',
     speaking: '朗讀',
@@ -47,29 +50,29 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     markdown: 'markdown',
     retry: '重新摘要',
     loading: '摘要中...',
-    noContent: '請先點上方按鈕開始摘要...',
+    noContent: '點擊下方按鈕以濃縮並分析此網頁重點。',
     copied: '✅ 已複製到剪貼簿',
     copyFail: '❌ 複製失敗',
     exportFail: '❌ 匯出區塊未找到',
     pageFail: '❗ 無法取得頁面內容',
     noText: '⚠️ 沒有取得頁面文字，無法進行摘要',
     close: '✕',
-    chatTitle: '續問 AI',
+    chatTitle: '繼續追問',
     chatPlaceholder: '就這個頁面提問...',
     chatSend: '送出',
-    chatEmpty: '目前沒有續問紀錄',
-    chatNeedSummary: '請先產生摘要後再提問',
+    chatEmpty: '目前沒有對話紀錄',
+    chatNeedSummary: '請先產生網頁摘要',
     chatThinking: 'AI 思考中...',
     chatError: '⚠️ 無法取得回覆，請稍後再試',
     clear: '清除',
     history: '歷史'
   },
   zh_CN: {
-    title: 'AI 工具',
+    title: 'AI 空间',
     panelSubtitle: '智能摘要與對談',
     summarySectionTitle: '摘要',
     summarySectionHint: '轻鬆掌握重點',
-    chatSectionTitle: '问 AI',
+    chatSectionTitle: '追问與对话',
     chatSectionHint: '继续追问',
     summarize: '浓缩',
     speaking: '朗读',
@@ -78,7 +81,7 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     markdown: 'markdown',
     retry: '重新摘要',
     loading: '摘要中...',
-    noContent: '请先点击上方按钮开始摘要...',
+    noContent: '点击下方按钮以浓缩並分析此网页重点。',
     copied: '✅ 已复制到剪贴板',
     copyFail: '❌ 复制失败',
     exportFail: '❌ 导出区域未找到',
@@ -88,8 +91,8 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     chatTitle: '继续追问',
     chatPlaceholder: '就这个页面发问...',
     chatSend: '发送',
-    chatEmpty: '目前没有追问记录',
-    chatNeedSummary: '请先生成摘要后再提问',
+    chatEmpty: '目前没有对话记录',
+    chatNeedSummary: '请先生成网页摘要',
     chatThinking: 'AI 思考中...',
     chatError: '⚠️ 暂时无法回应，请稍后再试',
     clear: '清除',
@@ -100,7 +103,7 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     panelSubtitle: 'Summaries & Chat',
     summarySectionTitle: 'Summary',
     summarySectionHint: 'Capture key ideas',
-    chatSectionTitle: 'Ask AI',
+    chatSectionTitle: 'Discuss & Ask',
     chatSectionHint: 'Follow-up questions',
     summarize: 'Condense',
     speaking: 'Speak',
@@ -109,7 +112,7 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     markdown: 'Markdown',
     retry: 'Retry',
     loading: 'Summarizing...',
-    noContent: 'Click the button above to generate summary...',
+    noContent: 'Click the button below to condense this page.',
     copied: '✅ Copied to clipboard',
     copyFail: '❌ Copy failed',
     exportFail: '❌ Export target not found',
@@ -119,16 +122,17 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     chatTitle: 'Follow-up Chat',
     chatPlaceholder: 'Ask something about this page...',
     chatSend: 'Send',
-    chatEmpty: 'No follow-up questions yet',
-    chatNeedSummary: 'Generate a summary first before asking',
+    chatEmpty: 'No conversations yet',
+    chatNeedSummary: 'Generate a summary first',
     chatThinking: 'AI is typing...',
     chatError: '⚠️ Unable to fetch a reply, please try again',
     clear: 'Clear',
-    history: 'History'
   }
 }
 
 export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
+  const send = useRemeshSend()
+  const appStatusDomain = useRemeshDomain(AppStatusDomain())
   const [language, setLanguage] = useState<Lang>(detectBrowserLang())
   const { summarize, loading, summary, clearSummary } = useSummarize()
   const [pageText, setPageText] = useState('')
@@ -206,7 +210,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   }
 
   const handleOpenHistory = () => {
-    const historyUrl = browser.runtime.getURL('history.html')
+    const historyUrl = browser.runtime.getURL('/history.html')
     window.open(historyUrl, '_blank', 'noopener,noreferrer')
   }
 
@@ -453,48 +457,60 @@ ${summaryForPrompt}`
         animate={{ opacity: 1, x: '0%' }}
         exit={{ opacity: 0, x: '100%' }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="fixed right-0 top-0 z-infinity grid h-full w-[420px] min-w-[360px] max-w-[800px] grid-rows-[auto_1fr] border-l border-slate-100 bg-white font-sans shadow-2xl"
+        className="fixed right-0 top-0 z-infinity grid h-full w-[420px] min-w-[360px] max-w-[800px] grid-rows-[auto_1fr] border-l border-border bg-background shadow-2xl"
       >
-        <div className="flex items-center justify-between border-b border-slate-100 bg-white/90 px-5 py-3 backdrop-blur">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">{text.title}</p>
-            <p className="text-xs text-slate-400">{text.panelSubtitle}</p>
+        <div className="flex h-12 items-center justify-between border-b border-border bg-background px-4">
+          <div className="flex items-center gap-1.5 py-1">
+            <span className="text-sm font-extrabold tracking-wider text-foreground">✨ {text.title}</span>
           </div>
           <div className="flex items-center gap-2">
-            <select
-              className="rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-xs font-medium text-slate-700 focus:border-slate-400 focus:ring-slate-400"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as Lang)}
-            >
-              <option value="zh_TW">正體中文</option>
-              <option value="zh_CN">简体中文</option>
-              <option value="en">English</option>
-            </select>
+            <div className="flex rounded-full bg-muted p-0.5 border border-border/80 h-7 items-center shrink-0">
+              {(
+                [
+                  { code: 'zh_TW', label: '繁' },
+                  { code: 'zh_CN', label: '簡' },
+                  { code: 'en', label: 'En' }
+                ] as const
+              ).map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  className={`px-2.5 h-full text-[10px] font-bold rounded-full transition-all ${
+                    language === lang.code
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
             <button
               onClick={handleOpenHistory}
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+              className="rounded-full border border-border bg-background px-3 h-7 text-xs font-semibold text-foreground transition hover:bg-muted shrink-0"
             >
               {text.history}
             </button>
             <button
               onClick={() => setShowApiSettings(!showApiSettings)}
-              className="rounded-full border border-slate-200 px-2 py-1 text-xs text-slate-600 transition hover:bg-slate-50"
+              className="flex size-7 items-center justify-center rounded-full border border-border bg-background text-sm text-foreground transition hover:bg-muted shrink-0"
               title="API setting 設置"
             >
               ⚙️
             </button>
             <button
               onClick={onClose}
-              className="rounded-full border border-slate-200 px-2 py-1 text-xs text-slate-500 transition hover:bg-slate-50"
+              className="flex size-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground shrink-0"
+              title="關閉 AI 空間"
             >
-              {text.close}
+              <XIcon size={14} />
             </button>
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col space-y-5 overflow-y-auto bg-gradient-to-b from-slate-50 to-white p-5">
+        <div className="flex flex-col min-h-0 flex-1 bg-background p-4 justify-between space-y-3">
           {showApiSettings && (
-            <div className="space-y-3 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="space-y-3 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shrink-0">
               <h3 className="text-sm font-semibold text-slate-700">API setting</h3>
               <div className="space-y-2">
                 <Label htmlFor="api-key" className="text-sm text-slate-500">
@@ -553,101 +569,126 @@ ${summaryForPrompt}`
             </div>
           )}
 
-          <section className="rounded-3xl border border-slate-100 bg-white shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{text.summarySectionTitle}</p>
-                <p className="text-xs text-slate-400">{text.summarySectionHint}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                {pageHost && <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">{pageHost}</span>}
-                <button
-                  onClick={handleClear}
-                  disabled={!summary?.trim() && chatMessages.length === 0}
-                  className="rounded-full border border-slate-200 px-3 py-1 font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
-                >
-                  {text.clear}
-                </button>
-              </div>
-            </div>
-            <div className="space-y-4 p-5">
-              <div className="flex flex-wrap gap-2">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            {!summary ? (
+              /* 1. 未產生摘要時的引導介面 */
+              <div className="flex flex-col flex-1 items-center justify-center p-6 text-center gap-y-4 bg-muted/40 rounded-2xl border border-dashed border-border/80 my-auto">
+                <span className="text-3xl">✨</span>
+                <p className="text-base text-muted-foreground font-medium leading-relaxed max-w-[280px]">
+                  點擊下方按鈕以濃縮並分析此網頁重點。
+                </p>
                 <button
                   onClick={onClickSummarize}
                   disabled={loading}
-                  className="rounded-full bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm disabled:bg-slate-400"
+                  className="rounded-full bg-primary px-6 py-2.5 text-base font-bold text-primary-foreground shadow shadow-primary/20 hover:bg-primary/95 transition-all disabled:opacity-50"
                 >
-                  {!hasApiKey ? '⚠️ Please set API Key first' : loading ? text.loading : text.summarize}
-                </button>
-                <button
-                  onClick={copy}
-                  disabled={!summary}
-                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
-                >
-                  {text.copy}
-                </button>
-                <button
-                  onClick={exportMarkdown}
-                  disabled={!summary}
-                  className="rounded-full bg-amber-100 px-3 py-2 text-sm font-medium text-amber-800 transition hover:bg-amber-200 disabled:opacity-40"
-                >
-                  {text.markdown}
+                  {loading ? text.loading : '✨ 濃縮此網頁'}
                 </button>
               </div>
-
-              <div
-                id="summary-content"
-                className="flex-1 overflow-y-auto whitespace-pre-wrap rounded-2xl border border-slate-100 bg-gradient-to-b from-white to-slate-50 p-4 text-sm leading-relaxed shadow-inner"
-                dangerouslySetInnerHTML={{ __html: markedHtml }}
-              />
-            </div>
-          </section>
-
-          <section className="flex min-h-0 flex-1 flex-col rounded-3xl border border-slate-100 bg-white shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{text.chatSectionTitle}</p>
-                <p className="text-xs text-slate-400">{text.chatSectionHint}</p>
-              </div>
-              <span className="text-xs font-medium text-slate-400">{new Date().toLocaleDateString()}</span>
-            </div>
-            <div className="flex min-h-0 flex-1 flex-col space-y-4 p-5">
+            ) : (
+              /* 2. 已產生摘要時的對話流介面 (滾動區域) */
               <div
                 ref={chatListRef}
-                className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/60 p-3 text-sm"
+                className="flex-1 space-y-4 overflow-y-auto rounded-2xl border border-border bg-muted/20 p-4"
               >
-                {chatMessages.length === 0 ? (
-                  <p className="text-xs text-slate-500">{text.chatEmpty}</p>
-                ) : (
-                  chatMessages.map((message) => {
-                    const isUser = message.role === 'user'
-                    return (
-                      <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-                        <div
-                          className={`max-w-[90%] rounded-2xl px-4 py-2 text-sm shadow ${
-                            isUser ? 'bg-indigo-600 text-white' : 'border border-slate-100 bg-white text-slate-700'
-                          }`}
-                        >
-                          {isUser ? (
-                            <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                          ) : (
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              className="prose prose-sm prose-slate dark:prose-invert prose-a:underline"
-                            >
-                              {message.content}
-                            </ReactMarkdown>
-                          )}
-                        </div>
+                {/* 網頁摘要氣泡 (置頂呈現) */}
+                <div className="flex flex-col items-start gap-y-1">
+                  <div className="flex items-center justify-between w-full text-xs text-muted-foreground font-semibold px-1">
+                    <span className="flex items-center gap-1">📄 網頁摘要 {pageHost && `(${pageHost})`}</span>
+                    {/* 精簡快捷動作組 */}
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <button
+                        onClick={onClickSummarize}
+                        disabled={loading}
+                        className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
+                        title={text.retry}
+                      >
+                        🔄 {loading ? '...' : text.retry}
+                      </button>
+                      <span className="text-border">|</span>
+                      <button
+                        onClick={copy}
+                        className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
+                        title={text.copy}
+                      >
+                        📋 複製
+                      </button>
+                      <span className="text-border">|</span>
+                      <button
+                        onClick={exportMarkdown}
+                        className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
+                        title={text.markdown}
+                      >
+                        📄 MD
+                      </button>
+                      <span className="text-border">|</span>
+                      <button
+                        onClick={handleClear}
+                        className="hover:text-destructive transition flex items-center gap-0.5 text-xs font-semibold"
+                        title={text.clear}
+                      >
+                        🗑️ {text.clear}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="w-full rounded-2xl bg-background border border-border px-4 py-3 text-base leading-relaxed text-foreground/90 shadow-sm">
+                    <div
+                      className="prose prose-sm prose-slate dark:prose-invert max-w-none text-base"
+                      dangerouslySetInnerHTML={{ __html: markedHtml }}
+                    />
+                  </div>
+                </div>
+
+                {/* 續問對話記錄 */}
+                {chatMessages.map((message) => {
+                  const isUser = message.role === 'user'
+                  return (
+                    <div key={message.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} gap-y-1`}>
+                      <span className="text-xs text-muted-foreground px-1">
+                        {isUser ? '👤 你' : '🤖 AI'}
+                      </span>
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-base shadow-sm ${
+                          isUser 
+                            ? 'bg-primary text-primary-foreground rounded-tr-sm' 
+                            : 'border border-border bg-background text-foreground rounded-tl-sm'
+                        }`}
+                      >
+                        {isUser ? (
+                          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                        ) : (
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            className="prose prose-sm prose-slate dark:prose-invert prose-a:underline text-base"
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        )}
                       </div>
-                    )
-                  })
+                    </div>
+                  )
+                })}
+
+                {/* AI 思考中 */}
+                {chatLoading && (
+                  <div className="flex flex-col items-start gap-y-1">
+                    <span className="text-xs text-muted-foreground px-1">🤖 AI</span>
+                    <div className="rounded-2xl border border-border bg-background rounded-tl-sm px-4 py-2.5 text-base text-primary font-medium animate-pulse">
+                      {text.chatThinking}
+                    </div>
+                  </div>
                 )}
-                {chatLoading && <p className="text-xs text-blue-500">{text.chatThinking}</p>}
               </div>
-              <div className="flex flex-wrap items-end gap-3">
+            )}
+          </div>
+
+          {/* 底部功能與輸入框控制欄 */}
+          <div className="flex flex-col gap-2 pt-1 shrink-0">
+            {summary && (
+              <div className="flex items-end gap-2">
                 <Textarea
                   value={chatInput}
+                  rows={1}
                   placeholder={text.chatPlaceholder}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -666,18 +707,39 @@ ${summaryForPrompt}`
                     chatInputIsComposingRef.current = false
                   }}
                   disabled={chatLoading || !canChat}
-                  className="flex-1 rounded-2xl border border-slate-200 bg-white p-3 text-sm shadow-sm focus-visible:ring-slate-400"
+                  className="flex-1 min-h-[38px] max-h-24 resize-none rounded-xl border border-border bg-muted px-3 py-2 text-base focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-foreground"
                 />
                 <button
                   onClick={sendFollowUpQuestion}
                   disabled={chatLoading || !chatInput.trim() || !canChat}
-                  className="shrink-0 rounded-full bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 disabled:bg-slate-300"
+                  className="shrink-0 rounded-full bg-primary px-5 py-2.5 text-base font-bold text-primary-foreground shadow hover:bg-primary/95 transition disabled:opacity-50"
                 >
-                  {chatLoading ? text.chatThinking : text.chatSend}
+                  {text.chatSend}
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              {/* 左下角功能切換雙鍵膠囊 */}
+              <div className="flex rounded-full bg-muted p-0.5 border border-border/80 shrink-0">
+                <button
+                  onClick={() => {
+                    send(appStatusDomain.command.UpdateOpenCommand(true))
+                    onClose()
+                  }}
+                  className="px-2.5 py-1 text-xs font-bold rounded-full text-muted-foreground hover:text-foreground transition-all"
+                >
+                  💬 聊天
+                </button>
+                <button
+                  className="px-2.5 py-1 text-xs font-bold rounded-full bg-primary text-primary-foreground shadow-sm cursor-default"
+                  disabled
+                >
+                  ✨ AI
                 </button>
               </div>
             </div>
-          </section>
+          </div>
         </div>
       </motion.div>
     </AnimatePresence>

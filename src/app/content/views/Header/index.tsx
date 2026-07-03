@@ -48,17 +48,17 @@ const Header: FC = () => {
   }
 
   return (
-    <div className="z-10 grid h-12 grid-flow-col grid-cols-[theme('spacing.20')_auto_theme('spacing.20')] items-center justify-between rounded-t-xl bg-white px-4 backdrop-blur-lg dark:bg-slate-950">
-      <Avatar className="size-8 rounded-sm">
+    <div className="z-10 grid h-12 grid-flow-col grid-cols-[theme('spacing.20')_auto_theme('spacing.20')] items-center justify-between border-b border-border bg-background px-4">
+      <Avatar className="size-8 rounded-md">
         <AvatarImage src={siteInfo.icon} alt="favicon" />
         <AvatarFallback>
-          <Globe2Icon size="100%" className="text-gray-400" />
+          <Globe2Icon size="100%" className="text-muted-foreground" />
         </AvatarFallback>
       </Avatar>
       <HoverCard>
         <HoverCardTrigger asChild>
-          <Button className="overflow-hidden rounded-md p-2" variant="link">
-            <span className="truncate text-lg font-semibold text-slate-600 dark:text-slate-50">
+          <Button className="overflow-hidden rounded-md p-2 hover:no-underline" variant="link">
+            <span className="truncate text-sm font-semibold text-foreground">
               {siteInfo.hostname.replace(/^www\./i, '')}
             </span>
           </Button>
@@ -124,19 +124,10 @@ const Header: FC = () => {
         </HoverCardContent>
       </HoverCard>
       <div className="flex items-center gap-2">
-        <Button
-          onClick={handleClose}
-          variant="ghost"
-          size="icon"
-          className="size-8 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800"
-          aria-label="關閉聊天"
-        >
-          <XIcon size={18} />
-        </Button>
         <HoverCard>
           <HoverCardTrigger asChild>
-            <Button className="rounded-md p-0 hover:no-underline" variant="link">
-              <div className="relative flex items-center gap-x-1 text-nowrap text-xs text-slate-500 hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:h-px hover:after:w-full hover:after:bg-black dark:text-slate-100 dark:hover:after:bg-white">
+            <Button className="rounded-md p-0 hover:no-underline animate-in fade-in" variant="link">
+              <div className="flex items-center gap-x-1 text-nowrap text-xs text-muted-foreground hover:text-foreground">
                 <div className="flex items-center gap-x-1 pt-px">
                   <span className="relative flex size-2">
                     <span
@@ -186,6 +177,14 @@ const Header: FC = () => {
             </ScrollArea>
           </HoverCardContent>
         </HoverCard>
+        <button
+          onClick={handleClose}
+          className="flex size-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground shrink-0"
+          title="關閉聊天"
+          aria-label="關閉聊天"
+        >
+          <XIcon size={14} />
+        </button>
       </div>
     </div>
   )

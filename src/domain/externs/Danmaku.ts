@@ -7,6 +7,7 @@ export interface Danmaku {
   clear: () => void
   mount: (root: HTMLElement) => void
   unmount: () => void
+  setSpeed: (speed: 'slow' | 'normal' | 'fast') => void
 }
 
 export const DanmakuExtern = Remesh.extern<Danmaku>({
@@ -25,6 +26,9 @@ export const DanmakuExtern = Remesh.extern<Danmaku>({
     },
     unshift: () => {
       throw new Error('"unshift" not implemented.')
+    },
+    setSpeed: () => {
+      throw new Error('"setSpeed" not implemented.')
     }
   }
 })

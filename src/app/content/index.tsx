@@ -91,6 +91,24 @@ export default defineContentScript({
       onMount: (container) => {
         const app = createElement('<div id="root"></div>')
         container.append(app)
+
+        const fontStyle = document.createElement('style')
+        fontStyle.textContent = `
+          @font-face {
+            font-family: 'JetBrainsMono';
+            src: url('${browser.runtime.getURL('/fonts/JetBrainsMono-Medium.woff2' as any)}') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+          }
+          @font-face {
+            font-family: 'MapleMono';
+            src: url('${browser.runtime.getURL('/fonts/MapleMonoNormal-Medium.woff2' as any)}') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+          }
+        `
+        container.append(fontStyle)
+
         const root = createRoot(app)
         root.render(
           <React.StrictMode>

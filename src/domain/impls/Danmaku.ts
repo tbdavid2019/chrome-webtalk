@@ -69,6 +69,20 @@ export class Danmaku {
     }
     this.manager!.clear()
   }
+
+  setSpeed(speed: 'slow' | 'normal' | 'fast') {
+    if (!this.manager) return
+    if (speed === 'slow') {
+      // @ts-ignore
+      this.manager.durationRange = [12000, 15000]
+    } else if (speed === 'fast') {
+      // @ts-ignore
+      this.manager.durationRange = [4000, 6000]
+    } else {
+      // @ts-ignore
+      this.manager.durationRange = [7000, 10000]
+    }
+  }
 }
 
 export const DanmakuImpl = DanmakuExtern.impl(new Danmaku())

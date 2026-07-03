@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/Form'
 import { Input } from '@/components/ui/Input'
 import UserInfoDomain, { type UserInfo } from '@/domain/UserInfo'
+import AppStatusDomain from '@/domain/AppStatus'
 import { cn, generateRandomAvatar } from '@/utils'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/RadioGroup'
 import { Label } from '@/components/ui/Label'
@@ -26,6 +27,8 @@ const defaultUserInfo: UserInfo = {
   createTime: Date.now(),
   themeMode: 'system',
   danmakuEnabled: true,
+  danmakuOpacity: 0.8,
+  danmakuSpeed: 'normal',
   notificationEnabled: true,
   notificationType: 'at'
 }
@@ -54,6 +57,19 @@ const formSchema = v.object({
     )
   ),
   danmakuEnabled: v.boolean(),
+  danmakuOpacity: v.optional(
+    v.pipe(
+      v.number(),
+      v.minValue(0.1),
+      v.maxValue(1.0)
+    )
+  ),
+  danmakuSpeed: v.optional(
+    v.pipe(
+      v.string(),
+      v.union([v.literal('slow'), v.literal('normal'), v.literal('fast')])
+    )
+  ),
   notificationEnabled: v.boolean(),
   notificationType: v.pipe(
     v.string(),
@@ -66,6 +82,9 @@ const ProfileForm: FC = () => {
 
   const userInfoDomain = useRemeshDomain(UserInfoDomain())
   const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
+
+  const appStatusDomain = useRemeshDomain(AppStatusDomain())
+  const buttonsHidden = useRemeshQuery(appStatusDomain.query.ButtonsHiddenQuery())
 
   const form = useForm({
     resolver: valibotResolver(formSchema),
@@ -125,7 +144,7 @@ const ProfileForm: FC = () => {
                     onClick={handleRefreshAvatar}
                   >
                     <RefreshCcwIcon size={14} />
-                    Ugly Avatar 醜萌頭像
+                    Random Avatar 隨機頭像
                   </Button>
                 </div>
               </FormControl>
@@ -176,6 +195,94 @@ const ProfileForm: FC = () => {
             </FormItem>
           )}
         />
+
+        {form.watch('danmakuEnabled') && (
+          <div className="pl-6 space-y-4 border-l-2 border-slate-200 dark:border-slate-800">
+            <FormField
+              control={form.control}
+              name="danmakuOpacity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold text-xs text-slate-500 dark:text-slate-400">Danmaku Opacity 彈幕透明度</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      className="flex gap-x-4"
+                      onValueChange={(val) => field.onChange(parseFloat(val))}
+                      value={String(field.value ?? 0.8)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="0.3" id="op-30" />
+                        <Label className="cursor-pointer text-xs" htmlFor="op-30">30%</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="0.5" id="op-50" />
+                        <Label className="cursor-pointer text-xs" htmlFor="op-50">50%</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="0.8" id="op-80" />
+                        <Label className="cursor-pointer text-xs" htmlFor="op-80">80%</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="1" id="op-100" />
+                        <Label className="cursor-pointer text-xs" htmlFor="op-100">100%</Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="danmakuSpeed"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold text-xs text-slate-500 dark:text-slate-400">Danmaku Speed 彈幕速度</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      className="flex gap-x-4"
+                      onValueChange={field.onChange}
+                      value={field.value ?? 'normal'}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="slow" id="sp-slow" />
+                        <Label className="cursor-pointer text-xs" htmlFor="sp-slow">Slow 慢</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="normal" id="sp-normal" />
+                        <Label className="cursor-pointer text-xs" htmlFor="sp-normal">Normal 正常</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="fast" id="sp-fast" />
+                        <Label className="cursor-pointer text-xs" htmlFor="sp-fast">Fast 快</Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+
+        <FormItem>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="show-floating-buttons"
+              onCheckedChange={(checked) => {
+                send(appStatusDomain.command.UpdateButtonsHiddenCommand(!checked))
+              }}
+              checked={!buttonsHidden}
+            />
+            <Label className="cursor-pointer font-semibold" htmlFor="show-floating-buttons">
+              Show Floating Button 顯示右側懸浮按鈕
+            </Label>
+          </div>
+          <FormDescription>
+            Show the floating chat and AI buttons on the right side of the screen. / 在螢幕右側顯示聊天和 AI 摘要的懸浮按鈕。如果隱藏，你也可以點擊瀏覽器工具列上的擴充功能圖示來重新顯示。
+          </FormDescription>
+        </FormItem>
 
         <FormField
           control={form.control}

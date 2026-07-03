@@ -112,6 +112,9 @@ const DanmakuDomain = Remesh.domain({
         const onUserInfo$ = fromEvent(userInfoDomain.event.UpdateUserInfoEvent)
         return onUserInfo$.pipe(
           map((userInfo) => {
+            if (userInfo?.danmakuSpeed) {
+              danmakuExtern.setSpeed(userInfo.danmakuSpeed)
+            }
             return userInfo?.danmakuEnabled ? EnableCommand() : DisableCommand()
           })
         )

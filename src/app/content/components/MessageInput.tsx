@@ -44,31 +44,29 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
   ) => {
     return (
       <div className={cn('relative', className)}>
-        <ScrollArea className="box-border max-h-28 w-full rounded-lg border border-input bg-background ring-offset-background focus-within:ring-1 focus-within:ring-ring 2xl:max-h-40">
-          <Textarea
-            ref={ref}
-            onPaste={onPaste}
-            onKeyDown={onKeyDown}
-            autoFocus={autoFocus}
-            maxLength={maxLength}
-            className={cn(
-              'box-border resize-none whitespace-pre-wrap break-words border-none bg-slate-100 pb-5 [field-sizing:content] [word-break:break-word] focus:ring-0 focus:ring-offset-0 dark:bg-slate-800',
-              {
-                'disabled:opacity-100': loading
-              }
-            )}
-            rows={2}
-            value={value}
-            spellCheck={false}
-            onCompositionStart={onCompositionStart}
-            onCompositionEnd={onCompositionEnd}
-            placeholder="Type your message here."
-            onChange={onChange}
-            disabled={disabled || loading}
-          />
-        </ScrollArea>
+        <Textarea
+          ref={ref}
+          onPaste={onPaste}
+          onKeyDown={onKeyDown}
+          autoFocus={autoFocus}
+          maxLength={maxLength}
+          className={cn(
+            'w-full min-h-[38px] max-h-24 resize-none rounded-xl border border-border bg-muted px-3 py-2 text-base focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-foreground pb-6',
+            {
+              'disabled:opacity-100': loading
+            }
+          )}
+          rows={2}
+          value={value}
+          spellCheck={false}
+          onCompositionStart={onCompositionStart}
+          onCompositionEnd={onCompositionEnd}
+          placeholder="Type your message here..."
+          onChange={onChange}
+          disabled={disabled || loading}
+        />
         <div
-          className={cn('absolute bottom-1 right-3 rounded-lg text-xs text-slate-400', {
+          className={cn('absolute bottom-1.5 right-3 rounded-lg text-xs text-muted-foreground', {
             'opacity-50': disabled || loading
           })}
         >

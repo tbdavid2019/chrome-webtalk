@@ -37,7 +37,7 @@ const AppMain: FC<AppMainProps> = ({ children, className, zIndex, onMouseDown })
             zIndex: zIndex
           }}
           className={cn(
-            'fixed top-0 right-0 z-infinity h-full grid grid-rows-[auto_1fr_auto] bg-slate-50 dark:bg-slate-950 font-sans shadow-2xl',
+            'fixed top-0 right-0 z-infinity h-full grid grid-rows-[auto_1fr_auto] bg-background text-foreground shadow-2xl border-l border-border',
             className
           )}
           onMouseDown={onMouseDown}
@@ -45,7 +45,7 @@ const AppMain: FC<AppMainProps> = ({ children, className, zIndex, onMouseDown })
           {children}
           <div
             ref={setRef}
-            className="absolute inset-y-0 -left-1 z-infinity w-2 cursor-ew-resize rounded-l-md bg-slate-200 opacity-0 transition-opacity hover:opacity-100 dark:bg-slate-600"
+            className="absolute inset-y-0 -left-0.5 z-infinity w-1 cursor-ew-resize bg-primary/20 opacity-0 transition-opacity hover:opacity-100"
           ></div>
         </motion.div>
       )}

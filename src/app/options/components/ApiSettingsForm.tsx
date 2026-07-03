@@ -24,11 +24,11 @@ const ApiSettingsForm: FC = () => {
   useEffect(() => {
     browser.storage.sync
       .get(['groqApiKey', 'groqApiBaseURL', 'groqModelName'])
-      .then(({ groqApiKey, groqApiBaseURL, groqModelName }) => {
+      .then((res: Record<string, any>) => {
         const nextValues = {
-          apiKey: groqApiKey ?? FALLBACK_GROQ_API_KEY,
-          apiBaseURL: groqApiBaseURL ?? DEFAULT_BASE_URL,
-          apiModelName: groqModelName ?? DEFAULT_MODEL
+          apiKey: (res.groqApiKey as string) ?? FALLBACK_GROQ_API_KEY,
+          apiBaseURL: (res.groqApiBaseURL as string) ?? DEFAULT_BASE_URL,
+          apiModelName: (res.groqModelName as string) ?? DEFAULT_MODEL
         }
         setApiKey(nextValues.apiKey)
         setApiBaseURL(nextValues.apiBaseURL)

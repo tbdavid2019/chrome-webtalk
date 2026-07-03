@@ -11,6 +11,8 @@ export interface UserInfo {
   createTime: number
   themeMode: 'system' | 'light' | 'dark'
   danmakuEnabled: boolean
+  danmakuOpacity?: number
+  danmakuSpeed?: 'slow' | 'normal' | 'fast'
   notificationEnabled: boolean
   notificationType: 'all' | 'at'
 }
