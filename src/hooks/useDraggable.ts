@@ -18,6 +18,7 @@ const useDraggable = (options: DargOptions) => {
   const { initX, initY, maxX = 0, minX = 0, maxY = 0, minY = 0, value, onChange } = options
 
   const mousePosition = useRef({ x: 0, y: 0 })
+  const startMousePos = useRef({ x: 0, y: 0 })
 
   const positionRef = useRef({ x: clamp(initX, minX, maxX), y: clamp(initY, minY, maxY) })
 
@@ -69,7 +70,13 @@ const useDraggable = (options: DargOptions) => {
           mousePosition.current.y = clientY
         }
         if (hasChanged) {
-          hasDraggedRef.current = true
+          const totalDistance = Math.sqrt(
+            Math.pow(clientX - startMousePos.current.x, 2) +
+            Math.pow(clientY - startMousePos.current.y, 2)
+          )
+          if (totalDistance > 4) {
+            hasDraggedRef.current = true
+          }
           const x = clamp(delta.x, minX, maxX)
           const y = clamp(delta.y, minY, maxY)
           positionRef.current = { x, y }
@@ -104,6 +111,7 @@ const useDraggable = (options: DargOptions) => {
   const handleStart = useCallback((e: MouseEvent) => {
     const { clientX, clientY } = e
     mousePosition.current = { x: clientX, y: clientY }
+    startMousePos.current = { x: clientX, y: clientY }
     isMove.current = true
     hasDraggedRef.current = false
     document.documentElement.style.userSelect = 'none'

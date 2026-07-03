@@ -276,6 +276,15 @@ const Footer: FC = () => {
     }
   }
 
+  const handleCompositionStart = () => {
+    isComposing.current = true
+  }
+
+  const handleCompositionEnd = () => {
+    isComposing.current = false
+  }
+
+
   const handleInjectEmoji = (emoji: string) => {
     const newMessage = `${message.slice(0, selectionEnd)}${emoji}${message.slice(selectionEnd)}`
 
@@ -380,7 +389,7 @@ const Footer: FC = () => {
   const root = getRootNode()
 
   return (
-    <div className="relative grid gap-y-2 rounded-b-xl px-4 pb-4 pt-2 before:pointer-events-none before:absolute before:inset-x-4 before:-top-2 before:h-2 before:bg-gradient-to-t before:from-slate-50 before:from-30%  before:to-transparent dark:bg-slate-900 before:dark:from-slate-900">
+    <div className="relative grid gap-y-2 px-4 pb-4 pt-2 border-t border-border bg-background before:pointer-events-none before:absolute before:inset-x-4 before:-top-2 before:h-2 before:bg-gradient-to-t before:from-background before:from-30% before:to-transparent before:dark:from-background">
       <Presence present={autoCompleteListShow}>
         <Portal
           container={root}
@@ -430,31 +439,42 @@ const Footer: FC = () => {
         maxLength={MESSAGE_MAX_LENGTH}
       ></MessageInput>
       <div className="flex items-center gap-2">
+        {/* 左下角功能切換雙鍵膠囊 */}
+        <div className="flex rounded-full bg-muted p-0.5 border border-border/80 shrink-0">
+          <button
+            className="px-2.5 py-1 text-xs font-bold rounded-full bg-primary text-primary-foreground shadow-sm cursor-default"
+            disabled
+          >
+            💬 聊天
+          </button>
+          <button
+            onClick={handleAskAi}
+            className="px-2.5 py-1 text-xs font-bold rounded-full text-muted-foreground hover:text-foreground transition-all"
+          >
+            ✨ AI
+          </button>
+        </div>
+
         <EmojiButton onSelect={handleInjectEmoji}></EmojiButton>
         <ImageButton disabled={inputLoading} onSelect={handleInjectImage}></ImageButton>
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="text-slate-500"
+          className="text-muted-foreground hover:text-foreground size-8 rounded-full"
           onClick={handleInsertPageUrl}
           title="插入目前頁面連結"
         >
-          <LinkIcon size={18} />
+          <LinkIcon size={16} />
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="rounded-full border-slate-200 text-xs font-semibold text-slate-600"
-          onClick={handleAskAi}
+        <Button 
+          className="ml-auto rounded-full text-sm font-bold px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95" 
+          size="sm" 
+          disabled={isSending || inputLoading} 
+          onClick={handleSend}
         >
-          <BotIcon className="mr-1" size={14} />
-          問 AI
-        </Button>
-        <Button className="ml-auto" size="sm" disabled={isSending || inputLoading} onClick={handleSend}>
-          <span className="mr-2">Send</span>
-          <CornerDownLeftIcon className="text-slate-400" size={12}></CornerDownLeftIcon>
+          <span className="mr-1.5">Send</span>
+          <CornerDownLeftIcon className="text-primary-foreground/75" size={10}></CornerDownLeftIcon>
         </Button>
       </div>
     </div>
@@ -464,10 +484,4 @@ const Footer: FC = () => {
 Footer.displayName = 'Footer'
 
 export default Footer
-  const handleCompositionStart = () => {
-    isComposing.current = true
-  }
 
-  const handleCompositionEnd = () => {
-    isComposing.current = false
-  }

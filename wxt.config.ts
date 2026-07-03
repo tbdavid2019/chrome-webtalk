@@ -6,6 +6,7 @@ import svgr from 'vite-plugin-svgr'
 
 export default defineConfig({
   srcDir: path.resolve('src'),
+  outDir: 'output',
   imports: false,
   entrypointsDir: 'app',
   runner: {
@@ -28,7 +29,7 @@ export default defineConfig({
       },
       web_accessible_resources: [
         {
-          resources: ["history.html", "options.html"],
+          resources: ["history.html", "options.html", "fonts/*.woff2"],
           matches: ["<all_urls>"]
         }
       ]

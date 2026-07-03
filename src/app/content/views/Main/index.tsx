@@ -1,4 +1,4 @@
-import { type FC } from 'react'
+import { type FC, useMemo } from 'react'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 
 import MessageList from '../../components/MessageList'
@@ -15,18 +15,21 @@ const Main: FC = () => {
   const userInfoDomain = useRemeshDomain(UserInfoDomain())
   const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
   const _messageList = useRemeshQuery(messageListDomain.query.ListQuery())
-  const messageList = _messageList
-    .map((message) => {
-      if (message.type === MessageType.Normal) {
-        return {
-          ...message,
-          like: message.likeUsers.some((likeUser) => likeUser.userId === userInfo?.id),
-          hate: message.hateUsers.some((hateUser) => hateUser.userId === userInfo?.id)
+  
+  const messageList = useMemo(() => {
+    return _messageList
+      .map((message) => {
+        if (message.type === MessageType.Normal) {
+          return {
+            ...message,
+            like: message.likeUsers.some((likeUser) => likeUser.userId === userInfo?.id),
+            hate: message.hateUsers.some((hateUser) => hateUser.userId === userInfo?.id)
+          }
         }
-      }
-      return message
-    })
-    .toSorted((a, b) => a.sendTime - b.sendTime)
+        return message
+      })
+      .toSorted((a, b) => a.sendTime - b.sendTime)
+  }, [_messageList, userInfo?.id])
 
   const handleLikeChange = (messageId: string) => {
     send(chatRoomDomain.command.SendLikeMessageCommand(messageId))

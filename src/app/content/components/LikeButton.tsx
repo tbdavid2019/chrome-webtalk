@@ -32,11 +32,13 @@ const LikeButton: FC<LikeButtonProps> & { Icon: FC<LikeButtonIconProps> } = ({
   return (
     <Button
       onClick={handleClick}
-      variant="secondary"
+      variant="ghost"
       className={cn(
-        'grid items-center overflow-hidden rounded-full leading-none transition-all select-none dark:bg-slate-600',
-        checked ? 'text-orange-500' : 'text-slate-500 dark:text-slate-100',
-        count ? 'grid-cols-[auto_1fr] gap-x-1' : 'grid-cols-[auto_0fr] gap-x-0'
+        'grid items-center overflow-hidden rounded-full leading-none transition-all select-none border border-border/40 py-1 px-2.5',
+        checked 
+          ? 'bg-primary/20 text-primary border-primary/30' 
+          : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground',
+        count ? 'grid-cols-[auto_1fr] gap-x-1.5' : 'grid-cols-[auto_0fr] gap-x-0'
       )}
       size="xs"
     >

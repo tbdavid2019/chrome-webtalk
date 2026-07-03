@@ -1,15 +1,16 @@
 import { cn } from '@/utils'
-import { forwardRef } from 'react'
+import { forwardRef, HTMLAttributes } from 'react'
 
-export interface DanmakuContainerProps {
+export interface DanmakuContainerProps extends HTMLAttributes<HTMLDivElement> {
   className?: string
 }
 
-const DanmakuContainer = forwardRef<HTMLDivElement, DanmakuContainerProps>(({ className }, ref) => {
+const DanmakuContainer = forwardRef<HTMLDivElement, DanmakuContainerProps>(({ className, ...props }, ref) => {
   return (
     <div
       className={cn('fixed left-0 top-0 z-infinity w-full h-full invisible pointer-events-none shadow-md', className)}
       ref={ref}
+      {...props}
     ></div>
   )
 })

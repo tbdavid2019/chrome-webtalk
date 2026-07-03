@@ -57,12 +57,12 @@ const MessageItem: FC<MessageItemProps> = (props) => {
         <AvatarFallback>{props.data.username.at(0)}</AvatarFallback>
       </Avatar>
       <div className="overflow-hidden">
-        <div className="grid grid-cols-[1fr_auto] items-center gap-x-2 leading-none">
-          <div className="truncate text-sm font-semibold text-slate-600 dark:text-slate-50">{props.data.username}</div>
-          <FormatDate className="text-xs text-slate-400 dark:text-slate-100" date={props.data.sendTime}></FormatDate>
+        <div className="grid grid-cols-[1fr_auto] items-center gap-x-2 leading-none mb-1">
+          <div className="truncate text-sm font-semibold text-foreground/80">{props.data.username}</div>
+          <FormatDate className="text-xs text-muted-foreground" date={props.data.sendTime}></FormatDate>
         </div>
         <div>
-          <div className="pb-2">
+          <div className="pb-1.5 text-base text-foreground/95 leading-relaxed">
             <Markdown>{content}</Markdown>
           </div>
           <div className="grid grid-flow-col justify-end gap-x-2 leading-none dark:text-slate-600">

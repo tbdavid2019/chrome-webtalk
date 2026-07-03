@@ -3,7 +3,6 @@ import Header from '@/app/content/views/Header'
 import Footer from '@/app/content/views/Footer'
 import Main from '@/app/content/views/Main'
 import AppButton from '@/app/content/views/AppButton'
-import AppSummaryButton from '@/app/content/views/AppSummaryButton'
 import AppMain from '@/app/content/views/AppMain'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import ChatRoomDomain from '@/domain/ChatRoom'
@@ -194,13 +193,8 @@ export default function App() {
           <SummaryPanel key="summary-panel" onClose={() => setShowSummary(false)} />
         </div>
       )}
-      {!buttonsHidden && (
-        <>
-          <AppButton />
-          <AppSummaryButton />
-        </>
-      )}
-      <DanmakuContainer ref={danmakuContainerRef} />
+      {!buttonsHidden && <AppButton />}
+      <DanmakuContainer ref={danmakuContainerRef} style={{ opacity: userInfo?.danmakuOpacity ?? 0.8 }} />
     </div>
   )
 }
