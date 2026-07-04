@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [1.4.0] - 2026-07-04
+
+### Added
+- **預埋實驗額度 Key 與防呆引導**：預置了實驗性 Groq API 金鑰 `gsk_ZXLmQTdpmUAIHGMnIfmQWGdyb3FYR4YeJg3gf7` 供直接使用。當請求失敗（如额度用盡、失效）時，系統會彈出中文/英文的醒目警示，主動引導使用者前往 Groq Console 申請自己的 API Key 並在設定中進行替換。
+
+### Fixed
+- **聊天室關閉按鈕壓線/溢出修復**：解決聊天室 Header 右上角關閉 `✕` 按鈕在部分螢幕解析度下靠右壓線、甚至被推出畫面的問題。改用彈性 `flex` 佈局自適應排版，使其恆定與右邊框保持舒適的內縮安全邊距。
+- **預設 API 與模型修正**：更改預設 API Provider 為 Groq，預設模型為 `openai/gpt-oss-120b`；將所有設定面板中的 "Gemini" 字樣更換為 "Groq"，並新增申請 API Key 的 Groq 控制台外部連結。
+
+---
+
 ## [1.3.9] - 2026-07-03
 
 ### Fixed

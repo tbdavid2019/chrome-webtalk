@@ -48,7 +48,7 @@ const Header: FC = () => {
   }
 
   return (
-    <div className="z-10 grid h-12 grid-flow-col grid-cols-[theme('spacing.20')_auto_theme('spacing.20')] items-center justify-between border-b border-border bg-background px-4">
+    <div className="z-10 flex h-12 items-center justify-between border-b border-border bg-background px-4">
       <Avatar className="size-8 rounded-md">
         <AvatarImage src={siteInfo.icon} alt="favicon" />
         <AvatarFallback>

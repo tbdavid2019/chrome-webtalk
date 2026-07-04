@@ -78,17 +78,28 @@ const ApiSettingsForm: FC = () => {
     <section className="w-[450px] space-y-6 rounded-xl border border-slate-200 bg-white/70 p-8 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/60">
       <div>
         <h2 className="text-xl font-semibold">API setting / AI 服務設定</h2>
-        <p className="text-sm text-muted-foreground">設定 Gemini/GROQ API Key 與模型參數，供 AI 摘要功能使用。</p>
+        <p className="text-sm text-muted-foreground">
+          設定 Groq API Key 與模型參數，供 AI 摘要與對話使用。您可以前往{' '}
+          <a
+            href="https://console.groq.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="text-blue-500 hover:underline font-medium"
+          >
+            Groq Console
+          </a>{' '}
+          取得 API Key。
+        </p>
       </div>
 
       <div className="space-y-2">
         <Label className="font-semibold">
-          LLM API Key <span className="text-red-500">*</span>
+          Groq API Key <span className="text-red-500">*</span>
         </Label>
         <Input
           type="password"
           value={apiKey}
-          placeholder="your Gemini API key / 請輸入 API Key"
+          placeholder="your Groq API key / 請輸入 Groq API Key"
           onChange={(event) => setApiKey(event.target.value)}
         />
       </div>

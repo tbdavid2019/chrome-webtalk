@@ -321,8 +321,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
     try {
       const newSummary = await summarize(pageText, language)
       updateHistoryEntry({ summary: newSummary ?? text.noContent, chatMessages: [] }, { forceNew: true })
-    } catch (error) {
+    } catch (error: any) {
       console.error('[WebTalk] ❌ 摘要失敗', error)
+      alert(error.message || '摘要失敗，請稍後再試 / Condensation failed, please try again')
     }
   }
   const speak = () => {
@@ -421,26 +422,34 @@ ${summaryForPrompt}`
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: resolvedModelName || 'gemini-2.0-flash',
+          model: resolvedModelName || FALLBACK_GROQ_MODEL,
           messages: [{ role: 'system', content: systemPrompt }, ...chatHistory]
         })
       })
 
       const data = await response.json()
-      const answer = data.choices?.[0]?.message?.content?.trim()
+      if (!response.ok) {
+        const errorMessage = data?.error?.message || `HTTP ${response.status}`
+        throw new Error(`API呼叫失敗 (${errorMessage})。這可能是因為預埋的實驗額度 Key 已失效或超出限額。請點擊右上角設置圖示 ⚙️，至 Groq 官網 (https://console.groq.com/) 申請您自己的 API Key 並進行更換。 / API call failed. Please click settings ⚙️ and get your own API Key from Groq.`)
+      }
+      if (!data.choices?.[0]?.message?.content) {
+        const apiError = data?.error?.message || 'Unknown API Error'
+        throw new Error(`API回傳格式錯誤 (${apiError})。這可能是因為預埋的實驗額度 Key 已失效或超出限額。請點擊右上角設置圖示 ⚙️，至 Groq 官網 (https://console.groq.com/) 申請您自己的 API Key 並進行更換。 / API returned error. Please click settings ⚙️ and get your own API Key from Groq.`)
+      }
+      const answer = data.choices[0].message.content.trim()
 
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: answer || text.chatError
+        content: answer
       }
       appendChatMessage(assistantMessage)
-    } catch (error) {
+    } catch (error: any) {
       console.error('[WebTalk] ❌ 續問失敗', error)
       appendChatMessage({
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: text.chatError
+        content: error.message || text.chatError
       })
     } finally {
       setChatLoading(false)
@@ -513,13 +522,21 @@ ${summaryForPrompt}`
             <div className="space-y-3 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shrink-0">
               <h3 className="text-sm font-semibold text-slate-700">API setting</h3>
               <div className="space-y-2">
-                <Label htmlFor="api-key" className="text-sm text-slate-500">
-                  Gemini API Key <span className="text-red-500">*</span>
+                <Label htmlFor="api-key" className="text-sm text-slate-500 flex items-center justify-between">
+                  <span>Groq API Key <span className="text-red-500">*</span></span>
+                  <a
+                    href="https://console.groq.com/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-blue-500 hover:underline"
+                  >
+                    申請 API Key
+                  </a>
                 </Label>
                 <Input
                   id="api-key"
                   type="password"
-                  placeholder="your Gemini API Key"
+                  placeholder="your Groq API Key / 請輸入 Groq API Key"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   className="text-sm"
@@ -537,11 +554,11 @@ ${summaryForPrompt}`
                   onChange={(e) => setApiBaseURL(e.target.value)}
                   className="text-sm"
                 />
-                <p className="text-xs text-gray-500">預設default: https://gemini.david888.com/v1</p>
+                <p className="text-xs text-gray-500">預設default: {DEFAULT_API_BASE_URL}</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="api-model-name" className="text-sm text-slate-500">
-                  模型名稱
+                  模型名稱 / Model Name
                 </Label>
                 <Input
                   id="api-model-name"
@@ -550,7 +567,7 @@ ${summaryForPrompt}`
                   onChange={(e) => setApiModelName(e.target.value)}
                   className="text-sm"
                 />
-                <p className="text-xs text-gray-500">預設: gemini-2.5-flash</p>
+                <p className="text-xs text-gray-500">預設: {DEFAULT_MODEL_NAME}</p>
               </div>
               <div className="flex justify-end gap-2">
                 <button
