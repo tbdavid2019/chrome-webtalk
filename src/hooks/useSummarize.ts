@@ -49,7 +49,7 @@ export const useSummarize = () => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: modelName || 'gemini-2.0-flash-exp',
+        model: modelName || FALLBACK_GROQ_MODEL,
         messages: [
           { role: 'system', content: prompt },
           { role: 'user', content: pageText }
@@ -58,7 +58,19 @@ export const useSummarize = () => {
     })
 
     const json = await res.json()
-    const content = json.choices?.[0]?.message?.content || '無摘要結果'
+    if (!res.ok) {
+      const errorMessage = json?.error?.message || `HTTP ${res.status}`
+      setLoading(false)
+      throw new Error(`API呼叫失敗 (${errorMessage})。這可能是因為預埋的實驗額度 Key 已失效或超出限額。請點擊設置圖示 ⚙️，至 Groq 官網 (https://console.groq.com/) 申請您自己的 API Key 並進行更換。 / API call failed. The pre-filled experimental Key may have expired. Please click settings ⚙️ and get your own API Key from Groq (https://console.groq.com/).`)
+    }
+
+    if (!json.choices?.[0]?.message?.content) {
+      const apiError = json?.error?.message || 'Unknown API Error'
+      setLoading(false)
+      throw new Error(`API回傳格式錯誤 (${apiError})。這可能是因為預埋的實驗額度 Key 已失效或超出限額。請點擊設置圖示 ⚙️，至 Groq 官網 (https://console.groq.com/) 申請您自己的 API Key 並進行更換。 / API returned error. Please click settings ⚙️ and get your own API Key from Groq.`)
+    }
+
+    const content = json.choices[0].message.content
     setSummary(content)
     setLoading(false)
     return content
