@@ -29,6 +29,8 @@ export interface NormalMessage extends MessageUser {
   likeUsers: MessageUser[]
   hateUsers: MessageUser[]
   atUsers: AtUser[]
+  isPrivate?: boolean
+  toUser?: MessageUser
 }
 
 export interface PromptMessage extends MessageUser {
