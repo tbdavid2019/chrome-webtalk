@@ -212,7 +212,7 @@ const ChatRoomDomain = Remesh.domain({
       impl: ({ get }) => {
         return (
           get(messageListDomain.query.ListQuery())
-            .filter((message) => message.type === MessageType.Normal)
+            .filter((message) => message.type === MessageType.Normal && !message.isPrivate)
             .toSorted((a, b) => b.sendTime - a.sendTime)[0]?.sendTime ?? new Date(1970, 1, 1).getTime()
         )
       }
@@ -355,7 +355,16 @@ const ChatRoomDomain = Remesh.domain({
           ...localMessage,
           likeUsers: desert(localMessage.likeUsers, likeMessage, 'userId')
         }
-        chatRoomExtern.sendMessage(likeMessage)
+
+        if (localMessage.isPrivate && localMessage.toUser) {
+          const receiver = get(UserListQuery()).find((u) => u.userId === localMessage.toUser!.userId)
+          if (receiver) {
+            chatRoomExtern.sendMessage(likeMessage, receiver.peerIds)
+          }
+        } else {
+          chatRoomExtern.sendMessage(likeMessage)
+        }
+
         return [messageListDomain.command.UpdateItemCommand(listMessage), SendLikeMessageEvent(likeMessage)]
       }
     })
@@ -381,7 +390,16 @@ const ChatRoomDomain = Remesh.domain({
           ...localMessage,
           hateUsers: desert(localMessage.hateUsers, hateMessage, 'userId')
         }
-        chatRoomExtern.sendMessage(hateMessage)
+
+        if (localMessage.isPrivate && localMessage.toUser) {
+          const receiver = get(UserListQuery()).find((u) => u.userId === localMessage.toUser!.userId)
+          if (receiver) {
+            chatRoomExtern.sendMessage(hateMessage, receiver.peerIds)
+          }
+        } else {
+          chatRoomExtern.sendMessage(hateMessage)
+        }
+
         return [messageListDomain.command.UpdateItemCommand(listMessage), SendHateMessageEvent(hateMessage)]
       }
     })
@@ -444,7 +462,7 @@ const ChatRoomDomain = Remesh.domain({
             message.type === MessageType.Normal &&
             !message.isPrivate &&
             message.sendTime > lastMessageTime &&
-            message.sendTime - Date.now() <= SYNC_HISTORY_MAX_DAYS * 24 * 60 * 60 * 1000
+            Date.now() - message.sendTime <= SYNC_HISTORY_MAX_DAYS * 24 * 60 * 60 * 1000
         )
 
         if (historyMessages.length === 0) {
@@ -726,11 +744,12 @@ const ChatRoomDomain = Remesh.domain({
             const existUser = get(UserListQuery()).find((user) => user.peerIds.includes(peerId))
             const privateTarget = get(PrivateChatTargetQuery())
             const isPrivateTargetLeaving = privateTarget && existUser && privateTarget.userId === existUser.userId
+            const willUserRemainOnline = existUser && existUser.peerIds.filter((id) => id !== peerId).length > 0
 
             if (existUser) {
               return [
                 UpdateUserListCommand({ type: 'delete', user: { ...existUser, peerId } }),
-                isPrivateTargetLeaving ? SelectPrivateChatTargetCommand(null) : null,
+                isPrivateTargetLeaving && !willUserRemainOnline ? SelectPrivateChatTargetCommand(null) : null,
                 // 移除 "left the chat" 訊息
                 null,
                 OnLeaveRoomEvent(peerId)
