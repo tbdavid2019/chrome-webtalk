@@ -13,6 +13,7 @@ export interface MessageInputProps {
   autoFocus?: boolean
   disabled?: boolean
   loading?: boolean
+  placeholder?: string
   onChange?: (e: ChangeEvent<HTMLTextAreaElement>) => void
   onPaste?: (e: ClipboardEvent<HTMLTextAreaElement>) => void
   onKeyDown?: (e: KeyboardEvent<HTMLTextAreaElement>) => void
@@ -38,7 +39,8 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       onCompositionEnd,
       autoFocus,
       disabled,
-      loading
+      loading,
+      placeholder = 'Type your message here...'
     },
     ref
   ) => {
@@ -61,7 +63,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           spellCheck={false}
           onCompositionStart={onCompositionStart}
           onCompositionEnd={onCompositionEnd}
-          placeholder="Type your message here..."
+          placeholder={placeholder}
           onChange={onChange}
           disabled={disabled || loading}
         />

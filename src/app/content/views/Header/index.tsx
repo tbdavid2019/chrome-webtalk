@@ -13,6 +13,7 @@ import AvatarCircles from '@/components/magicui/AvatarCircles'
 import Link from '@/components/Link'
 import NumberFlow from '@number-flow/react'
 import AppStatusDomain from '@/domain/AppStatus'
+import UserInfoDomain from '@/domain/UserInfo'
 
 const Header: FC = () => {
   const send = useRemeshSend()
@@ -20,8 +21,11 @@ const Header: FC = () => {
   const chatRoomDomain = useRemeshDomain(ChatRoomDomain())
   const virtualRoomDomain = useRemeshDomain(VirtualRoomDomain())
   const appStatusDomain = useRemeshDomain(AppStatusDomain())
+  const userInfoDomain = useRemeshDomain(UserInfoDomain())
   const chatUserList = useRemeshQuery(chatRoomDomain.query.UserListQuery())
   const virtualUserList = useRemeshQuery(virtualRoomDomain.query.UserListQuery())
+  const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
+  const privateChatTarget = useRemeshQuery(chatRoomDomain.query.PrivateChatTargetQuery())
   const chatOnlineCount = chatUserList.length
 
   const virtualOnlineGroup = virtualUserList
@@ -164,15 +168,44 @@ const Header: FC = () => {
                 data={chatUserList}
                 defaultItemHeight={28}
                 customScrollParent={chatUserListScrollParentRef!}
-                itemContent={(_index, user) => (
-                  <div className={cn('flex items-center gap-x-2 rounded-md px-2 py-1.5 outline-none')}>
-                    <Avatar className="size-4 shrink-0">
-                      <AvatarImage className="size-full" src={user.userAvatar} alt="avatar" />
-                      <AvatarFallback>{user.username.at(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 truncate text-xs text-slate-500 dark:text-slate-50">{user.username}</div>
-                  </div>
-                )}
+                itemContent={(_index, user) => {
+                  const isMe = user.userId === userInfo?.id
+                  const isSelected = privateChatTarget?.userId === user.userId
+                  return (
+                    <div
+                      onClick={() => {
+                        if (isMe) return
+                        if (isSelected) {
+                          send(chatRoomDomain.command.SelectPrivateChatTargetCommand(null))
+                        } else {
+                          send(chatRoomDomain.command.SelectPrivateChatTargetCommand(user))
+                        }
+                      }}
+                      className={cn(
+                        'flex items-center gap-x-2 rounded-md px-2 py-1 outline-none select-none my-0.5',
+                        !isMe && 'cursor-pointer hover:bg-accent/70 active:bg-accent transition-colors',
+                        isSelected && 'bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100/50 dark:border-indigo-900/50'
+                      )}
+                      title={isMe ? undefined : isSelected ? '取消私聊' : '點擊開始私聊'}
+                    >
+                      <Avatar className="size-4 shrink-0">
+                        <AvatarImage className="size-full" src={user.userAvatar} alt="avatar" />
+                        <AvatarFallback>{user.username.at(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className={cn(
+                        'flex-1 truncate text-xs text-slate-500 dark:text-slate-50',
+                        isSelected && 'text-indigo-600 dark:text-indigo-400 font-semibold'
+                      )}>
+                        {user.username} {isMe && '(me)'}
+                      </div>
+                      {isSelected && (
+                        <span className="text-[9px] bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 px-1 py-0.5 rounded font-bold shrink-0">
+                          🔒 私聊
+                        </span>
+                      )}
+                    </div>
+                  )
+                }}
               ></Virtuoso>
             </ScrollArea>
           </HoverCardContent>

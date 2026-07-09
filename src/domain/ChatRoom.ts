@@ -60,6 +60,8 @@ export interface TextMessage extends MessageUser {
   body: string
   sendTime: number
   atUsers: AtUser[]
+  isPrivate?: boolean
+  toUser?: MessageUser
 }
 
 export type RoomMessage = SyncUserMessage | SyncHistoryMessage | LikeMessage | HateMessage | TextMessage
@@ -96,6 +98,8 @@ const RoomMessageSchema = v.union([
     body: v.string(),
     sendTime: v.number(),
     atUsers: v.array(v.object(AtUserSchema)),
+    isPrivate: v.optional(v.boolean()),
+    toUser: v.optional(v.object(MessageUserSchema)),
     ...MessageUserSchema
   }),
   v.object({
@@ -184,6 +188,25 @@ const ChatRoomDomain = Remesh.domain({
       }
     })
 
+    const PrivateChatTargetState = domain.state<RoomUser | null>({
+      name: 'Room.PrivateChatTargetState',
+      default: null
+    })
+
+    const PrivateChatTargetQuery = domain.query({
+      name: 'Room.PrivateChatTargetQuery',
+      impl: ({ get }) => {
+        return get(PrivateChatTargetState())
+      }
+    })
+
+    const SelectPrivateChatTargetCommand = domain.command({
+      name: 'Room.SelectPrivateChatTargetCommand',
+      impl: (_, target: RoomUser | null) => {
+        return PrivateChatTargetState().new(target)
+      }
+    })
+
     const LastMessageTimeQuery = domain.query({
       name: 'Room.LastMessageTimeQuery',
       impl: ({ get }) => {
@@ -252,13 +275,24 @@ const ChatRoomDomain = Remesh.domain({
           return [OnErrorEvent(new Error('Please wait for connection to be established.'))]
         }
 
+        const privateTarget = get(PrivateChatTargetQuery())
+        const isPrivate = !!privateTarget
+
         const textMessage: TextMessage = {
           ...self,
           id: nanoid(),
           type: SendType.Text,
           sendTime: Date.now(),
           body: typeof message === 'string' ? message : message.body,
-          atUsers: typeof message === 'string' ? [] : message.atUsers
+          atUsers: typeof message === 'string' ? [] : message.atUsers,
+          isPrivate,
+          toUser: privateTarget
+            ? {
+                userId: privateTarget.userId,
+                username: privateTarget.username,
+                userAvatar: privateTarget.userAvatar
+              }
+            : undefined
         }
 
         const listMessage: NormalMessage = {
@@ -267,7 +301,15 @@ const ChatRoomDomain = Remesh.domain({
           receiveTime: Date.now(),
           likeUsers: [],
           hateUsers: [],
-          atUsers: typeof message === 'string' ? [] : message.atUsers
+          atUsers: typeof message === 'string' ? [] : message.atUsers,
+          isPrivate,
+          toUser: privateTarget
+            ? {
+                userId: privateTarget.userId,
+                username: privateTarget.username,
+                userAvatar: privateTarget.userAvatar
+              }
+            : undefined
         }
 
         // 檢查消息大小是否超過 WebRTC 限制
@@ -278,7 +320,11 @@ const ChatRoomDomain = Remesh.domain({
         }
 
         try {
-          chatRoomExtern.sendMessage(textMessage)
+          if (privateTarget) {
+            chatRoomExtern.sendMessage(textMessage, privateTarget.peerIds)
+          } else {
+            chatRoomExtern.sendMessage(textMessage)
+          }
           return [messageListDomain.command.CreateItemCommand(listMessage), SendTextMessageEvent(textMessage)]
         } catch (error) {
           console.error('Failed to send message:', error)
@@ -396,6 +442,7 @@ const ChatRoomDomain = Remesh.domain({
         const historyMessages = get(messageListDomain.query.ListQuery()).filter(
           (message) =>
             message.type === MessageType.Normal &&
+            !message.isPrivate &&
             message.sendTime > lastMessageTime &&
             message.sendTime - Date.now() <= SYNC_HISTORY_MAX_DAYS * 24 * 60 * 60 * 1000
         )
@@ -677,14 +724,17 @@ const ChatRoomDomain = Remesh.domain({
             // console.log('onLeaveRoom', peerId)
 
             const existUser = get(UserListQuery()).find((user) => user.peerIds.includes(peerId))
+            const privateTarget = get(PrivateChatTargetQuery())
+            const isPrivateTargetLeaving = privateTarget && existUser && privateTarget.userId === existUser.userId
 
             if (existUser) {
               return [
                 UpdateUserListCommand({ type: 'delete', user: { ...existUser, peerId } }),
+                isPrivateTargetLeaving ? SelectPrivateChatTargetCommand(null) : null,
                 // 移除 "left the chat" 訊息
                 null,
                 OnLeaveRoomEvent(peerId)
-              ]
+              ].filter(Boolean)
             } else {
               return [OnLeaveRoomEvent(peerId)]
             }
@@ -711,7 +761,8 @@ const ChatRoomDomain = Remesh.domain({
       query: {
         PeerIdQuery,
         UserListQuery,
-        JoinIsFinishedQuery
+        JoinIsFinishedQuery,
+        PrivateChatTargetQuery
       },
       command: {
         JoinRoomCommand,
@@ -720,7 +771,8 @@ const ChatRoomDomain = Remesh.domain({
         SendLikeMessageCommand,
         SendHateMessageCommand,
         SendSyncUserMessageCommand,
-        SendSyncHistoryMessageCommand
+        SendSyncHistoryMessageCommand,
+        SelectPrivateChatTargetCommand
       },
       event: {
         SendTextMessageEvent,

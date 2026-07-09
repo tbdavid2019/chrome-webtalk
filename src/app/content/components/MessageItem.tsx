@@ -17,6 +17,7 @@ export interface MessageItemProps {
   onHateChange?: (checked: boolean) => void
   onAvatarClick?: (data: NormalMessage) => void
   className?: string
+  currentUserId?: string
 }
 
 const MessageItem: FC<MessageItemProps> = (props) => {
@@ -48,7 +49,8 @@ const MessageItem: FC<MessageItemProps> = (props) => {
     <div
       data-index={props.index}
       className={cn(
-        'box-border grid grid-cols-[auto_1fr] gap-x-2 px-4  first:pt-4 last:pb-4 dark:text-slate-50',
+        'box-border grid grid-cols-[auto_1fr] gap-x-2 px-4 first:pt-4 last:pb-4 dark:text-slate-50 transition-colors duration-200',
+        props.data.isPrivate && 'bg-indigo-500/5 dark:bg-indigo-500/10 border-l-2 border-l-indigo-500/70',
         props.className
       )}
     >
@@ -58,7 +60,14 @@ const MessageItem: FC<MessageItemProps> = (props) => {
       </Avatar>
       <div className="overflow-hidden">
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-2 leading-none mb-1">
-          <div className="truncate text-sm font-semibold text-foreground/80">{props.data.username}</div>
+          <div className="flex items-center gap-x-1.5 truncate">
+            <div className="truncate text-sm font-semibold text-foreground/80">{props.data.username}</div>
+            {props.data.isPrivate && (
+              <span className="inline-flex items-center gap-x-0.5 rounded bg-indigo-100/80 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-900/50 px-1 py-0.5 text-[9px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
+                🔒 {props.data.userId === props.currentUserId ? `私密傳送給 @${props.data.toUser?.username}` : '私密訊息'}
+              </span>
+            )}
+          </div>
           <FormatDate className="text-xs text-muted-foreground" date={props.data.sendTime}></FormatDate>
         </div>
         <div>

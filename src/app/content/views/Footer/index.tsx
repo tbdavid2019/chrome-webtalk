@@ -32,6 +32,7 @@ const Footer: FC = () => {
   const userInfoDomain = useRemeshDomain(UserInfoDomain())
   const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
   const userList = useRemeshQuery(chatRoomDomain.query.UserListQuery())
+  const privateChatTarget = useRemeshQuery(chatRoomDomain.query.PrivateChatTargetQuery())
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const { x, y, selectionStart, selectionEnd, setRef } = useCursorPosition()
@@ -427,6 +428,23 @@ const Footer: FC = () => {
           </ScrollArea>
         </Portal>
       </Presence>
+      {privateChatTarget && (
+        <div className="flex items-center justify-between rounded-lg bg-indigo-50 dark:bg-indigo-950/30 px-3 py-1.5 text-xs text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-950/50 mb-1.5 animate-in fade-in-0 slide-in-from-bottom-1">
+          <div className="flex items-center gap-1.5 truncate">
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            </span>
+            <span className="truncate">私密對話中 (僅傳送給 @{privateChatTarget.username})</span>
+          </div>
+          <button
+            onClick={() => send(chatRoomDomain.command.SelectPrivateChatTargetCommand(null))}
+            className="text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 font-bold ml-2 shrink-0 transition-colors"
+          >
+            取消
+          </button>
+        </div>
+      )}
       <MessageInput
         ref={shareRef}
         value={message}
@@ -437,6 +455,11 @@ const Footer: FC = () => {
         onPaste={handlePaste}
         onKeyDown={handleKeyDown}
         maxLength={MESSAGE_MAX_LENGTH}
+        placeholder={
+          privateChatTarget
+            ? `傳送私密訊息給 @${privateChatTarget.username}...`
+            : '輸入訊息...'
+        }
       ></MessageInput>
       <div className="flex items-center gap-2">
         {/* 左下角功能切換雙鍵膠囊 */}

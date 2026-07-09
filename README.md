@@ -2,11 +2,12 @@
 
 > 在任何網站上與他人匿名即時聊天！可以提供LLM 幫你了解網頁內容
 >
-![alt text](image.png)
+> ![alt text](image.png)
 
 這是一款去中心化、無伺服器的瀏覽器聊天擴充功能，透過 WebRTC 實現端對端加密傳輸，保護你的隱私，所有資料皆儲存在本地裝置。
 
 本版本 fork 自 [molvqingtai/WebChat](https://github.com/molvqingtai/WebChat)，並進行以下改進：
+
 - ✅ 使用其他建的 WSS 通訊站台，與原專案用戶分流
 - 🎨 全新設計的使用者介面，提升操作體驗與可讀性
 - 🧠 新增 AI 摘要功能，一鍵生成網頁內容摘要，提高閱讀效率
@@ -17,6 +18,8 @@
 
 ## 🆕 近期更新
 
+- 🔒 **P2P 私密對話隱私修復 (v1.5.1)**：修復私聊消息對所有用戶可見的隱私漏洞。現在私聊消息僅雙方可見，歷史同步也排除私聊內容，並限制非參與者的互動權限。
+- 🔒 **P2P 私密對話功能 (v1.5.0)**：導入基於 WebRTC P2P 的定點私聊機制。使用者可透過點擊對話頭像或右上角在線用戶列表開啟私聊，發送的訊息僅雙方可見，且畫面會呈現高質感的靛藍色光暈與鎖頭徽章。詳細架構請參考 [房間機制與 P2P 私聊設計文件](file:///Users/david/Documents/git/tbdavid2019/chrome-webtalk/docs/room-mechanism-and-private-chat.md)。
 - 🧠 **預置實驗 Key、預設模型更換與 Groq 引導 (v1.4.0)**：預設模型更改為 `openai/gpt-oss-120b`，API 改為引導至 Groq Console。內建預置實驗 API Key `gsk_ZXLmQT*****`，並增強錯誤處理，當實驗 Key 請求失敗或超出限額時，會顯示引導錯誤說明引導使用者自行更換 API Key。
 - ✕ **聊天室 Header 關閉按鈕壓線溢出修正 (v1.4.0)**：重新調整 Header 佈局，由原先的限制性網格改為自適應彈性 `flex` 排版，確保關閉 `✕` 按鈕在任何視窗解析度下均不會靠右過度壓線或甚至超出畫面。
 - 💬 **漂浮對話氣泡超長句子截斷修正 (v1.3.9)**：將網頁漂浮對話氣泡/彈幕的最大寬度從 `max-w-44` (176px) 擴展至 `max-w-[480px]`，徹底修復超長英文、中文句子被過早砍斷、顯示不全的 Bug。
@@ -33,6 +36,7 @@
 ## 🚀 安裝方式
 
 ### 從瀏覽器擴充商店安裝
+
 https://chromewebstore.google.com/detail/webtalk/hhhdloelamldfadfobnhdhpfmbbdppdb
 
 ### 手動安裝
@@ -44,25 +48,23 @@ https://chromewebstore.google.com/detail/webtalk/hhhdloelamldfadfobnhdhpfmbbdppd
    - 開啟右上角「開發人員模式」
    - 點選「載入未封裝項目」，選取剛剛解壓縮的資料夾
 
-
 ### 原始建構
 
 ```
-pnpm build 
+pnpm build
 
 ```
-會產出 output/
 
+會產出 output/
 
 ---
 
 ## 💬 使用說明
 
 當擴充功能安裝完成後，會在每個網站的右側出現兩個小圖示：
+
 - **聊天室圖示**（上方）：點擊它，就能開啟聊天室，與其他正在同個網站上的使用者即時聊天！
 - **AI 摘要圖示**（下方黃色）：點擊它，可以快速生成當前網頁內容的 AI 摘要，包含總結、觀點、關鍵字等，幫助你快速了解網頁內容。
-
-
 
 ---
 
@@ -109,6 +111,7 @@ pnpm build
 This is a decentralized, serverless browser extension that allows real-time, end-to-end encrypted chatting via WebRTC. All data is stored locally to ensure privacy.
 
 This fork, hosted at [`tbdavid2019/chrome-webtalk`](https://github.com/tbdavid2019/chrome-webtalk), includes:
+
 - ✅ A custom WSS server to separate userbase from the original project
 - 🎨 A redesigned interface for better user experience and readability
 - 🧠 New AI summary feature that generates concise summaries of web pages
@@ -135,10 +138,9 @@ https://chromewebstore.google.com/detail/webtalk/hhhdloelamldfadfobnhdhpfmbbdppd
 ## 💬 How to Use
 
 Once installed, two icons will appear on the right side of any website:
+
 - **Chat icon** (top): Click it to join a shared chatroom with others browsing the same site!
 - **AI Summary icon** (bottom, yellow): Click it to generate an AI-powered summary of the current webpage, including key points, opinions, and keywords to help you quickly understand the content.
-
-
 
 ---
 
