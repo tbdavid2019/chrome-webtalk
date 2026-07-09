@@ -321,7 +321,12 @@ const ChatRoomDomain = Remesh.domain({
 
         try {
           if (privateTarget) {
-            chatRoomExtern.sendMessage(textMessage, privateTarget.peerIds)
+            const freshTarget = get(UserListQuery()).find((u) => u.userId === privateTarget.userId)
+            if (freshTarget) {
+              chatRoomExtern.sendMessage(textMessage, freshTarget.peerIds)
+            } else {
+              return [OnErrorEvent(new Error('Target user is no longer online.'))]
+            }
           } else {
             chatRoomExtern.sendMessage(textMessage)
           }
@@ -357,9 +362,11 @@ const ChatRoomDomain = Remesh.domain({
         }
 
         if (localMessage.isPrivate && localMessage.toUser) {
-          const receiver = get(UserListQuery()).find((u) => u.userId === localMessage.toUser!.userId)
-          if (receiver) {
-            chatRoomExtern.sendMessage(likeMessage, receiver.peerIds)
+          const otherUserId =
+            self.userId === localMessage.toUser.userId ? localMessage.userId : localMessage.toUser.userId
+          const otherUser = get(UserListQuery()).find((u) => u.userId === otherUserId)
+          if (otherUser) {
+            chatRoomExtern.sendMessage(likeMessage, otherUser.peerIds)
           }
         } else {
           chatRoomExtern.sendMessage(likeMessage)
@@ -392,9 +399,11 @@ const ChatRoomDomain = Remesh.domain({
         }
 
         if (localMessage.isPrivate && localMessage.toUser) {
-          const receiver = get(UserListQuery()).find((u) => u.userId === localMessage.toUser!.userId)
-          if (receiver) {
-            chatRoomExtern.sendMessage(hateMessage, receiver.peerIds)
+          const otherUserId =
+            self.userId === localMessage.toUser.userId ? localMessage.userId : localMessage.toUser.userId
+          const otherUser = get(UserListQuery()).find((u) => u.userId === otherUserId)
+          if (otherUser) {
+            chatRoomExtern.sendMessage(hateMessage, otherUser.peerIds)
           }
         } else {
           chatRoomExtern.sendMessage(hateMessage)
