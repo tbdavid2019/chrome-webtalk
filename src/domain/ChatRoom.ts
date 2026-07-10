@@ -252,11 +252,15 @@ const ChatRoomDomain = Remesh.domain({
 
         const sendTime = Date.now()
         const upstreamHLC = upstreamMode ? sendHLCEvent(get(HLCState())) : undefined
+        const effectiveSender: MessageUser = {
+          userId: self.userId,
+          username: input.username ?? self.username,
+          userAvatar: input.userAvatar ?? self.userAvatar
+        }
 
         const textMessage: TextMessage = {
           ...self,
-          username: input.username ?? self.username,
-          userAvatar: input.userAvatar ?? self.userAvatar,
+          ...effectiveSender,
           id: input.id ?? nanoid(),
           type: SendType.Text,
           sendTime,
@@ -273,6 +277,27 @@ const ChatRoomDomain = Remesh.domain({
               }
             : undefined
         }
+
+        const protocolMessage = upstreamMode
+          ? createProtocolTextMessage({
+              id: textMessage.id,
+              sender: effectiveSender,
+              body: input.body,
+              mentions: input.atUsers,
+              sentAt: sendTime,
+              hlc: upstreamHLC ?? createPseudoHLC(sendTime),
+              senderType: input.senderType,
+              aiMeta: input.aiMeta,
+              isPrivate,
+              toUser: privateTarget
+                ? {
+                    userId: privateTarget.userId,
+                    username: privateTarget.username,
+                    userAvatar: privateTarget.userAvatar
+                  }
+                : undefined
+            })
+          : null
 
         const listMessage: NormalMessage = {
           ...textMessage,
@@ -294,8 +319,9 @@ const ChatRoomDomain = Remesh.domain({
             : undefined
         }
 
-        // 檢查消息大小是否超過 WebRTC 限制
-        const messageSize = getTextByteSize(JSON.stringify(textMessage))
+        // 檢查實際送出的 payload 大小是否超過 WebRTC 限制
+        const outgoingPayload = protocolMessage ?? textMessage
+        const messageSize = getTextByteSize(JSON.stringify(outgoingPayload))
         if (messageSize >= WEB_RTC_MAX_MESSAGE_SIZE) {
           console.error('Message too large to send:', messageSize, 'bytes')
           return [OnErrorEvent(new Error('Message size cannot exceed 256KiB.'))]
@@ -305,20 +331,12 @@ const ChatRoomDomain = Remesh.domain({
           if (privateTarget) {
             const freshTarget = get(UserListQuery()).find((u) => u.userId === privateTarget.userId)
             if (freshTarget) {
-              chatRoomExtern.sendMessage(textMessage, freshTarget.peerIds)
+              chatRoomExtern.sendMessage(protocolMessage ?? textMessage, freshTarget.peerIds)
             } else {
               return [OnErrorEvent(new Error('Target user is no longer online.'))]
             }
-          } else if (upstreamMode && input.senderType === 'user' && !input.aiMeta) {
+          } else if (protocolMessage) {
             const peerIds = get(PeerListQuery())
-            const protocolMessage = createProtocolTextMessage({
-              id: listMessage.id,
-              sender: self,
-              body: input.body,
-              mentions: input.atUsers,
-              sentAt: sendTime,
-              hlc: upstreamHLC ?? createPseudoHLC(sendTime)
-            })
             peerIds.length && chatRoomExtern.sendMessage(protocolMessage, peerIds)
           } else {
             chatRoomExtern.sendMessage(textMessage)

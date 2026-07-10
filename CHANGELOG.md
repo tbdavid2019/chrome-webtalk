@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [1.6.0] - 2026-07-10
+
+### Added
+
+- **Protocol text extension 疊層**：在 upstream `text` 訊息上新增 fork 專用的 optional `extension` metadata，承載 `AI / private` 類型資訊，不再把這些功能綁死在 legacy `Text` payload。
+
+### Changed
+
+- **Upstream 模式全面改走 protocol text**：`compatibilityMode = upstream` 下，公開訊息、`@ai` 房間回覆與私聊文字現在都會優先走 upstream text 結構；只有 fork 專屬語意才附加 `extension`。
+- **私聊改為 upstream 定向傳送**：upstream 模式的私聊文字訊息不再退回 legacy text，而是改用 protocol text 只發給目標 peer，讓公開協定與 fork 擴充層的邊界更清楚。
+- **AI/private metadata 可隨 history-sync 保留**：fork peer 在接收 upstream text 或 history-sync 時，會還原 AI badge、owner metadata 與 private 標記；原版 upstream peer 則仍可把它視為一般文字訊息處理。
+
+### Fixed
+
+- **options/chat 殘留硬編碼文案清理**：修正設定頁 `Developer Mode`、`Hide All AI Messages` 與聊天私聊 badge 的殘留硬編碼，回到 `uiText` 多語系來源。
+
+---
+
 ## [1.5.9] - 2026-07-10
 
 ### Added
