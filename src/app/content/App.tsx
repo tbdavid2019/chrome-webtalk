@@ -185,9 +185,9 @@ export default function App() {
             position: 'fixed',
             top: 0,
             right: 0,
-            width: '100%',
+            width: 'auto',
             height: '100%',
-            pointerEvents: 'auto'
+            pointerEvents: 'none'
           }}
         >
           <SummaryPanel key="summary-panel" onClose={() => setShowSummary(false)} />
