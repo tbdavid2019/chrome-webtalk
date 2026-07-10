@@ -19,13 +19,19 @@ import { ToastImpl } from '@/domain/impls/Toast'
 import BlurFade from '@/components/magicui/BlurFade'
 import { Checkbox } from '@/components/ui/Checkbox'
 import Link from '@/components/Link'
+import { getUiText } from '@/utils'
 
 const defaultUserInfo: UserInfo = {
   id: nanoid(),
   name: '',
   avatar: '',
   createTime: Date.now(),
+  language: 'auto',
+  compatibilityMode: 'legacy',
   themeMode: 'system',
+  developerMode: false,
+  bannedUserIds: [],
+  hideAllAiMessages: false,
   danmakuEnabled: true,
   danmakuOpacity: 0.8,
   danmakuSpeed: 'normal',
@@ -49,6 +55,14 @@ const formSchema = v.object({
     v.notLength(0, 'Please select your avatar. / 請選擇頭像'),
     v.maxBytes(8 * 1024, `Your avatar cannot exceed 8kb. / 頭像檔案不可超過 8KB`)
   ),
+  language: v.pipe(
+    v.string(),
+    v.union(
+      [v.literal('auto'), v.literal('zh_TW'), v.literal('zh_CN'), v.literal('en')],
+      'Please select interface language. / 請選擇介面語言'
+    )
+  ),
+  compatibilityMode: v.optional(v.union([v.literal('legacy'), v.literal('upstream')])),
   themeMode: v.pipe(
     v.string(),
     v.union(
@@ -56,20 +70,12 @@ const formSchema = v.object({
       'Please select extension theme mode. / 請選擇擴充主題模式'
     )
   ),
+  developerMode: v.optional(v.boolean()),
+  bannedUserIds: v.optional(v.array(v.string())),
+  hideAllAiMessages: v.optional(v.boolean()),
   danmakuEnabled: v.boolean(),
-  danmakuOpacity: v.optional(
-    v.pipe(
-      v.number(),
-      v.minValue(0.1),
-      v.maxValue(1.0)
-    )
-  ),
-  danmakuSpeed: v.optional(
-    v.pipe(
-      v.string(),
-      v.union([v.literal('slow'), v.literal('normal'), v.literal('fast')])
-    )
-  ),
+  danmakuOpacity: v.optional(v.pipe(v.number(), v.minValue(0.1), v.maxValue(1.0))),
+  danmakuSpeed: v.optional(v.pipe(v.string(), v.union([v.literal('slow'), v.literal('normal'), v.literal('fast')]))),
   notificationEnabled: v.boolean(),
   notificationType: v.pipe(
     v.string(),
@@ -88,13 +94,15 @@ const ProfileForm: FC = () => {
 
   const form = useForm({
     resolver: valibotResolver(formSchema),
-    defaultValues: userInfo ?? defaultUserInfo
+    defaultValues: userInfo ? { ...defaultUserInfo, ...userInfo } : defaultUserInfo
   })
 
   // Update defaultValues
   useEffect(() => {
-    userInfo && form.reset(userInfo)
+    userInfo && form.reset({ ...defaultUserInfo, ...userInfo })
   }, [userInfo, form])
+
+  const text = getUiText(form.watch('language'))
 
   const handleSubmit = (userInfo: UserInfo) => {
     send(userInfoDomain.command.UpdateUserInfoCommand(userInfo))
@@ -169,6 +177,45 @@ const ProfileForm: FC = () => {
         />
         <FormField
           control={form.control}
+          name="language"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">{text.languageLabel}</FormLabel>
+              <FormControl>
+                <RadioGroup className="flex flex-wrap gap-x-4 gap-y-2" onValueChange={field.onChange} value={field.value}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="auto" id="language-auto" />
+                    <Label className="cursor-pointer" htmlFor="language-auto">
+                      {text.languageAuto}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="zh_TW" id="language-zh-tw" />
+                    <Label className="cursor-pointer" htmlFor="language-zh-tw">
+                      {text.languageZhTw}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="zh_CN" id="language-zh-cn" />
+                    <Label className="cursor-pointer" htmlFor="language-zh-cn">
+                      {text.languageZhCn}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="en" id="language-en" />
+                    <Label className="cursor-pointer" htmlFor="language-en">
+                      {text.languageEn}
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormDescription>{text.languageDescription}</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="danmakuEnabled"
           render={({ field }) => (
             <FormItem>
@@ -203,7 +250,9 @@ const ProfileForm: FC = () => {
               name="danmakuOpacity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-xs text-slate-500 dark:text-slate-400">Danmaku Opacity 彈幕透明度</FormLabel>
+                  <FormLabel className="font-semibold text-xs text-slate-500 dark:text-slate-400">
+                    Danmaku Opacity 彈幕透明度
+                  </FormLabel>
                   <FormControl>
                     <RadioGroup
                       className="flex gap-x-4"
@@ -212,19 +261,27 @@ const ProfileForm: FC = () => {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="0.3" id="op-30" />
-                        <Label className="cursor-pointer text-xs" htmlFor="op-30">30%</Label>
+                        <Label className="cursor-pointer text-xs" htmlFor="op-30">
+                          30%
+                        </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="0.5" id="op-50" />
-                        <Label className="cursor-pointer text-xs" htmlFor="op-50">50%</Label>
+                        <Label className="cursor-pointer text-xs" htmlFor="op-50">
+                          50%
+                        </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="0.8" id="op-80" />
-                        <Label className="cursor-pointer text-xs" htmlFor="op-80">80%</Label>
+                        <Label className="cursor-pointer text-xs" htmlFor="op-80">
+                          80%
+                        </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="1" id="op-100" />
-                        <Label className="cursor-pointer text-xs" htmlFor="op-100">100%</Label>
+                        <Label className="cursor-pointer text-xs" htmlFor="op-100">
+                          100%
+                        </Label>
                       </div>
                     </RadioGroup>
                   </FormControl>
@@ -237,24 +294,28 @@ const ProfileForm: FC = () => {
               name="danmakuSpeed"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-xs text-slate-500 dark:text-slate-400">Danmaku Speed 彈幕速度</FormLabel>
+                  <FormLabel className="font-semibold text-xs text-slate-500 dark:text-slate-400">
+                    Danmaku Speed 彈幕速度
+                  </FormLabel>
                   <FormControl>
-                    <RadioGroup
-                      className="flex gap-x-4"
-                      onValueChange={field.onChange}
-                      value={field.value ?? 'normal'}
-                    >
+                    <RadioGroup className="flex gap-x-4" onValueChange={field.onChange} value={field.value ?? 'normal'}>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="slow" id="sp-slow" />
-                        <Label className="cursor-pointer text-xs" htmlFor="sp-slow">Slow 慢</Label>
+                        <Label className="cursor-pointer text-xs" htmlFor="sp-slow">
+                          Slow 慢
+                        </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="normal" id="sp-normal" />
-                        <Label className="cursor-pointer text-xs" htmlFor="sp-normal">Normal 正常</Label>
+                        <Label className="cursor-pointer text-xs" htmlFor="sp-normal">
+                          Normal 正常
+                        </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="fast" id="sp-fast" />
-                        <Label className="cursor-pointer text-xs" htmlFor="sp-fast">Fast 快</Label>
+                        <Label className="cursor-pointer text-xs" htmlFor="sp-fast">
+                          Fast 快
+                        </Label>
                       </div>
                     </RadioGroup>
                   </FormControl>
@@ -264,7 +325,6 @@ const ProfileForm: FC = () => {
             />
           </div>
         )}
-
 
         <FormItem>
           <div className="flex items-center space-x-2">
@@ -280,9 +340,54 @@ const ProfileForm: FC = () => {
             </Label>
           </div>
           <FormDescription>
-            Show the floating chat and AI buttons on the right side of the screen. / 在螢幕右側顯示聊天和 AI 摘要的懸浮按鈕。如果隱藏，你也可以點擊瀏覽器工具列上的擴充功能圖示來重新顯示。
+            Show the floating chat and AI buttons on the right side of the screen. / 在螢幕右側顯示聊天和 AI
+            摘要的懸浮按鈕。如果隱藏，你也可以點擊瀏覽器工具列上的擴充功能圖示來重新顯示。
           </FormDescription>
         </FormItem>
+
+        <FormField
+          control={form.control}
+          name="developerMode"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="developer-mode" onCheckedChange={field.onChange} checked={field.value ?? false} />
+                  <FormLabel className="cursor-pointer font-semibold" htmlFor="developer-mode">
+                    Developer Mode 開發者模式
+                  </FormLabel>
+                </div>
+              </FormControl>
+              <FormDescription>
+                Show cross-site presence and site-switch/debug UI in the header. Hidden from normal users by default. /
+                顯示跨網站在線狀態與站點切換除錯介面；預設一般使用者不會看到。
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="hideAllAiMessages"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="hide-all-ai-messages" onCheckedChange={field.onChange} checked={field.value ?? false} />
+                  <FormLabel className="cursor-pointer font-semibold" htmlFor="hide-all-ai-messages">
+                    Hide All AI Messages 隱藏全部 AI 訊息
+                  </FormLabel>
+                </div>
+              </FormControl>
+              <FormDescription>
+                Hide all AI-generated chat replies locally without affecting other users. / 僅在你的本地畫面隱藏所有 AI
+                聊天回覆，不影響其他使用者。
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

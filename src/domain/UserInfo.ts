@@ -9,7 +9,12 @@ export interface UserInfo {
   name: string
   avatar: string
   createTime: number
+  language?: 'auto' | 'zh_TW' | 'zh_CN' | 'en'
+  compatibilityMode?: 'legacy' | 'upstream'
   themeMode: 'system' | 'light' | 'dark'
+  developerMode?: boolean
+  bannedUserIds?: string[]
+  hideAllAiMessages?: boolean
   danmakuEnabled: boolean
   danmakuOpacity?: number
   danmakuSpeed?: 'slow' | 'normal' | 'fast'

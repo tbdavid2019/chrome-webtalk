@@ -130,7 +130,7 @@ const DanmakuDomain = Remesh.domain({
         const onMessage$ = merge(sendTextMessage$, onTextMessage$).pipe(
           map((message) => {
             const danmakuEnabled = get(IsEnabledQuery())
-            return danmakuEnabled ? PushCommand(message) : null
+            return danmakuEnabled && message.senderType !== 'ai' ? PushCommand(message) : null
           })
         )
         return onMessage$

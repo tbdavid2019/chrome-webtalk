@@ -1,8 +1,18 @@
 import { Remesh } from 'remesh'
 import { map, merge, of, EMPTY, mergeMap, fromEventPattern } from 'rxjs'
-import { AtUser, NormalMessage, type MessageUser } from './MessageList'
+import { AiMessageMeta, AtUser, NormalMessage, type MessageUser } from './MessageList'
 import { ChatRoomExtern } from '@/domain/externs/ChatRoom'
 import MessageListDomain, { MessageType } from '@/domain/MessageList'
+import {
+  LegacySendType as SendType,
+  isLegacyRoomMessage,
+  type LegacyHateMessage as HateMessage,
+  type LegacyLikeMessage as LikeMessage,
+  type LegacyRoomMessage as RoomMessage,
+  type LegacySyncHistoryMessage as SyncHistoryMessage,
+  type LegacySyncUserMessage as SyncUserMessage,
+  type LegacyTextMessage as TextMessage
+} from '@/protocol'
 import UserInfoDomain from '@/domain/UserInfo'
 import { desert, getTextByteSize, upsert } from '@/utils'
 import { nanoid } from 'nanoid'
@@ -14,127 +24,22 @@ import {
   SYNC_BATCH_DELAY_MS,
   SYNC_MESSAGE_DELAY_MS
 } from '@/constants/config'
-import * as v from 'valibot'
 
 export { MessageType }
-
-export enum SendType {
-  Like = 'Like',
-  Hate = 'Hate',
-  Text = 'Text',
-  SyncUser = 'SyncUser',
-  SyncHistory = 'SyncHistory'
-}
-
-export interface SyncUserMessage extends MessageUser {
-  type: SendType.SyncUser
-  id: string
-  peerId: string
-  joinTime: number
-  sendTime: number
-  lastMessageTime: number
-}
-
-export interface SyncHistoryMessage extends MessageUser {
-  type: SendType.SyncHistory
-  sendTime: number
-  id: string
-  messages: NormalMessage[]
-}
-
-export interface LikeMessage extends MessageUser {
-  type: SendType.Like
-  sendTime: number
-  id: string
-}
-
-export interface HateMessage extends MessageUser {
-  type: SendType.Hate
-  sendTime: number
-  id: string
-}
-
-export interface TextMessage extends MessageUser {
-  type: SendType.Text
-  id: string
-  body: string
-  sendTime: number
-  atUsers: AtUser[]
-  isPrivate?: boolean
-  toUser?: MessageUser
-}
-
-export type RoomMessage = SyncUserMessage | SyncHistoryMessage | LikeMessage | HateMessage | TextMessage
+export { SendType }
+export type { RoomMessage, SyncHistoryMessage, SyncUserMessage, LikeMessage, HateMessage, TextMessage }
 
 export type RoomUser = MessageUser & { peerIds: string[]; joinTime: number }
 
-const MessageUserSchema = {
-  userId: v.string(),
-  username: v.string(),
-  userAvatar: v.string()
+export interface SendTextMessageInput {
+  id?: string
+  body: string
+  atUsers: AtUser[]
+  senderType?: 'user' | 'ai'
+  aiMeta?: AiMessageMeta
+  username?: string
+  userAvatar?: string
 }
-
-const AtUserSchema = {
-  positions: v.array(v.tuple([v.number(), v.number()])),
-  ...MessageUserSchema
-}
-
-const NormalMessageSchema = {
-  id: v.string(),
-  type: v.literal(MessageType.Normal),
-  body: v.string(),
-  sendTime: v.number(),
-  receiveTime: v.number(),
-  likeUsers: v.array(v.object(MessageUserSchema)),
-  hateUsers: v.array(v.object(MessageUserSchema)),
-  atUsers: v.array(v.object(AtUserSchema)),
-  ...MessageUserSchema
-}
-
-const RoomMessageSchema = v.union([
-  v.object({
-    type: v.literal(SendType.Text),
-    id: v.string(),
-    body: v.string(),
-    sendTime: v.number(),
-    atUsers: v.array(v.object(AtUserSchema)),
-    isPrivate: v.optional(v.boolean()),
-    toUser: v.optional(v.object(MessageUserSchema)),
-    ...MessageUserSchema
-  }),
-  v.object({
-    type: v.literal(SendType.Like),
-    id: v.string(),
-    sendTime: v.number(),
-    ...MessageUserSchema
-  }),
-  v.object({
-    type: v.literal(SendType.Hate),
-    id: v.string(),
-    sendTime: v.number(),
-    ...MessageUserSchema
-  }),
-  v.object({
-    type: v.literal(SendType.SyncUser),
-    id: v.string(),
-    peerId: v.string(),
-    joinTime: v.number(),
-    sendTime: v.number(),
-    lastMessageTime: v.number(),
-    ...MessageUserSchema
-  }),
-  v.object({
-    type: v.literal(SendType.SyncHistory),
-    id: v.string(),
-    sendTime: v.number(),
-    messages: v.array(v.object(NormalMessageSchema)),
-    ...MessageUserSchema
-  })
-])
-
-// Check if the message conforms to the format
-const checkMessageFormat = (message: v.InferInput<typeof RoomMessageSchema>) =>
-  v.safeParse(RoomMessageSchema, message).success
 
 const ChatRoomDomain = Remesh.domain({
   name: 'ChatRoomDomain',
@@ -266,7 +171,7 @@ const ChatRoomDomain = Remesh.domain({
 
     const SendTextMessageCommand = domain.command({
       name: 'Room.SendTextMessageCommand',
-      impl: ({ get }, message: string | { body: string; atUsers: AtUser[] }) => {
+      impl: ({ get }, message: string | SendTextMessageInput) => {
         const self = get(SelfUserQuery())
 
         // 檢查用戶是否已經加入房間
@@ -278,13 +183,29 @@ const ChatRoomDomain = Remesh.domain({
         const privateTarget = get(PrivateChatTargetQuery())
         const isPrivate = !!privateTarget
 
+        const input =
+          typeof message === 'string'
+            ? {
+                body: message,
+                atUsers: [] as AtUser[],
+                senderType: 'user' as const
+              }
+            : {
+                senderType: 'user' as const,
+                ...message
+              }
+
         const textMessage: TextMessage = {
           ...self,
-          id: nanoid(),
+          username: input.username ?? self.username,
+          userAvatar: input.userAvatar ?? self.userAvatar,
+          id: input.id ?? nanoid(),
           type: SendType.Text,
           sendTime: Date.now(),
-          body: typeof message === 'string' ? message : message.body,
-          atUsers: typeof message === 'string' ? [] : message.atUsers,
+          body: input.body,
+          atUsers: input.atUsers,
+          senderType: input.senderType,
+          aiMeta: input.aiMeta,
           isPrivate,
           toUser: privateTarget
             ? {
@@ -301,7 +222,9 @@ const ChatRoomDomain = Remesh.domain({
           receiveTime: Date.now(),
           likeUsers: [],
           hateUsers: [],
-          atUsers: typeof message === 'string' ? [] : message.atUsers,
+          atUsers: input.atUsers,
+          senderType: input.senderType,
+          aiMeta: input.aiMeta,
           isPrivate,
           toUser: privateTarget
             ? {
@@ -656,7 +579,7 @@ const ChatRoomDomain = Remesh.domain({
         const onMessage$ = fromEventPattern<RoomMessage>(chatRoomExtern.onMessage).pipe(
           mergeMap((message) => {
             // Filter out messages that do not conform to the format
-            if (!checkMessageFormat(message)) {
+            if (!isLegacyRoomMessage(message)) {
               console.warn('Invalid message format', message)
               return EMPTY
             }
@@ -691,7 +614,14 @@ const ChatRoomDomain = Remesh.domain({
                 }
 
                 case SendType.SyncHistory: {
-                  return of(...message.messages.map((message) => messageListDomain.command.UpsertItemCommand(message)))
+                  return of(
+                    ...message.messages.map((message) =>
+                      messageListDomain.command.UpsertItemCommand({
+                        ...message,
+                        type: MessageType.Normal
+                      })
+                    )
+                  )
                 }
 
                 case SendType.Text:

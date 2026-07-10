@@ -27,21 +27,19 @@
 :where([data-sonner-toaster]) {
   position: fixed;
   width: var(--width);
-  font-family:
+  font-family: var(
+    --font-ui,
+    'PingFang TC',
+    'Noto Sans TC',
+    'Microsoft JhengHei',
+    'Segoe UI',
     ui-sans-serif,
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
-    Segoe UI,
     Roboto,
-    Helvetica Neue,
-    Arial,
-    Noto Sans,
-    sans-serif,
-    Apple Color Emoji,
-    Segoe UI Emoji,
-    Segoe UI Symbol,
-    Noto Color Emoji;
+    sans-serif
+  );
   --gray1: hsl(0, 0%, 99%);
   --gray2: hsl(0, 0%, 97.3%);
   --gray3: hsl(0, 0%, 95.1%);
