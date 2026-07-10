@@ -20,6 +20,13 @@ export interface AtUser extends MessageUser {
   positions: [number, number][]
 }
 
+export interface AiMessageMeta {
+  ownerUserId: string
+  ownerUsername: string
+  triggerMessageId: string
+  model?: string
+}
+
 export interface NormalMessage extends MessageUser {
   type: MessageType.Normal
   id: string
@@ -29,6 +36,8 @@ export interface NormalMessage extends MessageUser {
   likeUsers: MessageUser[]
   hateUsers: MessageUser[]
   atUsers: AtUser[]
+  senderType?: 'user' | 'ai'
+  aiMeta?: AiMessageMeta
   isPrivate?: boolean
   toUser?: MessageUser
 }

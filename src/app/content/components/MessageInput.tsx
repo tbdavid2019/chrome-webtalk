@@ -44,6 +44,10 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
     },
     ref
   ) => {
+    const currentLength = value?.length ?? 0
+    const nearLimit = currentLength >= Math.max(Math.floor(maxLength * 0.9), maxLength - 50)
+    const atLimit = currentLength >= maxLength
+
     return (
       <div className={cn('relative', className)}>
         <Textarea
@@ -55,6 +59,8 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           className={cn(
             'w-full min-h-[38px] max-h-24 resize-none rounded-xl border border-border bg-muted px-3 py-2 text-base focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-foreground pb-6',
             {
+              'border-amber-400/80 focus-visible:ring-amber-500': nearLimit,
+              'border-red-400/90 focus-visible:ring-red-500': atLimit,
               'disabled:opacity-100': loading
             }
           )}
@@ -68,11 +74,14 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           disabled={disabled || loading}
         />
         <div
-          className={cn('absolute bottom-1.5 right-3 rounded-lg text-xs text-muted-foreground', {
+          className={cn('absolute bottom-1.5 right-3 rounded-lg text-xs font-medium tabular-nums', {
+            'text-muted-foreground': !nearLimit,
+            'text-amber-600 dark:text-amber-400': nearLimit && !atLimit,
+            'text-red-600 dark:text-red-400': atLimit,
             'opacity-50': disabled || loading
           })}
         >
-          {value?.length ?? 0}/{maxLength}
+          {currentLength}/{maxLength}
         </div>
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center text-slate-800 after:absolute after:inset-0 after:backdrop-blur-xs dark:text-slate-100">

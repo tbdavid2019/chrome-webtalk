@@ -1,6 +1,7 @@
 import { type Config } from 'tailwindcss'
 import typography from '@tailwindcss/typography'
 import animate from 'tailwindcss-animate'
+import defaultTheme from 'tailwindcss/defaultTheme'
 
 export default {
   darkMode: ['class'],
@@ -11,6 +12,9 @@ export default {
       padding: '2rem'
     },
     extend: {
+      fontFamily: {
+        sans: ['PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Segoe UI', ...defaultTheme.fontFamily.sans]
+      },
       fontSize: {
         '2xs': '0.625rem'
       },

@@ -1,5 +1,5 @@
 import { useState, type FC } from 'react'
-import { Globe2Icon, XIcon } from 'lucide-react'
+import { BugIcon, Globe2Icon, XIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/HoverCard'
 import { Button } from '@/components/ui/Button'
@@ -15,6 +15,24 @@ import NumberFlow from '@number-flow/react'
 import AppStatusDomain from '@/domain/AppStatus'
 import UserInfoDomain from '@/domain/UserInfo'
 
+const PresenceCount: FC<{ count: number; capped?: boolean }> = ({ count, capped }) => {
+  const tone =
+    count > 1 ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-orange-200 bg-orange-50 text-orange-700'
+
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium leading-none tabular-nums dark:border-white/10 dark:bg-white/5 dark:text-slate-100',
+        tone
+      )}
+    >
+      <span aria-hidden>👥</span>
+      {import.meta.env.FIREFOX ? count : <NumberFlow className="tabular-nums" willChange value={count} />}
+      {capped && <span>+</span>}
+    </span>
+  )
+}
+
 const Header: FC = () => {
   const send = useRemeshSend()
   const siteInfo = getSiteInfo()
@@ -27,6 +45,8 @@ const Header: FC = () => {
   const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
   const privateChatTarget = useRemeshQuery(chatRoomDomain.query.PrivateChatTargetQuery())
   const chatOnlineCount = chatUserList.length
+  const developerMode = userInfo?.developerMode === true
+  const cappedChatOnlineCount = Math.min(chatOnlineCount, 99)
 
   const virtualOnlineGroup = virtualUserList
     .flatMap((user) => user.fromInfos.map((from) => ({ from, user })))
@@ -53,113 +73,71 @@ const Header: FC = () => {
 
   return (
     <div className="z-10 flex h-12 items-center justify-between border-b border-border bg-background px-4">
-      <Avatar className="size-8 rounded-md">
-        <AvatarImage src={siteInfo.icon} alt="favicon" />
-        <AvatarFallback>
-          <Globe2Icon size="100%" className="text-muted-foreground" />
-        </AvatarFallback>
-      </Avatar>
-      <HoverCard>
-        <HoverCardTrigger asChild>
-          <Button className="overflow-hidden rounded-md p-2 hover:no-underline" variant="link">
-            <span className="truncate text-sm font-semibold text-foreground">
-              {siteInfo.hostname.replace(/^www\./i, '')}
-            </span>
-          </Button>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-80 rounded-lg p-0">
-          <ScrollArea type="scroll" className="max-h-96 min-h-[72px] p-2" ref={setVirtualOnlineGroupScrollParentRef}>
-            <Virtuoso
-              data={virtualOnlineGroup}
-              defaultItemHeight={56}
-              customScrollParent={virtualOnlineGroupScrollParentRef!}
-              itemContent={(_index, site) => (
-                <Link
-                  underline={false}
-                  href={site.origin}
-                  className="grid cursor-pointer grid-cols-[auto_1fr] items-center gap-x-2 rounded-lg px-2 py-1.5 hover:bg-accent hover:text-accent-foreground"
-                >
-                  <Avatar className="size-10 rounded-sm">
-                    <AvatarImage src={site.icon} alt="favicon" />
-                    <AvatarFallback>
-                      <Globe2Icon size="100%" className="text-gray-400" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="grid items-center">
-                    <div className="flex items-center gap-x-1 overflow-hidden">
-                      <h4 className="flex-1 truncate text-sm font-semibold text-slate-600 dark:text-slate-50">
-                        {site.hostname.replace(/^www\./i, '')}
-                      </h4>
-                      <div className="shrink-0 text-sm">
-                        <div className="flex items-center gap-x-1 text-nowrap text-xs text-slate-500 dark:text-slate-100">
-                          <div className="flex items-center gap-x-1 pt-px">
-                            <span className="relative flex size-2">
-                              <span
-                                className={cn(
-                                  'absolute inline-flex size-full animate-ping rounded-full opacity-75',
-                                  site.users.length > 1 ? 'bg-green-400' : 'bg-orange-400'
-                                )}
-                              ></span>
-                              <span
-                                className={cn(
-                                  'relative inline-flex size-full rounded-full',
-                                  site.users.length > 1 ? 'bg-green-500' : 'bg-orange-500'
-                                )}
-                              ></span>
-                            </span>
-                            <span className="flex items-center leading-none ">
-                              <span className="py-[0.25em]">ONLINE</span>
-                            </span>
-                          </div>
-                          {import.meta.env.FIREFOX ? (
-                            <span className="tabular-nums">{site.users.length}</span>
-                          ) : (
-                            <NumberFlow className="tabular-nums" willChange value={site.users.length} />
-                          )}
+      <div className="flex min-w-0 items-center gap-2">
+        <Avatar className="size-8 rounded-md">
+          <AvatarImage src={siteInfo.icon} alt="favicon" />
+          <AvatarFallback>
+            <Globe2Icon size="100%" className="text-muted-foreground" />
+          </AvatarFallback>
+        </Avatar>
+        <span className="truncate text-sm font-semibold text-foreground">
+          {siteInfo.hostname.replace(/^www\./i, '')}
+        </span>
+        {developerMode && virtualOnlineGroup.length > 1 && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Button
+                className="h-8 gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:no-underline hover:text-foreground"
+                variant="ghost"
+              >
+                <BugIcon size={14} />
+                <span>Sites</span>
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 rounded-lg p-0">
+              <ScrollArea
+                type="scroll"
+                className="max-h-96 min-h-[72px] p-2"
+                ref={setVirtualOnlineGroupScrollParentRef}
+              >
+                <Virtuoso
+                  data={virtualOnlineGroup}
+                  defaultItemHeight={56}
+                  customScrollParent={virtualOnlineGroupScrollParentRef!}
+                  itemContent={(_index, site) => (
+                    <Link
+                      underline={false}
+                      href={site.origin}
+                      className="grid cursor-pointer grid-cols-[auto_1fr] items-center gap-x-2 rounded-lg px-2 py-1.5 hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <Avatar className="size-10 rounded-sm">
+                        <AvatarImage src={site.icon} alt="favicon" />
+                        <AvatarFallback>
+                          <Globe2Icon size="100%" className="text-muted-foreground" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="grid items-center gap-y-1">
+                        <div className="flex items-center gap-x-2 overflow-hidden">
+                          <h4 className="flex-1 truncate text-sm font-semibold text-foreground">
+                            {site.hostname.replace(/^www\./i, '')}
+                          </h4>
+                          <PresenceCount count={site.users.length} />
                         </div>
+                        <AvatarCircles max={9} size="xs" avatarUrls={site.users.map((user) => user.userAvatar)} />
                       </div>
-                    </div>
-                    <AvatarCircles max={9} size="xs" avatarUrls={site.users.map((user) => user.userAvatar)} />
-                  </div>
-                </Link>
-              )}
-            ></Virtuoso>
-          </ScrollArea>
-        </HoverCardContent>
-      </HoverCard>
+                    </Link>
+                  )}
+                ></Virtuoso>
+              </ScrollArea>
+            </HoverCardContent>
+          </HoverCard>
+        )}
+      </div>
       <div className="flex items-center gap-2">
         <HoverCard>
           <HoverCardTrigger asChild>
-            <Button className="rounded-md p-0 hover:no-underline animate-in fade-in" variant="link">
-              <div className="flex items-center gap-x-1 text-nowrap text-xs text-muted-foreground hover:text-foreground">
-                <div className="flex items-center gap-x-1 pt-px">
-                  <span className="relative flex size-2">
-                    <span
-                      className={cn(
-                        'absolute inline-flex size-full animate-ping rounded-full opacity-75',
-                        chatOnlineCount > 1 ? 'bg-green-400' : 'bg-orange-400'
-                      )}
-                    ></span>
-                    <span
-                      className={cn(
-                        'relative inline-flex size-full rounded-full',
-                        chatOnlineCount > 1 ? 'bg-green-500' : 'bg-orange-500'
-                      )}
-                    ></span>
-                  </span>
-                  <span className="flex items-center leading-none">
-                    <span className="py-[0.25em]">ONLINE</span>
-                  </span>
-                </div>
-                {import.meta.env.FIREFOX ? (
-                  <span className="tabular-nums">{Math.min(chatUserList.length, 99)}</span>
-                ) : (
-                  <span className="tabular-nums">
-                    <NumberFlow className="tabular-nums" willChange value={Math.min(chatUserList.length, 99)} />
-                    {chatUserList.length > 99 && <span className="text-xs">+</span>}
-                  </span>
-                )}
-              </div>
+            <Button className="rounded-full p-0 hover:no-underline animate-in fade-in" variant="link">
+              <PresenceCount count={cappedChatOnlineCount} capped={chatOnlineCount > 99} />
             </Button>
           </HoverCardTrigger>
           <HoverCardContent className="w-36 rounded-lg p-0">
@@ -184,7 +162,8 @@ const Header: FC = () => {
                       className={cn(
                         'flex items-center gap-x-2 rounded-md px-2 py-1 outline-none select-none my-0.5',
                         !isMe && 'cursor-pointer hover:bg-accent/70 active:bg-accent transition-colors',
-                        isSelected && 'bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100/50 dark:border-indigo-900/50'
+                        isSelected &&
+                          'bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100/50 dark:border-indigo-900/50'
                       )}
                       title={isMe ? undefined : isSelected ? '取消私聊' : '點擊開始私聊'}
                     >
@@ -192,10 +171,12 @@ const Header: FC = () => {
                         <AvatarImage className="size-full" src={user.userAvatar} alt="avatar" />
                         <AvatarFallback>{user.username.at(0)}</AvatarFallback>
                       </Avatar>
-                      <div className={cn(
-                        'flex-1 truncate text-xs text-slate-500 dark:text-slate-50',
-                        isSelected && 'text-indigo-600 dark:text-indigo-400 font-semibold'
-                      )}>
+                      <div
+                        className={cn(
+                          'flex-1 truncate text-xs text-slate-500 dark:text-slate-50',
+                          isSelected && 'text-indigo-600 dark:text-indigo-400 font-semibold'
+                        )}
+                      >
                         {user.username} {isMe && '(me)'}
                       </div>
                       {isSelected && (

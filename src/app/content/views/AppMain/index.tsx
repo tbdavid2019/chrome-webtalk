@@ -37,7 +37,7 @@ const AppMain: FC<AppMainProps> = ({ children, className, zIndex, onMouseDown })
             zIndex: zIndex
           }}
           className={cn(
-            'fixed top-0 right-0 z-infinity h-full grid grid-rows-[auto_1fr_auto] bg-background text-foreground shadow-2xl border-l border-border',
+            'fixed top-0 right-0 z-infinity h-full grid grid-rows-[auto_1fr_auto] border-l border-border bg-background font-sans text-foreground shadow-2xl',
             className
           )}
           onMouseDown={onMouseDown}

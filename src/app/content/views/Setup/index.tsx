@@ -29,7 +29,12 @@ const generateUserInfo = async (): Promise<UserInfo> => {
     name: '',
     avatar: await generateRandomAvatar(MAX_AVATAR_SIZE),
     createTime: Date.now(),
+    language: 'auto',
+    compatibilityMode: 'legacy',
     themeMode: 'system',
+    developerMode: false,
+    bannedUserIds: [],
+    hideAllAiMessages: false,
     danmakuEnabled: true,
     notificationEnabled: true,
     notificationType: 'all'
@@ -135,14 +140,12 @@ const Setup: FC = () => {
               maxLength={20}
             />
           </div>
-          <p className="text-[10px] text-muted-foreground font-medium">
-            💡 點擊頭像可以隨機更換頭像
-          </p>
+          <p className="text-[10px] text-muted-foreground font-medium">💡 點擊頭像可以隨機更換頭像</p>
         </div>
 
-        <PulsatingButton 
-          onClick={handleSetup} 
-          pulseColor="#C4B4D560" 
+        <PulsatingButton
+          onClick={handleSetup}
+          pulseColor="#C4B4D560"
           className="text-xs font-semibold px-6 h-9 rounded-full bg-primary hover:bg-primary/95 text-primary-foreground shadow shadow-primary/30"
         >
           Start chatting

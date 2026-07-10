@@ -77,6 +77,7 @@ export const useSummarize = () => {
   }
 
   const clearSummary = () => setSummary('')
+  const restoreSummary = (content: string) => setSummary(content)
 
-  return { summarize, loading, summary, clearSummary }
+  return { summarize, loading, summary, clearSummary, restoreSummary }
 }

@@ -15,13 +15,32 @@ import useTriggerAway from '@/hooks/useTriggerAway'
 import { ScrollArea } from '@/components/ui/ScrollArea'
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import UserInfoDomain from '@/domain/UserInfo'
-import { blobToBase64, cn, compressImage, getRootNode, getTextByteSize, getTextSimilarity } from '@/utils'
+import { blobToBase64, cn, compressImage, getRootNode, getTextByteSize, getTextSimilarity, getUiText } from '@/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/Avatar'
 import { AvatarImage } from '@radix-ui/react-avatar'
 import ToastDomain from '@/domain/Toast'
 import ImageButton from '../../components/ImageButton'
 import { nanoid } from 'nanoid'
 import type { AtUser } from '@/domain/MessageList'
+import { requestAiChatReply } from '@/utils'
+import { ToastImpl } from '@/domain/impls/Toast'
+
+interface AutoCompleteAiItem {
+  kind: 'ai'
+  username: 'ai'
+  label: string
+  description: string
+}
+
+interface AutoCompleteUserItem {
+  kind: 'user'
+  userId: string
+  username: string
+  userAvatar: string
+  similarity: number
+}
+
+type AutoCompleteItem = AutoCompleteAiItem | AutoCompleteUserItem
 
 const Footer: FC = () => {
   const send = useRemeshSend()
@@ -31,6 +50,7 @@ const Footer: FC = () => {
   const message = useRemeshQuery(messageInputDomain.query.MessageQuery())
   const userInfoDomain = useRemeshDomain(UserInfoDomain())
   const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
+  const text = getUiText(userInfo?.language)
   const userList = useRemeshQuery(chatRoomDomain.query.UserListQuery())
   const privateChatTarget = useRemeshQuery(chatRoomDomain.query.PrivateChatTargetQuery())
 
@@ -46,6 +66,9 @@ const Footer: FC = () => {
   const virtuosoRef = useRef<VirtuosoHandle>(null)
   const [inputLoading, setInputLoading] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const maxLengthWarnedRef = useRef(false)
+  const aiRequestInFlightRef = useRef(false)
+  const aiLastTriggeredAtRef = useRef(0)
 
   const shareRef = useShareRef(inputRef, setRef)
 
@@ -98,13 +121,28 @@ const Footer: FC = () => {
   const [searchNameKeyword, setSearchNameKeyword] = useState('')
 
   const autoCompleteList = useMemo(() => {
-    return userList
+    const keyword = searchNameKeyword.toLowerCase()
+    const aiItem: AutoCompleteAiItem = {
+      kind: 'ai',
+      username: 'ai',
+      label: text.aiInvokeLabel,
+      description: text.aiInvokeDescription
+    }
+
+    const matchedUsers: AutoCompleteUserItem[] = userList
       .filter((user) => user.userId !== userInfo?.id)
       .map((item) => ({
+        kind: 'user' as const,
         ...item,
-        similarity: getTextSimilarity(searchNameKeyword.toLowerCase(), item.username.toLowerCase())
+        similarity: getTextSimilarity(keyword, item.username.toLowerCase())
       }))
       .toSorted((a, b) => b.similarity - a.similarity)
+
+    if (!keyword || 'ai'.includes(keyword) || keyword.includes('ai')) {
+      return [aiItem, ...matchedUsers]
+    }
+
+    return matchedUsers
   }, [searchNameKeyword, userList, userInfo])
 
   const selectedUser = autoCompleteList.find((_, index) => index === selectedUserIndex)!
@@ -133,7 +171,7 @@ const Footer: FC = () => {
     const currentMessage = message
 
     if (!`${currentMessage}`.trim()) {
-      return send(toastDomain.command.WarningCommand('Message cannot be empty.'))
+      return send(toastDomain.command.WarningCommand(text.emptyMessage))
     }
 
     setIsSending(true)
@@ -151,12 +189,40 @@ const Footer: FC = () => {
 
     try {
       const transformedMessage = await transformMessage(currentMessage)
-      const newMessage = { body: transformedMessage, atUsers }
+      const isAiPrompt = /^@ai(?:\s|$)/i.test(transformedMessage.trim())
+      const aiPrompt = transformedMessage
+        .trim()
+        .replace(/^@ai\s*/i, '')
+        .trim()
+      const triggerMessageId = nanoid()
+      const newMessage = { id: triggerMessageId, body: transformedMessage, atUsers }
       const byteSize = getTextByteSize(JSON.stringify(newMessage))
 
       if (byteSize > WEB_RTC_MAX_MESSAGE_SIZE) {
-        send(toastDomain.command.WarningCommand('Message size cannot exceed 256KiB.'))
+        send(toastDomain.command.WarningCommand(text.messageTooLarge))
         return
+      }
+
+      if (isAiPrompt) {
+        if (privateChatTarget) {
+          send(toastDomain.command.WarningCommand(text.aiUnsupportedInPrivate))
+          return
+        }
+
+        if (!aiPrompt) {
+          send(toastDomain.command.WarningCommand(text.aiPromptRequired))
+          return
+        }
+
+        if (aiRequestInFlightRef.current) {
+          send(toastDomain.command.WarningCommand(text.aiBusy))
+          return
+        }
+
+        if (Date.now() - aiLastTriggeredAtRef.current < 30000) {
+          send(toastDomain.command.WarningCommand(text.aiCooldown))
+          return
+        }
       }
 
       send(messageInputDomain.command.ClearCommand())
@@ -170,6 +236,46 @@ const Footer: FC = () => {
 
       // 發送消息
       send(chatRoomDomain.command.SendTextMessageCommand(newMessage))
+
+      if (isAiPrompt && userInfo) {
+        aiRequestInFlightRef.current = true
+        aiLastTriggeredAtRef.current = Date.now()
+        const loadingToastId = ToastImpl.value.loading(text.aiLoading, 30000)
+
+        try {
+          const result = await requestAiChatReply({
+            prompt: aiPrompt,
+            pageTitle: document.title,
+            pageUrl: window.location.href,
+            pageText: document.body.innerText,
+            language: userInfo.language
+          })
+
+          send(
+            chatRoomDomain.command.SendTextMessageCommand({
+              body: result.content,
+              atUsers: [],
+              senderType: 'ai',
+              username: 'AI',
+              userAvatar: userInfo.avatar,
+              aiMeta: {
+                ownerUserId: userInfo.id,
+                ownerUsername: userInfo.name,
+                triggerMessageId,
+                model: result.model
+              }
+            })
+          )
+
+          ToastImpl.value.cancel(loadingToastId)
+          send(toastDomain.command.SuccessCommand({ message: text.aiReplied, duration: 2000 }))
+        } catch (error) {
+          ToastImpl.value.cancel(loadingToastId)
+          send(toastDomain.command.ErrorCommand(error instanceof Error ? error.message : text.aiReplyFailed))
+        } finally {
+          aiRequestInFlightRef.current = false
+        }
+      }
     } catch (error) {
       console.error('[WebTalk] Failed to send message', error)
       if (inputCleared) {
@@ -229,7 +335,7 @@ const Footer: FC = () => {
       if (isComposing.current) return
 
       if (autoCompleteListShow && autoCompleteList.length) {
-        handleInjectAtSyntax(selectedUser.username)
+        handleInjectAtSyntax(selectedUser)
       } else {
         handleSend()
       }
@@ -267,6 +373,15 @@ const Footer: FC = () => {
 
     updateAtUserAtRecord(currentMessage, start, end, 0)
 
+    if (currentMessage.length >= MESSAGE_MAX_LENGTH) {
+      if (!maxLengthWarnedRef.current) {
+        send(toastDomain.command.WarningCommand(`Message length limit reached (${MESSAGE_MAX_LENGTH} chars).`))
+        maxLengthWarnedRef.current = true
+      }
+    } else {
+      maxLengthWarnedRef.current = false
+    }
+
     send(messageInputDomain.command.InputCommand(currentMessage))
   }
 
@@ -284,7 +399,6 @@ const Footer: FC = () => {
   const handleCompositionEnd = () => {
     isComposing.current = false
   }
-
 
   const handleInjectEmoji = (emoji: string) => {
     const newMessage = `${message.slice(0, selectionEnd)}${emoji}${message.slice(selectionEnd)}`
@@ -325,6 +439,26 @@ const Footer: FC = () => {
     window.dispatchEvent(event)
   }
 
+  const handleInjectAiPrompt = () => {
+    const before = message.slice(0, selectionEnd)
+    const after = message.slice(selectionEnd)
+    const needsLeadingSpace = before.length > 0 && !/\s$/.test(before)
+    const aiPrompt = `${needsLeadingSpace ? ' ' : ''}@ai `
+    const newMessage = `${before}${aiPrompt}${after}`
+    const cursor = before.length + aiPrompt.length
+
+    updateAtUserAtRecord(newMessage, selectionStart, cursor, 0)
+    send(messageInputDomain.command.InputCommand(newMessage))
+    setAutoCompleteListShow(false)
+    setSearchNameKeyword('')
+    setSelectedUserIndex(0)
+
+    requestIdleCallback(() => {
+      inputRef.current?.setSelectionRange(cursor, cursor)
+      inputRef.current?.focus()
+    })
+  }
+
   const handleInjectImage = async (file: File) => {
     try {
       setInputLoading(true)
@@ -358,12 +492,13 @@ const Footer: FC = () => {
     }
   }
 
-  const handleInjectAtSyntax = (username: string) => {
+  const handleInjectAtSyntax = (item: AutoCompleteItem) => {
     const atIndex = message.lastIndexOf('@', selectionEnd - 1)
     // Determine if there is a space before @
     const hasBeforeSpace = message.slice(atIndex - 1, atIndex) === ' '
     const hasAfterSpace = message.slice(selectionEnd, selectionEnd + 1) === ' '
 
+    const username = item.kind === 'ai' ? 'ai' : item.username
     const atText = `${hasBeforeSpace ? '' : ' '}@${username}${hasAfterSpace ? '' : ' '}`
     const newMessage = message.slice(0, atIndex) + `${atText}` + message.slice(selectionEnd)
 
@@ -378,7 +513,11 @@ const Footer: FC = () => {
     // Calculate the difference after replacing @text with @user
     const offset = newMessage.length - message.length - (atUserPosition[1] - atUserPosition[0])
 
-    updateAtUserAtRecord(newMessage, ...atUserPosition, offset, selectedUser.userId)
+    if (item.kind === 'user') {
+      updateAtUserAtRecord(newMessage, ...atUserPosition, offset, item.userId)
+    } else {
+      updateAtUserAtRecord(newMessage, ...atUserPosition, offset)
+    }
 
     send(messageInputDomain.command.InputCommand(newMessage))
     requestIdleCallback(() => {
@@ -395,8 +534,8 @@ const Footer: FC = () => {
         <Portal
           container={root}
           ref={shareAutoCompleteListRef}
-          className="fixed z-infinity w-36 -translate-y-full overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-md duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
-          style={{ left: `min(${x}px, 100vw - 160px)`, top: `${y}px` }}
+          className="fixed z-infinity w-44 -translate-y-full overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-md duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+          style={{ left: `min(${x}px, 100vw - 192px)`, top: `${y}px` }}
         >
           <ScrollArea className="max-h-[204px] min-h-9 p-1" ref={setScrollParentRef}>
             <Virtuoso
@@ -405,10 +544,10 @@ const Footer: FC = () => {
               defaultItemHeight={28}
               context={{ currentItemIndex: selectedUserIndex }}
               customScrollParent={scrollParentRef!}
-              itemContent={(index, user) => (
+              itemContent={(index, item) => (
                 <div
-                  key={user.userId}
-                  onClick={() => handleInjectAtSyntax(user.username)}
+                  key={item.kind === 'ai' ? 'ai-assistant' : item.userId}
+                  onClick={() => handleInjectAtSyntax(item)}
                   onMouseEnter={() => setSelectedUserIndex(index)}
                   className={cn(
                     'flex cursor-pointer select-none items-center gap-x-2 rounded-md px-2 py-1.5 outline-none',
@@ -418,10 +557,17 @@ const Footer: FC = () => {
                   )}
                 >
                   <Avatar className="size-4 shrink-0">
-                    <AvatarImage className="size-full" src={user.userAvatar} alt="avatar" />
-                    <AvatarFallback>{user.username.at(0)}</AvatarFallback>
+                    {item.kind === 'user' && <AvatarImage className="size-full" src={item.userAvatar} alt="avatar" />}
+                    <AvatarFallback>{item.kind === 'ai' ? <BotIcon size={12} /> : item.username.at(0)}</AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 truncate text-xs text-slate-500 dark:text-slate-50">{user.username}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-xs text-slate-500 dark:text-slate-50">
+                      {item.kind === 'ai' ? item.label : item.username}
+                    </div>
+                    {item.kind === 'ai' && (
+                      <div className="truncate text-[10px] text-muted-foreground">{item.description}</div>
+                    )}
+                  </div>
                 </div>
               )}
             ></Virtuoso>
@@ -457,8 +603,8 @@ const Footer: FC = () => {
         maxLength={MESSAGE_MAX_LENGTH}
         placeholder={
           privateChatTarget
-            ? `傳送私密訊息給 @${privateChatTarget.username}...`
-            : '輸入訊息...'
+            ? text.privateChatPlaceholder.replace('{username}', privateChatTarget.username)
+            : text.aiPromptPlaceholder
         }
       ></MessageInput>
       <div className="flex items-center gap-2">
@@ -490,10 +636,21 @@ const Footer: FC = () => {
         >
           <LinkIcon size={16} />
         </Button>
-        <Button 
-          className="ml-auto rounded-full text-sm font-bold px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95" 
-          size="sm" 
-          disabled={isSending || inputLoading} 
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="rounded-full px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
+          onClick={handleInjectAiPrompt}
+          title={text.aiInsertTitle}
+        >
+          <BotIcon size={14} />
+          <span className="ml-1">{text.aiInvokeLabel}</span>
+        </Button>
+        <Button
+          className="ml-auto rounded-full text-sm font-bold px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95"
+          size="sm"
+          disabled={isSending || inputLoading}
           onClick={handleSend}
         >
           <span className="mr-1.5">Send</span>
@@ -507,4 +664,3 @@ const Footer: FC = () => {
 Footer.displayName = 'Footer'
 
 export default Footer
-

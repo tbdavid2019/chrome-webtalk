@@ -134,7 +134,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const send = useRemeshSend()
   const appStatusDomain = useRemeshDomain(AppStatusDomain())
   const [language, setLanguage] = useState<Lang>(detectBrowserLang())
-  const { summarize, loading, summary, clearSummary } = useSummarize()
+  const { summarize, loading, summary, clearSummary, restoreSummary } = useSummarize()
   const [pageText, setPageText] = useState('')
   const [apiKey, setApiKey] = useState(DEFAULT_API_KEY)
   const [apiBaseURL, setApiBaseURL] = useState(DEFAULT_API_BASE_URL)
@@ -197,6 +197,23 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
     }
   }
 
+  const removeHistoryEntry = async (entryId?: string) => {
+    if (!entryId) return
+
+    try {
+      const stored = await browser.storage.local.get(HISTORY_STORAGE_KEY)
+      const list: SummaryHistoryEntry[] = Array.isArray(stored[HISTORY_STORAGE_KEY])
+        ? stored[HISTORY_STORAGE_KEY]
+        : []
+
+      await browser.storage.local.set({
+        [HISTORY_STORAGE_KEY]: list.filter((item) => item.id !== entryId)
+      })
+    } catch (error) {
+      console.error('[WebTalk] ❌ 刪除歷史記錄失敗', error)
+    }
+  }
+
   const updateHistoryEntry = (updates: Partial<SummaryHistoryEntry>, options: { forceNew?: boolean } = {}) => {
     const base = ensureHistoryEntry(Boolean(options.forceNew))
     const entry = {
@@ -215,6 +232,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   }
 
   const handleClear = () => {
+    void removeHistoryEntry(historyEntryRef.current?.id)
     clearSummary()
     setChatMessages([])
     setChatInput('')
@@ -296,6 +314,38 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   }, [text.pageFail])
 
   useEffect(() => {
+    const restoreCachedEntry = async () => {
+      try {
+        const stored = await browser.storage.local.get(HISTORY_STORAGE_KEY)
+        const list: SummaryHistoryEntry[] = Array.isArray(stored[HISTORY_STORAGE_KEY])
+          ? stored[HISTORY_STORAGE_KEY]
+          : []
+
+        const currentUrl = pageMetaRef.current.url
+        if (!currentUrl) return
+
+        const matchedEntry = list
+          .filter((entry) => entry.url === currentUrl)
+          .sort((a, b) => b.createdAt - a.createdAt)[0]
+
+        if (!matchedEntry) return
+
+        historyEntryRef.current = matchedEntry
+        setChatMessages(matchedEntry.chatMessages ?? [])
+        if (matchedEntry.summary) {
+          restoreSummary(matchedEntry.summary)
+        } else {
+          clearSummary()
+        }
+      } catch (error) {
+        console.error('[WebTalk] ❌ 讀取 URL 摘要快取失敗', error)
+      }
+    }
+
+    void restoreCachedEntry()
+  }, [clearSummary, restoreSummary])
+
+  useEffect(() => {
     if (!chatListRef.current) return
     chatListRef.current.scrollTo({
       top: chatListRef.current.scrollHeight,
@@ -320,7 +370,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
 
     try {
       const newSummary = await summarize(pageText, language)
-      updateHistoryEntry({ summary: newSummary ?? text.noContent, chatMessages: [] }, { forceNew: true })
+      updateHistoryEntry({ summary: newSummary ?? text.noContent, chatMessages: [] })
     } catch (error: any) {
       console.error('[WebTalk] ❌ 摘要失敗', error)
       alert(error.message || '摘要失敗，請稍後再試 / Condensation failed, please try again')
