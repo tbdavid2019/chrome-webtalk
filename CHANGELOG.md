@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## [1.5.9] - 2026-07-10
+
+### Added
+
+- **Upstream reaction/HLC 第二階段**：`compatibilityMode = upstream` 下，公開聊天室的 `👍 / 👎` 互動已可改走 upstream `reaction` 訊息，並為文字、reaction、peer-sync、history-sync 補上 Hybrid Logical Clock（HLC）欄位。
+
+### Changed
+
+- **公開聊天室排序改為 HLC 優先**：訊息列表在有 upstream HLC 時會先依 HLC 排序，再以 `sendTime` 作為 fallback，降低多 peer 同步時的順序漂移。
+- **Upstream 歷史同步升級**：接收 upstream `history-sync` 時會保留 `hlc` 與 reaction 狀態到本地訊息模型，為後續更完整對齊原版 WebChat 協定打好基礎。
+
+---
+
+## [1.5.8] - 2026-07-10
+
+### Added
+
+- **Upstream 相容模式初版**：設定頁新增 `Chat Protocol` 切換，可在 `legacy` 與 `upstream` 間切換，方便測試與原版 `molvqingtai/WebChat` 的公開聊天室互通。
+
+### Changed
+
+- **Dual parser 收訊管線**：聊天室收訊現在會同時辨識既有 legacy 協定與 upstream `text / peer-sync / history-sync` 協定，為公開房間互通打開第一步。
+- **Upstream 公開文字同步**：在 `compatibilityMode = upstream` 下，公開文字訊息、`peer-sync` 與基本 `history-sync` 會改走 upstream 風格封包；私聊、AI metadata 與 reaction 仍暫留後續版本處理。
+
+---
+
 ## [1.5.7] - 2026-07-10
 
 ### Added

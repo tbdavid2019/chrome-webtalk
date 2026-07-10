@@ -7,6 +7,7 @@ import PromptItem from '../../components/PromptItem'
 import UserInfoDomain from '@/domain/UserInfo'
 import ChatRoomDomain, { MessageType } from '@/domain/ChatRoom'
 import MessageListDomain, { NormalMessage } from '@/domain/MessageList'
+import { compareMessageHLC } from '@/protocol'
 import ToastDomain from '@/domain/Toast'
 import { getUiText } from '@/utils'
 
@@ -50,7 +51,9 @@ const Main: FC = () => {
         }
         return message
       })
-      .toSorted((a, b) => a.sendTime - b.sendTime)
+      .toSorted((a, b) =>
+        a.type === MessageType.Normal && b.type === MessageType.Normal ? compareMessageHLC(a, b) : a.sendTime - b.sendTime
+      )
   }, [_messageList, userInfo?.id, bannedUserIds, hideAllAiMessages])
 
   const canInteractWithMessage = (message: any) => {

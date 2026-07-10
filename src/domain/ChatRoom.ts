@@ -4,17 +4,29 @@ import { AiMessageMeta, AtUser, NormalMessage, type MessageUser } from './Messag
 import { ChatRoomExtern } from '@/domain/externs/ChatRoom'
 import MessageListDomain, { MessageType } from '@/domain/MessageList'
 import {
+  compareMessageHLC,
+  createPseudoHLC,
+  createProtocolReactionMessage,
+  createProtocolTextMessage,
+  createProtocolHistorySyncMessage,
+  createProtocolPeerSyncMessage,
+  denormalizeProtocolTextMessage,
+  fromProtocolSender,
+  isProtocolNetworkMessage,
   LegacySendType as SendType,
   isLegacyRoomMessage,
+  normalizeNormalMessage,
+  toLegacyTextMessage,
   type LegacyHateMessage as HateMessage,
   type LegacyLikeMessage as LikeMessage,
-  type LegacyRoomMessage as RoomMessage,
+  type LegacyRoomMessage,
   type LegacySyncHistoryMessage as SyncHistoryMessage,
   type LegacySyncUserMessage as SyncUserMessage,
-  type LegacyTextMessage as TextMessage
+  type LegacyTextMessage as TextMessage,
+  type ProtocolNetworkMessage
 } from '@/protocol'
 import UserInfoDomain from '@/domain/UserInfo'
-import { desert, getTextByteSize, upsert } from '@/utils'
+import { compareHLC, createHLC, desert, getTextByteSize, maxHLC, receiveHLCEvent, sendHLCEvent, upsert } from '@/utils'
 import { nanoid } from 'nanoid'
 import StatusModule from '@/domain/modules/Status'
 import {
@@ -27,7 +39,9 @@ import {
 
 export { MessageType }
 export { SendType }
-export type { RoomMessage, SyncHistoryMessage, SyncUserMessage, LikeMessage, HateMessage, TextMessage }
+export type { SyncHistoryMessage, SyncUserMessage, LikeMessage, HateMessage, TextMessage }
+
+export type RoomMessage = LegacyRoomMessage | ProtocolNetworkMessage
 
 export type RoomUser = MessageUser & { peerIds: string[]; joinTime: number }
 
@@ -62,6 +76,16 @@ const ChatRoomDomain = Remesh.domain({
 
     const JoinStatusModule = StatusModule(domain, {
       name: 'Room.JoinStatusModule'
+    })
+
+    const HLCState = domain.state({
+      name: 'Room.HLCState',
+      default: createHLC()
+    })
+
+    const UpdateHLCCommand = domain.command({
+      name: 'Room.UpdateHLCCommand',
+      impl: (_, hlc: { timestamp: number; counter: number }) => HLCState().new(hlc)
     })
 
     const UserListState = domain.state<RoomUser[]>({
@@ -125,6 +149,36 @@ const ChatRoomDomain = Remesh.domain({
 
     const JoinIsFinishedQuery = JoinStatusModule.query.IsFinishedQuery
 
+    const CompatibilityModeQuery = domain.query({
+      name: 'Room.CompatibilityModeQuery',
+      impl: ({ get }) => get(userInfoDomain.query.UserInfoQuery())?.compatibilityMode ?? 'legacy'
+    })
+
+    const IsUpstreamModeQuery = domain.query({
+      name: 'Room.IsUpstreamModeQuery',
+      impl: ({ get }) => get(CompatibilityModeQuery()) === 'upstream'
+    })
+
+    const PeerListQuery = domain.query({
+      name: 'Room.PeerListQuery',
+      impl: ({ get }) =>
+        get(UserListQuery())
+          .flatMap((user) => user.peerIds)
+          .filter((peerId) => peerId !== get(PeerIdQuery()))
+    })
+
+    const LastMessageHLCQuery = domain.query({
+      name: 'Room.LastMessageHLCQuery',
+      impl: ({ get }) => {
+        const messages = get(messageListDomain.query.ListQuery()).filter((message) => message.type === MessageType.Normal)
+        if (!messages.length) return createHLC()
+        return messages
+          .filter((message): message is NormalMessage => message.type === MessageType.Normal)
+          .map((message) => message.hlc ?? createPseudoHLC(message.sendTime))
+          .reduce((latest, current) => (compareHLC(current, latest) > 0 ? current : latest), createHLC())
+      }
+    })
+
     const JoinRoomCommand = domain.command({
       name: 'Room.JoinRoomCommand',
       impl: ({ get }) => {
@@ -182,6 +236,7 @@ const ChatRoomDomain = Remesh.domain({
 
         const privateTarget = get(PrivateChatTargetQuery())
         const isPrivate = !!privateTarget
+        const upstreamMode = get(IsUpstreamModeQuery())
 
         const input =
           typeof message === 'string'
@@ -195,13 +250,16 @@ const ChatRoomDomain = Remesh.domain({
                 ...message
               }
 
+        const sendTime = Date.now()
+        const upstreamHLC = upstreamMode ? sendHLCEvent(get(HLCState())) : undefined
+
         const textMessage: TextMessage = {
           ...self,
           username: input.username ?? self.username,
           userAvatar: input.userAvatar ?? self.userAvatar,
           id: input.id ?? nanoid(),
           type: SendType.Text,
-          sendTime: Date.now(),
+          sendTime,
           body: input.body,
           atUsers: input.atUsers,
           senderType: input.senderType,
@@ -219,7 +277,8 @@ const ChatRoomDomain = Remesh.domain({
         const listMessage: NormalMessage = {
           ...textMessage,
           type: MessageType.Normal,
-          receiveTime: Date.now(),
+          receiveTime: sendTime,
+          hlc: upstreamHLC,
           likeUsers: [],
           hateUsers: [],
           atUsers: input.atUsers,
@@ -250,10 +309,25 @@ const ChatRoomDomain = Remesh.domain({
             } else {
               return [OnErrorEvent(new Error('Target user is no longer online.'))]
             }
+          } else if (upstreamMode && input.senderType === 'user' && !input.aiMeta) {
+            const peerIds = get(PeerListQuery())
+            const protocolMessage = createProtocolTextMessage({
+              id: listMessage.id,
+              sender: self,
+              body: input.body,
+              mentions: input.atUsers,
+              sentAt: sendTime,
+              hlc: upstreamHLC ?? createPseudoHLC(sendTime)
+            })
+            peerIds.length && chatRoomExtern.sendMessage(protocolMessage, peerIds)
           } else {
             chatRoomExtern.sendMessage(textMessage)
           }
-          return [messageListDomain.command.CreateItemCommand(listMessage), SendTextMessageEvent(textMessage)]
+          return [
+            upstreamHLC ? UpdateHLCCommand(upstreamHLC) : null,
+            messageListDomain.command.CreateItemCommand(listMessage),
+            SendTextMessageEvent(textMessage)
+          ].filter(Boolean)
         } catch (error) {
           console.error('Failed to send message:', error)
           // 發送錯誤事件給用戶界面
@@ -282,6 +356,21 @@ const ChatRoomDomain = Remesh.domain({
         const listMessage: NormalMessage = {
           ...localMessage,
           likeUsers: desert(localMessage.likeUsers, likeMessage, 'userId')
+        }
+
+        if (get(IsUpstreamModeQuery()) && !localMessage.isPrivate) {
+          const newHLC = sendHLCEvent(get(HLCState()))
+          const protocolMessage = createProtocolReactionMessage({
+            id: nanoid(),
+            sender: self,
+            sentAt: Date.now(),
+            hlc: newHLC,
+            targetId: messageId,
+            reaction: 'like'
+          })
+          const peerIds = get(PeerListQuery())
+          peerIds.length && chatRoomExtern.sendMessage(protocolMessage, peerIds)
+          return [UpdateHLCCommand(newHLC), messageListDomain.command.UpdateItemCommand(listMessage), SendLikeMessageEvent(likeMessage)]
         }
 
         if (localMessage.isPrivate && localMessage.toUser) {
@@ -321,6 +410,21 @@ const ChatRoomDomain = Remesh.domain({
           hateUsers: desert(localMessage.hateUsers, hateMessage, 'userId')
         }
 
+        if (get(IsUpstreamModeQuery()) && !localMessage.isPrivate) {
+          const newHLC = sendHLCEvent(get(HLCState()))
+          const protocolMessage = createProtocolReactionMessage({
+            id: nanoid(),
+            sender: self,
+            sentAt: Date.now(),
+            hlc: newHLC,
+            targetId: messageId,
+            reaction: 'hate'
+          })
+          const peerIds = get(PeerListQuery())
+          peerIds.length && chatRoomExtern.sendMessage(protocolMessage, peerIds)
+          return [UpdateHLCCommand(newHLC), messageListDomain.command.UpdateItemCommand(listMessage), SendHateMessageEvent(hateMessage)]
+        }
+
         if (localMessage.isPrivate && localMessage.toUser) {
           const otherUserId =
             self.userId === localMessage.toUser.userId ? localMessage.userId : localMessage.toUser.userId
@@ -345,13 +449,40 @@ const ChatRoomDomain = Remesh.domain({
           return []
         }
 
-        const lastMessageTime = get(LastMessageTimeQuery())
+        const now = Date.now()
 
+        if (get(IsUpstreamModeQuery())) {
+          const newHLC = sendHLCEvent(get(HLCState()))
+          const protocolMessage = createProtocolPeerSyncMessage({
+            id: nanoid(),
+            sender: self,
+            sentAt: now,
+            peerId: chatRoomExtern.peerId,
+            joinedAt: self.joinTime,
+            lastMessageHLC: get(LastMessageHLCQuery()),
+            hlc: newHLC
+          })
+
+          chatRoomExtern.sendMessage(protocolMessage, peerId)
+          return [
+            UpdateHLCCommand(newHLC),
+            SendSyncUserMessageEvent({
+              ...self,
+              id: protocolMessage.id,
+              peerId,
+              sendTime: now,
+              lastMessageTime: protocolMessage.lastMessageHLC.timestamp,
+              type: SendType.SyncUser
+            })
+          ]
+        }
+
+        const lastMessageTime = get(LastMessageTimeQuery())
         const syncUserMessage: SyncUserMessage = {
           ...self,
           id: nanoid(),
           peerId: chatRoomExtern.peerId,
-          sendTime: Date.now(),
+          sendTime: now,
           lastMessageTime,
           type: SendType.SyncUser
         }
@@ -382,12 +513,55 @@ const ChatRoomDomain = Remesh.domain({
      */
     const SendSyncHistoryMessageCommand = domain.command({
       name: 'Room.SendSyncHistoryMessageCommand',
-      impl: ({ get }, { peerId, lastMessageTime }: { peerId: string; lastMessageTime: number }) => {
+      impl: (
+        { get },
+        payload:
+          | { peerId: string; lastMessageTime: number; lastMessageHLC?: never }
+          | { peerId: string; lastMessageTime?: never; lastMessageHLC: { timestamp: number; counter: number } }
+      ) => {
         const self = get(SelfUserQuery())
         if (!self) {
           console.error('Cannot send history sync: User not joined to room yet')
           return []
         }
+
+        if (get(IsUpstreamModeQuery()) && payload.lastMessageHLC) {
+          const historyMessages = get(messageListDomain.query.ListQuery()).filter(
+            (message) =>
+              message.type === MessageType.Normal &&
+              !message.isPrivate &&
+              message.sendTime > payload.lastMessageHLC.timestamp &&
+              Date.now() - message.sendTime <= SYNC_HISTORY_MAX_DAYS * 24 * 60 * 60 * 1000
+          ) as NormalMessage[]
+
+          return historyMessages
+            .toSorted(compareMessageHLC)
+            .map((message) => {
+            const newHLC = sendHLCEvent(get(HLCState()))
+            const protocolMessage = createProtocolHistorySyncMessage({
+              id: nanoid(),
+              sender: self,
+              sentAt: Date.now(),
+              messages: [message],
+              hlc: newHLC
+            })
+            chatRoomExtern.sendMessage(protocolMessage, payload.peerId)
+            return [
+              UpdateHLCCommand(newHLC),
+              SendSyncHistoryMessageEvent({
+                ...self,
+                id: protocolMessage.id,
+                sendTime: protocolMessage.sentAt,
+                type: SendType.SyncHistory,
+                messages: [message]
+              })
+            ]
+          })
+            .flat()
+        }
+
+        const peerId = payload.peerId
+        const lastMessageTime = payload.lastMessageTime ?? 0
 
         const historyMessages = get(messageListDomain.query.ListQuery()).filter(
           (message) =>
@@ -576,38 +750,78 @@ const ChatRoomDomain = Remesh.domain({
     domain.effect({
       name: 'Room.OnMessageEffect',
       impl: ({ get }) => {
-        const onMessage$ = fromEventPattern<RoomMessage>(chatRoomExtern.onMessage).pipe(
+        const onMessage$ = fromEventPattern<unknown>(chatRoomExtern.onMessage).pipe(
           mergeMap((message) => {
-            // Filter out messages that do not conform to the format
-            if (!isLegacyRoomMessage(message)) {
+            const parsedMessage = isLegacyRoomMessage(message)
+              ? message
+              : isProtocolNetworkMessage(message)
+                ? message
+                : null
+
+            if (!parsedMessage) {
               console.warn('Invalid message format', message)
               return EMPTY
             }
 
-            const messageEvent$ = of(OnMessageEvent(message))
+            const messageEvent$ = of(OnMessageEvent(parsedMessage))
 
-            const textMessageEvent$ = of(message.type === SendType.Text ? OnTextMessageEvent(message) : null)
+            const textMessageEvent$ = of(
+              parsedMessage.type === SendType.Text
+                ? OnTextMessageEvent(parsedMessage)
+                : parsedMessage.type === 'text'
+                  ? OnTextMessageEvent(toLegacyTextMessage(parsedMessage))
+                  : null
+            )
 
             const messageCommand$ = (() => {
-              switch (message.type) {
+              switch (parsedMessage.type) {
                 case SendType.SyncUser: {
                   const selfUser = get(SelfUserQuery())
 
                   // If a new user joins after the current user has entered the room, a join log message needs to be created.
-                  const existUser = get(UserListQuery()).find((user) => user.userId === message.userId)
-                  const isNewJoinUser = !existUser && selfUser && message.joinTime > selfUser.joinTime
+                  const existUser = get(UserListQuery()).find((user) => user.userId === parsedMessage.userId)
+                  const isNewJoinUser = !existUser && selfUser && parsedMessage.joinTime > selfUser.joinTime
 
                   const lastMessageTime = get(LastMessageTimeQuery())
-                  const needSyncHistory = lastMessageTime > message.lastMessageTime
+                  const needSyncHistory = lastMessageTime > parsedMessage.lastMessageTime
 
                   return of(
-                    UpdateUserListCommand({ type: 'create', user: message }),
+                    UpdateUserListCommand({ type: 'create', user: parsedMessage }),
                     // 移除 "joined the chat" 訊息
                     null,
                     needSyncHistory && selfUser
                       ? SendSyncHistoryMessageCommand({
-                          peerId: message.peerId,
-                          lastMessageTime: message.lastMessageTime
+                          peerId: parsedMessage.peerId,
+                          lastMessageTime: parsedMessage.lastMessageTime
+                        })
+                      : null
+                  )
+                }
+
+                case 'peer-sync': {
+                  const selfUser = get(SelfUserQuery())
+                  const existUser = get(UserListQuery()).find((user) => user.userId === parsedMessage.sender.id)
+                  const isNewJoinUser = !existUser && selfUser && parsedMessage.joinedAt > selfUser.joinTime
+                  const needSyncHistory = get(LastMessageTimeQuery()) > parsedMessage.lastMessageHLC.timestamp
+
+                  return of(
+                    UpdateHLCCommand(receiveHLCEvent(get(HLCState()), parsedMessage.hlc)),
+                    UpdateUserListCommand({
+                      type: 'create',
+                      user: {
+                        peerId: parsedMessage.peerId,
+                        joinTime: parsedMessage.joinedAt,
+                        ...(() => {
+                          const sender = parsedMessage.sender
+                          return { userId: sender.id, username: sender.name, userAvatar: sender.avatar }
+                        })()
+                      }
+                    }),
+                    isNewJoinUser ? null : null,
+                    needSyncHistory && selfUser
+                      ? SendSyncHistoryMessageCommand({
+                          peerId: parsedMessage.peerId,
+                          lastMessageHLC: parsedMessage.lastMessageHLC
                         })
                       : null
                   )
@@ -615,7 +829,7 @@ const ChatRoomDomain = Remesh.domain({
 
                 case SendType.SyncHistory: {
                   return of(
-                    ...message.messages.map((message) =>
+                    ...parsedMessage.messages.map((message) =>
                       messageListDomain.command.UpsertItemCommand({
                         ...message,
                         type: MessageType.Normal
@@ -624,23 +838,38 @@ const ChatRoomDomain = Remesh.domain({
                   )
                 }
 
+                case 'history-sync': {
+                  const maxMessageHLC = maxHLC(parsedMessage.messages.map((message) => message.hlc))
+                  return of(
+                    UpdateHLCCommand(receiveHLCEvent(get(HLCState()), maxMessageHLC)),
+                    ...parsedMessage.messages.map((message) =>
+                      messageListDomain.command.UpsertItemCommand(denormalizeProtocolTextMessage(message))
+                    )
+                  )
+                }
+
                 case SendType.Text:
                   return of(
                     messageListDomain.command.CreateItemCommand({
-                      ...message,
+                      ...parsedMessage,
                       type: MessageType.Normal,
                       receiveTime: Date.now(),
                       likeUsers: [],
                       hateUsers: []
                     })
                   )
+                case 'text':
+                  return of(
+                    UpdateHLCCommand(receiveHLCEvent(get(HLCState()), parsedMessage.hlc)),
+                    messageListDomain.command.CreateItemCommand(denormalizeProtocolTextMessage(parsedMessage))
+                  )
                 case SendType.Like:
                 case SendType.Hate: {
-                  if (!get(messageListDomain.query.HasItemQuery(message.id))) {
+                  if (!get(messageListDomain.query.HasItemQuery(parsedMessage.id))) {
                     return EMPTY
                   }
-                  const _message = get(messageListDomain.query.ItemQuery(message.id)) as NormalMessage
-                  const type = message.type === 'Like' ? 'likeUsers' : 'hateUsers'
+                  const _message = get(messageListDomain.query.ItemQuery(parsedMessage.id)) as NormalMessage
+                  const type = parsedMessage.type === 'Like' ? 'likeUsers' : 'hateUsers'
                   return of(
                     messageListDomain.command.UpdateItemCommand({
                       ..._message,
@@ -648,17 +877,39 @@ const ChatRoomDomain = Remesh.domain({
                       [type]: desert(
                         _message[type],
                         {
-                          userId: message.userId,
-                          username: message.username,
-                          userAvatar: message.userAvatar
+                          userId: parsedMessage.userId,
+                          username: parsedMessage.username,
+                          userAvatar: parsedMessage.userAvatar
                         },
                         'userId'
                       )
                     })
                   )
                 }
+                case 'reaction': {
+                  if (!get(messageListDomain.query.HasItemQuery(parsedMessage.targetId))) {
+                    return EMPTY
+                  }
+                  const targetMessage = get(messageListDomain.query.ItemQuery(parsedMessage.targetId)) as NormalMessage
+                  const updatedMessage: NormalMessage = {
+                    ...targetMessage,
+                    receiveTime: Date.now(),
+                    likeUsers:
+                      parsedMessage.reaction === 'like'
+                        ? desert(targetMessage.likeUsers, fromProtocolSender(parsedMessage.sender), 'userId')
+                        : targetMessage.likeUsers,
+                    hateUsers:
+                      parsedMessage.reaction === 'hate'
+                        ? desert(targetMessage.hateUsers, fromProtocolSender(parsedMessage.sender), 'userId')
+                        : targetMessage.hateUsers
+                  }
+                  return of(
+                    UpdateHLCCommand(receiveHLCEvent(get(HLCState()), parsedMessage.hlc)),
+                    messageListDomain.command.UpdateItemCommand(updatedMessage)
+                  )
+                }
                 default:
-                  console.warn('Unsupported message type', message)
+                  console.warn('Unsupported message type', parsedMessage)
                   return EMPTY
               }
             })()
