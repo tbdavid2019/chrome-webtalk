@@ -12,12 +12,14 @@ import type {
 import { LegacySendType } from './LegacyChatRoom'
 import type {
   HLC,
+  ProtocolAiMessageMeta,
   ProtocolHistorySyncMessage,
   ProtocolPeerSyncMessage,
   ProtocolMention,
   ProtocolNetworkMessage,
   ProtocolReactionMessage,
   ProtocolSender,
+  ProtocolTextMessageExtension,
   ProtocolTextMessage
 } from './Message'
 import { MESSAGE_TYPE, REACTION_TYPE } from './Message'
@@ -46,14 +48,66 @@ export const fromProtocolMention = (mention: ProtocolMention): AtUser => ({
 
 export const createPseudoHLC = (timestamp: number): HLC => ({ timestamp, counter: 0 })
 
-export const toLegacyTextMessage = (message: ProtocolTextMessage): LegacyTextMessage => ({
-  ...fromProtocolSender(message.sender),
-  type: LegacySendType.Text,
-  id: message.id,
-  body: message.body,
-  sendTime: message.sentAt,
-  atUsers: message.mentions.map(fromProtocolMention)
+export const toProtocolAiMessageMeta = (meta: LegacyAiMessageMeta): ProtocolAiMessageMeta => ({
+  ownerUserId: meta.ownerUserId,
+  ownerUsername: meta.ownerUsername,
+  triggerMessageId: meta.triggerMessageId,
+  model: meta.model
 })
+
+export const fromProtocolAiMessageMeta = (meta: ProtocolAiMessageMeta): LegacyAiMessageMeta => ({
+  ownerUserId: meta.ownerUserId,
+  ownerUsername: meta.ownerUsername,
+  triggerMessageId: meta.triggerMessageId,
+  model: meta.model
+})
+
+export const createProtocolTextExtension = (input: {
+  senderType?: 'user' | 'ai'
+  aiMeta?: LegacyAiMessageMeta
+  isPrivate?: boolean
+  toUser?: LegacyMessageUser | MessageUser
+}): ProtocolTextMessageExtension | undefined => {
+  const hasSenderType = input.senderType && input.senderType !== 'user'
+  const hasAiMeta = !!input.aiMeta
+  const hasPrivate = !!(input.isPrivate && input.toUser)
+
+  if (!hasSenderType && !hasAiMeta && !hasPrivate) {
+    return undefined
+  }
+
+  return {
+    namespace: 'chrome-webtalk',
+    senderType: input.senderType,
+    aiMeta: input.aiMeta ? toProtocolAiMessageMeta(input.aiMeta) : undefined,
+    private: hasPrivate && input.toUser ? { toUser: toProtocolSender(input.toUser) } : undefined
+  }
+}
+
+export const readProtocolTextExtension = (message: ProtocolTextMessage) => {
+  if (!message.extension || message.extension.namespace !== 'chrome-webtalk') {
+    return null
+  }
+
+  return message.extension
+}
+
+export const toLegacyTextMessage = (message: ProtocolTextMessage): LegacyTextMessage => {
+  const extension = readProtocolTextExtension(message)
+
+  return {
+    ...fromProtocolSender(message.sender),
+    type: LegacySendType.Text,
+    id: message.id,
+    body: message.body,
+    sendTime: message.sentAt,
+    atUsers: message.mentions.map(fromProtocolMention),
+    senderType: extension?.senderType,
+    aiMeta: extension?.aiMeta ? fromProtocolAiMessageMeta(extension.aiMeta) : undefined,
+    isPrivate: !!extension?.private,
+    toUser: extension?.private ? fromProtocolSender(extension.private.toUser) : undefined
+  }
+}
 
 export const normalizeLegacyTextMessage = (
   message: LegacyTextMessage,
@@ -70,7 +124,8 @@ export const normalizeLegacyTextMessage = (
   reactions: {
     likes: (reactions?.likes ?? []).map(toProtocolSender),
     hates: (reactions?.hates ?? []).map(toProtocolSender)
-  }
+  },
+  extension: createProtocolTextExtension(message)
 })
 
 export const normalizeLegacyStoredTextMessage = (message: LegacyStoredTextMessage): ProtocolTextMessage =>
@@ -86,7 +141,8 @@ export const normalizeLegacyStoredTextMessage = (message: LegacyStoredTextMessag
     reactions: {
       likes: message.likeUsers.map(toProtocolSender),
       hates: message.hateUsers.map(toProtocolSender)
-    }
+    },
+    extension: createProtocolTextExtension(message)
   })
 
 export const normalizeLegacyRoomMessage = (message: LegacyRoomMessage): ProtocolNetworkMessage => {
@@ -149,20 +205,25 @@ export const denormalizeProtocolTextMessage = (
     toUser?: MessageUser
   }
 ): NormalMessage => ({
-  ...fromProtocolSender(message.sender),
-  type: MessageType.Normal,
-  id: message.id,
-  body: message.body,
-  sendTime: message.sentAt,
-  receiveTime: message.receivedAt,
-  hlc: message.hlc,
-  atUsers: message.mentions.map(fromProtocolMention),
-  likeUsers: message.reactions.likes.map(fromProtocolSender),
-  hateUsers: message.reactions.hates.map(fromProtocolSender),
-  senderType: options?.senderType,
-  aiMeta: options?.aiMeta,
-  isPrivate: options?.isPrivate,
-  toUser: options?.toUser
+  ...(() => {
+    const extension = readProtocolTextExtension(message)
+    return {
+      ...fromProtocolSender(message.sender),
+      type: MessageType.Normal,
+      id: message.id,
+      body: message.body,
+      sendTime: message.sentAt,
+      receiveTime: message.receivedAt,
+      hlc: message.hlc,
+      atUsers: message.mentions.map(fromProtocolMention),
+      likeUsers: message.reactions.likes.map(fromProtocolSender),
+      hateUsers: message.reactions.hates.map(fromProtocolSender),
+      senderType: options?.senderType ?? extension?.senderType,
+      aiMeta: options?.aiMeta ?? (extension?.aiMeta ? fromProtocolAiMessageMeta(extension.aiMeta) : undefined),
+      isPrivate: options?.isPrivate ?? !!extension?.private,
+      toUser: options?.toUser ?? (extension?.private ? fromProtocolSender(extension.private.toUser) : undefined)
+    }
+  })()
 })
 
 export const normalizeNormalMessage = (message: NormalMessage): ProtocolTextMessage => ({
@@ -177,7 +238,8 @@ export const normalizeNormalMessage = (message: NormalMessage): ProtocolTextMess
   reactions: {
     likes: message.likeUsers.map(toProtocolSender),
     hates: message.hateUsers.map(toProtocolSender)
-  }
+  },
+  extension: createProtocolTextExtension(message)
 })
 
 export const createProtocolPeerSyncMessage = (input: {
@@ -207,6 +269,10 @@ export const createProtocolTextMessage = (input: {
   mentions: AtUser[]
   sentAt: number
   hlc: HLC
+  senderType?: 'user' | 'ai'
+  aiMeta?: LegacyAiMessageMeta
+  isPrivate?: boolean
+  toUser?: MessageUser
 }): ProtocolTextMessage => ({
   type: MESSAGE_TYPE.TEXT,
   id: input.id,
@@ -219,7 +285,8 @@ export const createProtocolTextMessage = (input: {
   reactions: {
     likes: [],
     hates: []
-  }
+  },
+  extension: createProtocolTextExtension(input)
 })
 
 export const createProtocolHistorySyncMessage = (input: {

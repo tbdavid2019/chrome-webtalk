@@ -84,7 +84,9 @@ const MessageItem: FC<MessageItemProps> = (props) => {
             {props.data.isPrivate && (
               <span className="inline-flex items-center gap-x-0.5 rounded bg-indigo-100/80 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-900/50 px-1 py-0.5 text-[9px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
                 🔒{' '}
-                {props.data.userId === props.currentUserId ? `私密傳送給 @${props.data.toUser?.username}` : '私密訊息'}
+                {props.data.userId === props.currentUserId
+                  ? text.privateMessageTo.replace('{username}', props.data.toUser?.username ?? '')
+                  : text.privateMessageIncoming}
               </span>
             )}
           </div>

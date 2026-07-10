@@ -24,6 +24,22 @@ export interface ProtocolSender {
   avatar: string
 }
 
+export interface ProtocolAiMessageMeta {
+  ownerUserId: string
+  ownerUsername: string
+  triggerMessageId: string
+  model?: string
+}
+
+export interface ProtocolTextMessageExtension {
+  namespace: 'chrome-webtalk'
+  senderType?: 'user' | 'ai'
+  aiMeta?: ProtocolAiMessageMeta
+  private?: {
+    toUser: ProtocolSender
+  }
+}
+
 export interface ProtocolMention extends ProtocolSender {
   positions: [number, number][]
 }
@@ -44,6 +60,7 @@ export interface ProtocolTextMessage extends ProtocolMessageMeta {
     likes: ProtocolSender[]
     hates: ProtocolSender[]
   }
+  extension?: ProtocolTextMessageExtension
 }
 
 export interface ProtocolReactionMessage extends ProtocolMessageMeta {
@@ -88,6 +105,24 @@ const MentionSchema = v.object({
   positions: v.array(v.tuple([v.number(), v.number()]))
 })
 
+const AiMessageMetaSchema = v.object({
+  ownerUserId: v.string(),
+  ownerUsername: v.string(),
+  triggerMessageId: v.string(),
+  model: v.optional(v.string())
+})
+
+const ProtocolTextMessageExtensionSchema: v.GenericSchema<ProtocolTextMessageExtension> = v.object({
+  namespace: v.literal('chrome-webtalk'),
+  senderType: v.optional(v.union([v.literal('user'), v.literal('ai')])),
+  aiMeta: v.optional(AiMessageMetaSchema),
+  private: v.optional(
+    v.object({
+      toUser: SenderSchema
+    })
+  )
+})
+
 const MessageMetaSchema = {
   id: v.string(),
   hlc: HLCSchema,
@@ -104,7 +139,8 @@ const ProtocolTextMessageSchema: v.GenericSchema<ProtocolTextMessage> = v.object
   reactions: v.object({
     likes: v.array(SenderSchema),
     hates: v.array(SenderSchema)
-  })
+  }),
+  extension: v.optional(ProtocolTextMessageExtensionSchema)
 })
 
 const ProtocolReactionMessageSchema: v.GenericSchema<ProtocolReactionMessage> = v.object({

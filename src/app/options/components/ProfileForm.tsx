@@ -381,14 +381,11 @@ const ProfileForm: FC = () => {
                 <div className="flex items-center space-x-2">
                   <Checkbox id="developer-mode" onCheckedChange={field.onChange} checked={field.value ?? false} />
                   <FormLabel className="cursor-pointer font-semibold" htmlFor="developer-mode">
-                    Developer Mode 開發者模式
+                    {text.profileDeveloperMode}
                   </FormLabel>
                 </div>
               </FormControl>
-              <FormDescription>
-                Show cross-site presence and site-switch/debug UI in the header. Hidden from normal users by default. /
-                顯示跨網站在線狀態與站點切換除錯介面；預設一般使用者不會看到。
-              </FormDescription>
+              <FormDescription>{text.profileDeveloperModeDescription}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -403,14 +400,11 @@ const ProfileForm: FC = () => {
                 <div className="flex items-center space-x-2">
                   <Checkbox id="hide-all-ai-messages" onCheckedChange={field.onChange} checked={field.value ?? false} />
                   <FormLabel className="cursor-pointer font-semibold" htmlFor="hide-all-ai-messages">
-                    Hide All AI Messages 隱藏全部 AI 訊息
+                    {text.profileHideAllAiMessages}
                   </FormLabel>
                 </div>
               </FormControl>
-              <FormDescription>
-                Hide all AI-generated chat replies locally without affecting other users. / 僅在你的本地畫面隱藏所有 AI
-                聊天回覆，不影響其他使用者。
-              </FormDescription>
+              <FormDescription>{text.profileHideAllAiMessagesDescription}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
