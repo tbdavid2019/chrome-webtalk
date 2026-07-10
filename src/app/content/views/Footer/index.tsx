@@ -614,13 +614,13 @@ const Footer: FC = () => {
             className="px-2.5 py-1 text-xs font-bold rounded-full bg-primary text-primary-foreground shadow-sm cursor-default"
             disabled
           >
-            💬 聊天
+            💬 {text.chatTab}
           </button>
           <button
             onClick={handleAskAi}
             className="px-2.5 py-1 text-xs font-bold rounded-full text-muted-foreground hover:text-foreground transition-all"
           >
-            ✨ AI
+            ✨ {text.aiTab}
           </button>
         </div>
 
@@ -632,7 +632,7 @@ const Footer: FC = () => {
           size="icon"
           className="text-muted-foreground hover:text-foreground size-8 rounded-full"
           onClick={handleInsertPageUrl}
-          title="插入目前頁面連結"
+          title={text.insertPageLink}
         >
           <LinkIcon size={16} />
         </Button>

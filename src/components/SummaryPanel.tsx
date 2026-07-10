@@ -12,9 +12,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { nanoid } from 'nanoid'
 import { FALLBACK_GROQ_API_KEY, FALLBACK_GROQ_BASE_URL, FALLBACK_GROQ_MODEL } from '@/constants/apiDefaults'
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY, HISTORY_LIMIT } from '@/types/summaryHistory'
-import { useRemeshDomain, useRemeshSend } from 'remesh-react'
+import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import AppStatusDomain from '@/domain/AppStatus'
 import { XIcon } from 'lucide-react'
+import UserInfoDomain from '@/domain/UserInfo'
+import { requestAiChatReply, resolveAppLocale } from '@/utils'
 
 const DEFAULT_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || FALLBACK_GROQ_API_KEY
 const DEFAULT_API_BASE_URL = import.meta.env.VITE_GEMINI_API_BASE_URL || FALLBACK_GROQ_BASE_URL
@@ -133,6 +135,8 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
 export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const send = useRemeshSend()
   const appStatusDomain = useRemeshDomain(AppStatusDomain())
+  const userInfoDomain = useRemeshDomain(UserInfoDomain())
+  const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
   const [language, setLanguage] = useState<Lang>(detectBrowserLang())
   const { summarize, loading, summary, clearSummary, restoreSummary } = useSummarize()
   const [pageText, setPageText] = useState('')
@@ -159,6 +163,11 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
       return pageMetaRef.current.url
     }
   }, [])
+
+  useEffect(() => {
+    const locale = resolveAppLocale(userInfo?.language)
+    setLanguage(locale)
+  }, [userInfo?.language])
 
   const ensureHistoryEntry = (forceNew = false) => {
     if (!historyEntryRef.current || forceNew) {
@@ -269,13 +278,20 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
 
   // 保存 API 設置
   const saveApiSettings = () => {
+    const trimmedApiKey = apiKey.trim()
+    const trimmedBaseURL = apiBaseURL.trim() || DEFAULT_API_BASE_URL
+    const trimmedModelName = apiModelName.trim() || DEFAULT_MODEL_NAME
+
     browser.storage.sync
       .set({
-        groqApiKey: apiKey,
-        groqApiBaseURL: apiBaseURL,
-        groqModelName: apiModelName
+        groqApiKey: trimmedApiKey,
+        groqApiBaseURL: trimmedBaseURL,
+        groqModelName: trimmedModelName
       })
       .then(() => {
+        setApiKey(trimmedApiKey)
+        setApiBaseURL(trimmedBaseURL)
+        setApiModelName(trimmedModelName)
         setShowApiSettings(false)
         alert('✅ API 設置已保存')
       })
@@ -436,62 +452,24 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
     setChatLoading(true)
 
     try {
-      const { groqApiKey, groqApiBaseURL, groqModelName } = await browser.storage.sync.get([
-        'groqApiKey',
-        'groqApiBaseURL',
-        'groqModelName'
-      ])
-
-      const resolvedApiKey = groqApiKey || apiKey || DEFAULT_API_KEY
-      const resolvedBaseURL = groqApiBaseURL || apiBaseURL || DEFAULT_API_BASE_URL
-      const resolvedModelName = groqModelName || apiModelName || DEFAULT_MODEL_NAME
-
-      if (!resolvedApiKey) {
-        alert('請先設置 API key')
-        setChatLoading(false)
-        return
-      }
-
-      const chatHistory = [...chatMessages, userMessage].map((msg) => ({
-        role: msg.role,
-        content: msg.content
-      }))
-
-      const summaryForPrompt = summary || text.noContent
-      const systemPrompt = `你是一個AI助理，請根據提供的原始頁面內容以及（若有的話）摘要來回答使用者的追問，語氣清楚、友善，必要時引用列表或重點。
-原始內容：
-${pageText.slice(0, 6000)}
-----
-摘要：
-${summaryForPrompt}`
-
-      const response = await fetch(`${resolvedBaseURL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${resolvedApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: resolvedModelName || FALLBACK_GROQ_MODEL,
-          messages: [{ role: 'system', content: systemPrompt }, ...chatHistory]
-        })
+      const result = await requestAiChatReply({
+        prompt: question,
+        pageTitle: pageMetaRef.current.title,
+        pageUrl: pageMetaRef.current.url,
+        pageText,
+        pageSummary: summary,
+        conversationHistory: chatMessages.map((msg) => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        language,
+        mode: 'workspace'
       })
-
-      const data = await response.json()
-      if (!response.ok) {
-        const errorMessage = data?.error?.message || `HTTP ${response.status}`
-        throw new Error(`API呼叫失敗 (${errorMessage})。這可能是因為預埋的實驗額度 Key 已失效或超出限額。請點擊右上角設置圖示 ⚙️，至 Groq 官網 (https://console.groq.com/) 申請您自己的 API Key 並進行更換。 / API call failed. Please click settings ⚙️ and get your own API Key from Groq.`)
-      }
-      if (!data.choices?.[0]?.message?.content) {
-        const apiError = data?.error?.message || 'Unknown API Error'
-        throw new Error(`API回傳格式錯誤 (${apiError})。這可能是因為預埋的實驗額度 Key 已失效或超出限額。請點擊右上角設置圖示 ⚙️，至 Groq 官網 (https://console.groq.com/) 申請您自己的 API Key 並進行更換。 / API returned error. Please click settings ⚙️ and get your own API Key from Groq.`)
-      }
-      const answer = data.choices[0].message.content.trim()
 
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: answer
+        content: result.content
       }
       appendChatMessage(assistantMessage)
     } catch (error: any) {
@@ -516,7 +494,7 @@ ${summaryForPrompt}`
         animate={{ opacity: 1, x: '0%' }}
         exit={{ opacity: 0, x: '100%' }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="fixed right-0 top-0 z-infinity grid h-full w-[420px] min-w-[360px] max-w-[800px] grid-rows-[auto_1fr] border-l border-border bg-background shadow-2xl"
+        className="pointer-events-auto fixed right-0 top-0 z-infinity grid h-full w-[420px] min-w-[360px] max-w-[800px] grid-rows-[auto_1fr] border-l border-border bg-background shadow-2xl"
       >
         <div className="flex h-12 items-center justify-between border-b border-border bg-background px-4">
           <div className="flex items-center gap-1.5 py-1">
@@ -656,7 +634,7 @@ ${summaryForPrompt}`
               /* 2. 已產生摘要時的對話流介面 (滾動區域) */
               <div
                 ref={chatListRef}
-                className="flex-1 space-y-4 overflow-y-auto rounded-2xl border border-border bg-muted/20 p-4"
+                className="flex-1 space-y-4 overflow-y-auto overscroll-y-contain rounded-2xl border border-border bg-muted/20 p-4"
               >
                 {/* 網頁摘要氣泡 (置頂呈現) */}
                 <div className="flex flex-col items-start gap-y-1">
@@ -751,40 +729,38 @@ ${summaryForPrompt}`
 
           {/* 底部功能與輸入框控制欄 */}
           <div className="flex flex-col gap-2 pt-1 shrink-0">
-            {summary && (
-              <div className="flex items-end gap-2">
-                <Textarea
-                  value={chatInput}
-                  rows={1}
-                  placeholder={text.chatPlaceholder}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (chatInputIsComposingRef.current) {
-                      return
-                    }
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      sendFollowUpQuestion()
-                    }
-                  }}
-                  onCompositionStart={() => {
-                    chatInputIsComposingRef.current = true
-                  }}
-                  onCompositionEnd={() => {
-                    chatInputIsComposingRef.current = false
-                  }}
-                  disabled={chatLoading || !canChat}
-                  className="flex-1 min-h-[38px] max-h-24 resize-none rounded-xl border border-border bg-muted px-3 py-2 text-base focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-foreground"
-                />
-                <button
-                  onClick={sendFollowUpQuestion}
-                  disabled={chatLoading || !chatInput.trim() || !canChat}
-                  className="shrink-0 rounded-full bg-primary px-5 py-2.5 text-base font-bold text-primary-foreground shadow hover:bg-primary/95 transition disabled:opacity-50"
-                >
-                  {text.chatSend}
-                </button>
-              </div>
-            )}
+            <div className="flex items-end gap-2">
+              <Textarea
+                value={chatInput}
+                rows={1}
+                placeholder={text.chatPlaceholder}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (chatInputIsComposingRef.current) {
+                    return
+                  }
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    sendFollowUpQuestion()
+                  }
+                }}
+                onCompositionStart={() => {
+                  chatInputIsComposingRef.current = true
+                }}
+                onCompositionEnd={() => {
+                  chatInputIsComposingRef.current = false
+                }}
+                disabled={chatLoading || !canChat}
+                className="flex-1 min-h-[38px] max-h-24 resize-none rounded-xl border border-border bg-muted px-3 py-2 text-base focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-foreground"
+              />
+              <button
+                onClick={sendFollowUpQuestion}
+                disabled={chatLoading || !chatInput.trim() || !canChat}
+                className="shrink-0 rounded-full bg-primary px-5 py-2.5 text-base font-bold text-primary-foreground shadow hover:bg-primary/95 transition disabled:opacity-50"
+              >
+                {text.chatSend}
+              </button>
+            </div>
 
             <div className="flex items-center gap-2">
               {/* 左下角功能切換雙鍵膠囊 */}
@@ -796,13 +772,13 @@ ${summaryForPrompt}`
                   }}
                   className="px-2.5 py-1 text-xs font-bold rounded-full text-muted-foreground hover:text-foreground transition-all"
                 >
-                  💬 聊天
+                  💬 {text.chatTab}
                 </button>
                 <button
                   className="px-2.5 py-1 text-xs font-bold rounded-full bg-primary text-primary-foreground shadow-sm cursor-default"
                   disabled
                 >
-                  ✨ AI
+                  ✨ {text.aiTab}
                 </button>
               </div>
             </div>

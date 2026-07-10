@@ -3,7 +3,7 @@
 > 在任何網站上與他人匿名即時聊天！可以提供LLM 幫你了解網頁內容
 >
 > ![alt text](image.png)
-
+![alt text](image-1.png)
 這是一款去中心化、無伺服器的瀏覽器聊天擴充功能，透過 WebRTC 實現端對端加密傳輸，保護你的隱私，所有資料皆儲存在本地裝置。
 
 本版本 fork 自 [molvqingtai/WebChat](https://github.com/molvqingtai/WebChat)，並進行以下改進：
@@ -18,6 +18,8 @@
 
 ## 🆕 近期更新
 
+- 🧠 **AI 空間與聊天室 AI 邏輯收斂 (v1.6.2)**：AI 空間現在和聊天室 `@ai` 共用同一套 API client / 設定讀取邏輯，並支援直接聊天，不必先摘要。兩邊都會帶入更完整的頁面上下文；AI 空間若已有摘要，也會一併帶入。這也修正了部分長頁面下 AI 空間明明 API Key 正確卻仍失敗的問題。
+- 🔌 **送訊時序穩定化 (v1.6.1)**：修正剛進房或剛建立 peer connection 的短時間內，聊天室偶發跳出 `Connection is not established yet.` 的假性錯誤。公開訊息與 `Like / Hate` 現在改為逐 peer 發送，並對尚未 ready 的單一 peer 做短暫自動重試。
 - 🧩 **Private / AI extension 疊上 upstream text (v1.6.0)**：`upstream` 模式下，私聊文字與 `@ai` 房間回覆不再退回 legacy `Text` payload，而是改用 upstream `text` + fork 專用 optional `extension` metadata。這讓公開聊天室更貼近原版 WebChat，同時保留這個 fork 的 AI/私聊能力。
 - 🕰️ **Upstream HLC / reaction 第二階段 (v1.5.9)**：`upstream` 相容模式下，公開聊天室現在會為 `text / reaction / peer-sync / history-sync` 維護 HLC 排序，`👍 / 👎` 也開始改走 upstream reaction 封包，跨 peer 順序與互動狀態比 `v1.5.8` 更接近原版 WebChat。
 - 🔀 **原版 WebChat 公開聊天室相容模式初版 (v1.5.8)**：設定頁新增 `Chat Protocol` 切換。切到 `upstream` 後，公開聊天室會開始嘗試用原版 `molvqingtai/WebChat` 的 `peer-sync / text / history-sync` 協定互通；私聊、AI metadata 與 reaction 仍會在後續版本逐步對齊。

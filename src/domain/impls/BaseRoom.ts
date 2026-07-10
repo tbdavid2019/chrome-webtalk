@@ -9,6 +9,8 @@ export interface RoomConfig {
 }
 
 export class BaseRoom<M> extends EventHub {
+  private static readonly SEND_RETRY_DELAY_MS = 250
+  private static readonly MAX_SEND_RETRIES = 4
   readonly peer: Peer
   readonly roomId: string
   readonly peerId: string
@@ -26,6 +28,38 @@ export class BaseRoom<M> extends EventHub {
     this.onLeaveRoom = this.onLeaveRoom.bind(this)
     this.leaveRoom = this.leaveRoom.bind(this)
     this.onError = this.onError.bind(this)
+  }
+
+  private sendSerializedMessage(serializedMessage: string, id?: string | string[], retryCount = 0) {
+    if (!this.room) {
+      this.emit('error', new Error('Connection is not established yet.'))
+      return
+    }
+
+    const recipientIds = id ? (Array.isArray(id) ? id : [id]) : []
+
+    if (recipientIds.length === 0) {
+      this.room.send(serializedMessage)
+      return
+    }
+
+    recipientIds.forEach((peerId) => {
+      try {
+        this.room?.send(serializedMessage, peerId)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        const shouldRetry = message.includes('Connection is not established yet.') && retryCount < BaseRoom.MAX_SEND_RETRIES
+
+        if (shouldRetry) {
+          setTimeout(() => {
+            this.sendSerializedMessage(serializedMessage, peerId, retryCount + 1)
+          }, BaseRoom.SEND_RETRY_DELAY_MS * (retryCount + 1))
+          return
+        }
+
+        this.emit('error', new Error(`Failed to send message: ${error}`))
+      }
+    })
   }
 
   joinRoom() {
@@ -57,7 +91,7 @@ export class BaseRoom<M> extends EventHub {
               this.emit('error', new Error('Failed to serialize message'))
               return
             }
-            this.room.send(serializedMessage, id)
+            this.sendSerializedMessage(serializedMessage, id)
           } catch (error) {
             this.emit('error', new Error(`Failed to send message: ${error}`))
           }
@@ -75,7 +109,7 @@ export class BaseRoom<M> extends EventHub {
           this.emit('error', new Error('Failed to serialize message'))
           return this
         }
-        this.room.send(serializedMessage, id)
+        this.sendSerializedMessage(serializedMessage, id)
       } catch (error) {
         this.emit('error', new Error(`Failed to send message: ${error}`))
       }
