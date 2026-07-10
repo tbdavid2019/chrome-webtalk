@@ -216,6 +216,33 @@ const ProfileForm: FC = () => {
         />
         <FormField
           control={form.control}
+          name="compatibilityMode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">{text.compatibilityLabel}</FormLabel>
+              <FormControl>
+                <RadioGroup className="flex gap-x-4" onValueChange={field.onChange} value={field.value ?? 'legacy'}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="legacy" id="compatibility-legacy" />
+                    <Label className="cursor-pointer" htmlFor="compatibility-legacy">
+                      {text.compatibilityLegacy}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="upstream" id="compatibility-upstream" />
+                    <Label className="cursor-pointer" htmlFor="compatibility-upstream">
+                      {text.compatibilityUpstream}
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormDescription>{text.compatibilityDescription}</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="danmakuEnabled"
           render={({ field }) => (
             <FormItem>

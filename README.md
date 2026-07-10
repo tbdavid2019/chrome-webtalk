@@ -18,6 +18,8 @@
 
 ## 🆕 近期更新
 
+- 🕰️ **Upstream HLC / reaction 第二階段 (v1.5.9)**：`upstream` 相容模式下，公開聊天室現在會為 `text / reaction / peer-sync / history-sync` 維護 HLC 排序，`👍 / 👎` 也開始改走 upstream reaction 封包，跨 peer 順序與互動狀態比 `v1.5.8` 更接近原版 WebChat。
+- 🔀 **原版 WebChat 公開聊天室相容模式初版 (v1.5.8)**：設定頁新增 `Chat Protocol` 切換。切到 `upstream` 後，公開聊天室會開始嘗試用原版 `molvqingtai/WebChat` 的 `peer-sync / text / history-sync` 協定互通；私聊、AI metadata 與 reaction 仍會在後續版本逐步對齊。
 - 🧱 **聊天室協定重構地基 (v1.5.7)**：抽出獨立 `protocol` 層與 adapter，開始把聊天室 wire format 從舊有 domain 內聯結構中拆出，為未來逐步靠攏 upstream `molvqingtai/WebChat` 協定做準備。
 - 🌐 **可選介面語系與 AI 回覆語言 (v1.5.6)**：設定頁新增 `Interface Language`，可選 `Auto / 繁體中文 / 简体中文 / English`。`@ai` 房間回覆也會跟隨這個設定，選繁中時會明確要求 AI 使用繁體中文。
 - 🤖 **`@ai` 房間回覆機器人 (v1.5.5)**：在公開聊天室輸入 `@ai ...`，會由發送者本機呼叫 AI，再把回覆作為獨立 AI 訊息推回聊天室，適合多人共同討論頁面內容。
@@ -83,6 +85,7 @@ pnpm build
 - **AI 訊息管理**：AI 回覆會以獨立樣式顯示，不會進入彈幕；你可以封鎖某位使用者並同步隱藏他觸發的 AI，或在設定頁開啟 `Hide All AI Messages` 完全隱藏 AI 訊息。
 - **訊息長度提示**：聊天輸入框目前上限為 `500` 字元；接近上限會變色提醒，達到上限時會主動顯示警告。
 - **Developer Mode**：若你是進階使用者，可到擴充功能設定頁開啟 `Developer Mode 開發者模式`，顯示跨網站 presence 與站點切換/debug 入口。
+- **原版相容測試模式**：若你想逐步和原版 `molvqingtai/WebChat` 公開房間互通，可在設定頁把 `Chat Protocol` 切到 `Upstream`。目前優先對齊的是公開聊天室的 `peer-sync / text / history-sync / reaction`；私聊與 AI metadata 仍保留 fork 自有擴充。
 
 ---
 

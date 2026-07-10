@@ -4,6 +4,7 @@ import { IndexDBStorageExtern } from '@/domain/externs/Storage'
 import StorageEffect from '@/domain/modules/StorageEffect'
 import StatusModule from './modules/Status'
 import { MESSAGE_LIST_STORAGE_KEY } from '@/constants/config'
+import type { HLC } from '@/protocol'
 
 export enum MessageType {
   Normal = 'normal',
@@ -33,6 +34,7 @@ export interface NormalMessage extends MessageUser {
   body: string
   sendTime: number
   receiveTime: number
+  hlc?: HLC
   likeUsers: MessageUser[]
   hateUsers: MessageUser[]
   atUsers: AtUser[]

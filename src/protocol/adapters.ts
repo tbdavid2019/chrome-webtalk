@@ -1,5 +1,6 @@
 import type { AtUser, MessageUser, NormalMessage } from '@/domain/MessageList'
 import { MessageType } from '@/domain/MessageList'
+import { compareHLC, createHLC } from '@/utils'
 import type {
   LegacyAiMessageMeta,
   LegacyAtUser,
@@ -12,9 +13,9 @@ import { LegacySendType } from './LegacyChatRoom'
 import type {
   HLC,
   ProtocolHistorySyncMessage,
+  ProtocolPeerSyncMessage,
   ProtocolMention,
   ProtocolNetworkMessage,
-  ProtocolPeerSyncMessage,
   ProtocolReactionMessage,
   ProtocolSender,
   ProtocolTextMessage
@@ -43,9 +44,15 @@ export const fromProtocolMention = (mention: ProtocolMention): AtUser => ({
   positions: mention.positions
 })
 
-export const createPseudoHLC = (timestamp: number): HLC => ({
-  timestamp,
-  counter: 0
+export const createPseudoHLC = (timestamp: number): HLC => ({ timestamp, counter: 0 })
+
+export const toLegacyTextMessage = (message: ProtocolTextMessage): LegacyTextMessage => ({
+  ...fromProtocolSender(message.sender),
+  type: LegacySendType.Text,
+  id: message.id,
+  body: message.body,
+  sendTime: message.sentAt,
+  atUsers: message.mentions.map(fromProtocolMention)
 })
 
 export const normalizeLegacyTextMessage = (
@@ -148,6 +155,7 @@ export const denormalizeProtocolTextMessage = (
   body: message.body,
   sendTime: message.sentAt,
   receiveTime: message.receivedAt,
+  hlc: message.hlc,
   atUsers: message.mentions.map(fromProtocolMention),
   likeUsers: message.reactions.likes.map(fromProtocolSender),
   hateUsers: message.reactions.hates.map(fromProtocolSender),
@@ -155,6 +163,97 @@ export const denormalizeProtocolTextMessage = (
   aiMeta: options?.aiMeta,
   isPrivate: options?.isPrivate,
   toUser: options?.toUser
+})
+
+export const normalizeNormalMessage = (message: NormalMessage): ProtocolTextMessage => ({
+  type: MESSAGE_TYPE.TEXT,
+  id: message.id,
+  hlc: message.hlc ?? createPseudoHLC(message.sendTime),
+  sentAt: message.sendTime,
+  receivedAt: message.receiveTime,
+  sender: toProtocolSender(message),
+  body: message.body,
+  mentions: message.atUsers.map(toProtocolMention),
+  reactions: {
+    likes: message.likeUsers.map(toProtocolSender),
+    hates: message.hateUsers.map(toProtocolSender)
+  }
+})
+
+export const createProtocolPeerSyncMessage = (input: {
+  id: string
+  sender: MessageUser
+  sentAt: number
+  hlc: HLC
+  peerId: string
+  joinedAt: number
+  lastMessageHLC: HLC
+}): ProtocolPeerSyncMessage => ({
+  type: MESSAGE_TYPE.PEER_SYNC,
+  id: input.id,
+  hlc: input.hlc,
+  sentAt: input.sentAt,
+  receivedAt: input.sentAt,
+  sender: toProtocolSender(input.sender),
+  peerId: input.peerId,
+  joinedAt: input.joinedAt,
+  lastMessageHLC: input.lastMessageHLC
+})
+
+export const createProtocolTextMessage = (input: {
+  id: string
+  sender: MessageUser
+  body: string
+  mentions: AtUser[]
+  sentAt: number
+  hlc: HLC
+}): ProtocolTextMessage => ({
+  type: MESSAGE_TYPE.TEXT,
+  id: input.id,
+  hlc: input.hlc,
+  sentAt: input.sentAt,
+  receivedAt: input.sentAt,
+  sender: toProtocolSender(input.sender),
+  body: input.body,
+  mentions: input.mentions.map(toProtocolMention),
+  reactions: {
+    likes: [],
+    hates: []
+  }
+})
+
+export const createProtocolHistorySyncMessage = (input: {
+  id: string
+  sender: MessageUser
+  sentAt: number
+  hlc: HLC
+  messages: NormalMessage[]
+}): ProtocolHistorySyncMessage => ({
+  type: MESSAGE_TYPE.HISTORY_SYNC,
+  id: input.id,
+  hlc: input.hlc,
+  sentAt: input.sentAt,
+  receivedAt: input.sentAt,
+  sender: toProtocolSender(input.sender),
+  messages: input.messages.map(normalizeNormalMessage)
+})
+
+export const createProtocolReactionMessage = (input: {
+  id: string
+  sender: MessageUser
+  sentAt: number
+  hlc: HLC
+  targetId: string
+  reaction: 'like' | 'hate'
+}): ProtocolReactionMessage => ({
+  type: MESSAGE_TYPE.REACTION,
+  id: input.id,
+  hlc: input.hlc,
+  sentAt: input.sentAt,
+  receivedAt: input.sentAt,
+  sender: toProtocolSender(input.sender),
+  targetId: input.targetId,
+  reaction: input.reaction === 'like' ? REACTION_TYPE.LIKE : REACTION_TYPE.HATE
 })
 
 export const toLegacyReactionPayload = (message: ProtocolReactionMessage) => ({
@@ -171,3 +270,15 @@ export const toLegacySyncUserPayload = (message: ProtocolPeerSyncMessage) => ({
 
 export const toLegacySyncHistoryMessages = (message: ProtocolHistorySyncMessage): NormalMessage[] =>
   message.messages.map((item) => denormalizeProtocolTextMessage(item))
+
+export const compareMessageHLC = (a: NormalMessage, b: NormalMessage): number => {
+  const aHLC = a.hlc ?? createHLC()
+  const bHLC = b.hlc ?? createHLC()
+  const hlcCompare = compareHLC(aHLC, bHLC)
+
+  if (hlcCompare !== 0) {
+    return hlcCompare
+  }
+
+  return a.sendTime - b.sendTime
+}
