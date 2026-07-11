@@ -14,9 +14,19 @@ import { FALLBACK_GROQ_API_KEY, FALLBACK_GROQ_BASE_URL, FALLBACK_GROQ_MODEL } fr
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY, HISTORY_LIMIT } from '@/types/summaryHistory'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import AppStatusDomain from '@/domain/AppStatus'
-import { XIcon } from 'lucide-react'
+import { XIcon, CornerDownLeftIcon } from 'lucide-react'
 import UserInfoDomain from '@/domain/UserInfo'
-import { requestAiChatReply, resolveAppLocale } from '@/utils'
+import {
+  blobToBase64,
+  compressImage,
+  requestAiChatReply,
+  requestPageSuggestions,
+  resolveAppLocale,
+  type PageSuggestion
+} from '@/utils'
+import ImageButton from '@/app/content/components/ImageButton'
+import PanelModeSwitch from '@/app/content/components/PanelModeSwitch'
+import MessageInput from '@/app/content/components/MessageInput'
 
 const DEFAULT_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || FALLBACK_GROQ_API_KEY
 const DEFAULT_API_BASE_URL = import.meta.env.VITE_GEMINI_API_BASE_URL || FALLBACK_GROQ_BASE_URL
@@ -27,6 +37,12 @@ type SummaryPanelProps = {
 }
 
 type Lang = 'zh_TW' | 'zh_CN' | 'en'
+
+type ChatImageAttachment = {
+  id: string
+  name: string
+  dataUrl: string
+}
 
 
 const detectBrowserLang = (): Lang => {
@@ -41,6 +57,8 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
   zh_TW: {
     title: 'AI 空間',
     panelSubtitle: '智慧摘要與對談',
+    chatTab: '聊天',
+    aiTab: 'AI',
     summarySectionTitle: '摘要',
     summarySectionHint: '幫你抓重點',
     chatSectionTitle: '追問與對話',
@@ -67,11 +85,22 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     chatThinking: 'AI 思考中...',
     chatError: '⚠️ 無法取得回覆，請稍後再試',
     clear: '清除',
-    history: '歷史'
+    history: '歷史',
+    suggestedQuestions: '推薦問題',
+    suggestionsLoading: 'AI 正在觀察這個頁面...',
+    suggestionsDescription: '',
+    imageAttached: '已附加圖片',
+    removeImage: '移除圖片',
+    removeAllImages: '移除全部',
+    imageReadFailed: '❌ 圖片處理失敗，請稍後再試',
+    visionModelHint: '附圖後將改用支援 vision 的模型處理。',
+    imagePreviewTitle: '圖片預覽'
   },
   zh_CN: {
     title: 'AI 空间',
     panelSubtitle: '智能摘要與對談',
+    chatTab: '聊天',
+    aiTab: 'AI',
     summarySectionTitle: '摘要',
     summarySectionHint: '轻鬆掌握重點',
     chatSectionTitle: '追问與对话',
@@ -98,11 +127,22 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     chatThinking: 'AI 思考中...',
     chatError: '⚠️ 暂时无法回应，请稍后再试',
     clear: '清除',
-    history: '历史'
+    history: '历史',
+    suggestedQuestions: '推荐问题',
+    suggestionsLoading: 'AI 正在观察这个页面...',
+    suggestionsDescription: '',
+    imageAttached: '已附加图片',
+    removeImage: '移除图片',
+    removeAllImages: '移除全部',
+    imageReadFailed: '❌ 图片处理失败，请稍后再试',
+    visionModelHint: '附图后会改用支持 vision 的模型处理。',
+    imagePreviewTitle: '图片预览'
   },
   en: {
     title: 'AI Workspace',
     panelSubtitle: 'Summaries & Chat',
+    chatTab: 'Chat',
+    aiTab: 'AI',
     summarySectionTitle: 'Summary',
     summarySectionHint: 'Capture key ideas',
     chatSectionTitle: 'Discuss & Ask',
@@ -129,6 +169,16 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     chatThinking: 'AI is typing...',
     chatError: '⚠️ Unable to fetch a reply, please try again',
     clear: 'Clear',
+    history: 'History',
+    suggestedQuestions: 'Recommended Questions',
+    suggestionsLoading: 'AI is scanning this page...',
+    suggestionsDescription: '',
+    imageAttached: 'Images attached',
+    removeImage: 'Remove',
+    removeAllImages: 'Remove all',
+    imageReadFailed: '❌ Failed to process the image',
+    visionModelHint: 'Image questions will use a vision-capable model.',
+    imagePreviewTitle: 'Image preview'
   }
 }
 
@@ -147,6 +197,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
+  const [chatImages, setChatImages] = useState<ChatImageAttachment[]>([])
+  const [suggestedQuestions, setSuggestedQuestions] = useState<PageSuggestion[]>([])
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
   const chatListRef = useRef<HTMLDivElement | null>(null)
   const chatInputIsComposingRef = useRef(false)
   const pageMetaRef = useRef({
@@ -156,6 +209,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const historyEntryRef = useRef<SummaryHistoryEntry | null>(null)
   const text = LANG_MAP[language]
   const hasApiKey = Boolean(apiKey.trim())
+  const aiTopicSuggestionsEnabled = userInfo?.aiTopicSuggestionsEnabled !== false
   const pageHost = useMemo(() => {
     try {
       return pageMetaRef.current.url ? new URL(pageMetaRef.current.url).hostname : ''
@@ -245,6 +299,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
     clearSummary()
     setChatMessages([])
     setChatInput('')
+    setChatImages([])
     historyEntryRef.current = null
   }
 
@@ -369,6 +424,37 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
     })
   }, [chatMessages, chatLoading])
 
+  useEffect(() => {
+    let active = true
+
+    if (!aiTopicSuggestionsEnabled || !pageText.trim()) {
+      setSuggestedQuestions([])
+      setSuggestionsLoading(false)
+      return
+    }
+
+    setSuggestionsLoading(true)
+
+    requestPageSuggestions({
+      pageTitle: pageMetaRef.current.title,
+      pageUrl: pageMetaRef.current.url,
+      pageText,
+      language
+    })
+      .then((result) => {
+        if (!active) return
+        setSuggestedQuestions(result.workspace)
+      })
+      .finally(() => {
+        if (!active) return
+        setSuggestionsLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [aiTopicSuggestionsEnabled, language, pageText])
+
   const onClickSummarize = async () => {
     if (!hasApiKey) {
       setShowApiSettings(true)
@@ -462,6 +548,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
           role: msg.role,
           content: msg.content
         })),
+        imageDataUrls: chatImages.map((item) => item.dataUrl),
         language,
         mode: 'workspace'
       })
@@ -472,6 +559,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
         content: result.content
       }
       appendChatMessage(assistantMessage)
+      setChatImages([])
     } catch (error: any) {
       console.error('[WebTalk] ❌ 續問失敗', error)
       appendChatMessage({
@@ -481,6 +569,38 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
       })
     } finally {
       setChatLoading(false)
+    }
+  }
+
+  const handleInsertSuggestion = (prompt: string) => {
+    setChatInput(prompt)
+  }
+
+  const handleSelectChatImage = async (file: File) => {
+    try {
+      const blob = await compressImage({
+        input: file,
+        targetSize: 4 * 1024 * 1024,
+        outputType: file.size > 4 * 1024 * 1024 ? 'image/webp' : undefined
+      })
+      const dataUrl = await blobToBase64(blob)
+      setChatImages((prev) => [
+        ...prev,
+        {
+          id: nanoid(),
+          name: file.name,
+          dataUrl
+        }
+      ])
+    } catch (error) {
+      console.error('[WebTalk] ❌ AI 空間圖片處理失敗', error)
+      alert(text.imageReadFailed)
+    }
+  }
+
+  const handleSelectChatImages = async (files: File[]) => {
+    for (const file of files.slice(0, 4)) {
+      await handleSelectChatImage(file)
     }
   }
 
@@ -494,14 +614,14 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
         animate={{ opacity: 1, x: '0%' }}
         exit={{ opacity: 0, x: '100%' }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="pointer-events-auto fixed right-0 top-0 z-infinity grid h-full w-[420px] min-w-[360px] max-w-[800px] grid-rows-[auto_1fr] border-l border-border bg-background shadow-2xl"
+        className="pointer-events-auto fixed right-0 top-0 z-infinity grid h-full w-[440px] min-w-[380px] max-w-[860px] grid-rows-[auto_1fr] border-l border-border bg-background shadow-2xl"
       >
-        <div className="flex h-12 items-center justify-between border-b border-border bg-background px-4">
+        <div className="flex h-14 items-center justify-between border-b border-border bg-background px-4">
           <div className="flex items-center gap-1.5 py-1">
-            <span className="text-sm font-extrabold tracking-wider text-foreground">✨ {text.title}</span>
+            <span className="text-lg font-extrabold tracking-wider text-foreground">✨ {text.title}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex rounded-full bg-muted p-0.5 border border-border/80 h-7 items-center shrink-0">
+            <div className="flex h-9 shrink-0 items-center rounded-full border border-border/80 bg-muted p-0.5">
               {(
                 [
                   { code: 'zh_TW', label: '繁' },
@@ -512,7 +632,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                 <button
                   key={lang.code}
                   onClick={() => setLanguage(lang.code)}
-                  className={`px-2.5 h-full text-[10px] font-bold rounded-full transition-all ${
+                  className={`h-full rounded-full px-3 text-sm font-extrabold transition-all ${
                     language === lang.code
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -524,23 +644,23 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
             </div>
             <button
               onClick={handleOpenHistory}
-              className="rounded-full border border-border bg-background px-3 h-7 text-xs font-semibold text-foreground transition hover:bg-muted shrink-0"
+              className="h-9 shrink-0 rounded-full border border-border bg-background px-4 text-sm font-extrabold text-foreground transition hover:bg-muted"
             >
               {text.history}
             </button>
             <button
               onClick={() => setShowApiSettings(!showApiSettings)}
-              className="flex size-7 items-center justify-center rounded-full border border-border bg-background text-sm text-foreground transition hover:bg-muted shrink-0"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-base text-foreground transition hover:bg-muted"
               title="API setting 設置"
             >
               ⚙️
             </button>
             <button
               onClick={onClose}
-              className="flex size-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground shrink-0"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground"
               title="關閉 AI 空間"
             >
-              <XIcon size={14} />
+              <XIcon size={16} />
             </button>
           </div>
         </div>
@@ -548,7 +668,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
         <div className="flex flex-col min-h-0 flex-1 bg-background p-4 justify-between space-y-3">
           {showApiSettings && (
             <div className="space-y-3 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shrink-0">
-              <h3 className="text-sm font-semibold text-slate-700">API setting</h3>
+              <h3 className="text-base font-semibold text-slate-700">API setting</h3>
               <div className="space-y-2">
                 <Label htmlFor="api-key" className="text-sm text-slate-500 flex items-center justify-between">
                   <span>Groq API Key <span className="text-red-500">*</span></span>
@@ -615,17 +735,43 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
           )}
 
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            {aiTopicSuggestionsEnabled && (
+              <div className="mb-3 rounded-2xl border border-border bg-muted/30 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-semibold text-foreground">{text.suggestedQuestions}</div>
+                  {suggestionsLoading && (
+                    <div className="text-xs text-muted-foreground">{text.suggestionsLoading}</div>
+                  )}
+                </div>
+                {!!text.suggestionsDescription && (
+                  <div className="mt-1 text-xs text-muted-foreground">{text.suggestionsDescription}</div>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {suggestedQuestions.map((item, index) => (
+                    <button
+                      key={`${item.label}-${index}`}
+                      type="button"
+                      onClick={() => handleInsertSuggestion(item.prompt)}
+                      className="rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted"
+                      title={item.prompt}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {!summary ? (
               /* 1. 未產生摘要時的引導介面 */
               <div className="flex flex-col flex-1 items-center justify-center p-6 text-center gap-y-4 bg-muted/40 rounded-2xl border border-dashed border-border/80 my-auto">
                 <span className="text-3xl">✨</span>
-                <p className="text-base text-muted-foreground font-medium leading-relaxed max-w-[280px]">
+                <p className="text-lg text-muted-foreground font-medium leading-relaxed max-w-[300px]">
                   點擊下方按鈕以濃縮並分析此網頁重點。
                 </p>
                 <button
                   onClick={onClickSummarize}
                   disabled={loading}
-                  className="rounded-full bg-primary px-6 py-2.5 text-base font-bold text-primary-foreground shadow shadow-primary/20 hover:bg-primary/95 transition-all disabled:opacity-50"
+                  className="rounded-full bg-primary px-6 py-2.5 text-lg font-bold text-primary-foreground shadow shadow-primary/20 hover:bg-primary/95 transition-all disabled:opacity-50"
                 >
                   {loading ? text.loading : '✨ 濃縮此網頁'}
                 </button>
@@ -639,7 +785,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                 {/* 網頁摘要氣泡 (置頂呈現) */}
                 <div className="flex flex-col items-start gap-y-1">
                   <div className="flex items-center justify-between w-full text-xs text-muted-foreground font-semibold px-1">
-                    <span className="flex items-center gap-1">📄 網頁摘要 {pageHost && `(${pageHost})`}</span>
+                    <span className="flex items-center gap-1 text-sm">📄 網頁摘要 {pageHost && `(${pageHost})`}</span>
                     {/* 精簡快捷動作組 */}
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <button
@@ -676,7 +822,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                       </button>
                     </div>
                   </div>
-                  <div className="w-full rounded-2xl bg-background border border-border px-4 py-3 text-base leading-relaxed text-foreground/90 shadow-sm">
+                  <div className="w-full rounded-2xl bg-background border border-border px-4 py-3 text-lg leading-relaxed text-foreground/90 shadow-sm">
                     <div
                       className="prose prose-sm prose-slate dark:prose-invert max-w-none text-base"
                       dangerouslySetInnerHTML={{ __html: markedHtml }}
@@ -693,7 +839,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                         {isUser ? '👤 你' : '🤖 AI'}
                       </span>
                       <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-base shadow-sm ${
+                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-lg shadow-sm ${
                           isUser 
                             ? 'bg-primary text-primary-foreground rounded-tr-sm' 
                             : 'border border-border bg-background text-foreground rounded-tl-sm'
@@ -704,7 +850,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                         ) : (
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
-                            className="prose prose-sm prose-slate dark:prose-invert prose-a:underline text-base"
+                            className="prose prose-base prose-slate dark:prose-invert prose-a:underline text-lg"
                           >
                             {message.content}
                           </ReactMarkdown>
@@ -718,7 +864,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                 {chatLoading && (
                   <div className="flex flex-col items-start gap-y-1">
                     <span className="text-xs text-muted-foreground px-1">🤖 AI</span>
-                    <div className="rounded-2xl border border-border bg-background rounded-tl-sm px-4 py-2.5 text-base text-primary font-medium animate-pulse">
+                    <div className="rounded-2xl border border-border bg-background rounded-tl-sm px-4 py-2.5 text-lg text-primary font-medium animate-pulse">
                       {text.chatThinking}
                     </div>
                   </div>
@@ -729,11 +875,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
 
           {/* 底部功能與輸入框控制欄 */}
           <div className="flex flex-col gap-2 pt-1 shrink-0">
-            <div className="flex items-end gap-2">
-              <Textarea
+            <div className="rounded-3xl border border-border bg-muted/20 p-3 shadow-sm">
+              <MessageInput
                 value={chatInput}
-                rows={1}
-                placeholder={text.chatPlaceholder}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (chatInputIsComposingRef.current) {
@@ -751,34 +895,74 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                   chatInputIsComposingRef.current = false
                 }}
                 disabled={chatLoading || !canChat}
-                className="flex-1 min-h-[38px] max-h-24 resize-none rounded-xl border border-border bg-muted px-3 py-2 text-base focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-foreground"
+                placeholder={text.chatPlaceholder}
+                loading={chatLoading}
               />
-              <button
-                onClick={sendFollowUpQuestion}
-                disabled={chatLoading || !chatInput.trim() || !canChat}
-                className="shrink-0 rounded-full bg-primary px-5 py-2.5 text-base font-bold text-primary-foreground shadow hover:bg-primary/95 transition disabled:opacity-50"
-              >
-                {text.chatSend}
-              </button>
-            </div>
 
-            <div className="flex items-center gap-2">
-              {/* 左下角功能切換雙鍵膠囊 */}
-              <div className="flex rounded-full bg-muted p-0.5 border border-border/80 shrink-0">
+              {chatImages.length > 0 && (
+                <div className="mt-3 rounded-2xl border border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <span className="font-semibold text-foreground">{text.imageAttached}</span>
+                      <span className="ml-2">{chatImages.length}</span>
+                      <span className="ml-3 text-xs">{text.visionModelHint}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setChatImages([])}
+                      className="shrink-0 rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground transition hover:bg-muted"
+                    >
+                      {text.removeAllImages}
+                    </button>
+                  </div>
+                  <div className="mt-3 text-xs font-semibold text-foreground">{text.imagePreviewTitle}</div>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    {chatImages.map((item) => (
+                      <div key={item.id} className="w-[96px]">
+                        <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+                          <img src={item.dataUrl} alt={item.name} className="h-24 w-full object-cover" />
+                        </div>
+                        <div className="mt-1 truncate text-xs text-muted-foreground">{item.name}</div>
+                        <button
+                          type="button"
+                          onClick={() => setChatImages((prev) => prev.filter((image) => image.id !== item.id))}
+                          className="mt-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-semibold text-foreground transition hover:bg-muted"
+                        >
+                          {text.removeImage}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-3 flex items-center justify-between gap-1">
+                <div className="flex min-w-0 flex-1 items-center gap-1">
+                  <PanelModeSwitch
+                    active="ai"
+                    onChat={() => {
+                      send(appStatusDomain.command.UpdateOpenCommand(true))
+                      onClose()
+                    }}
+                    chatLabel={text.chatTab}
+                    aiLabel={text.aiTab}
+                  />
+                  <div className="flex items-center gap-0.5">
+                    <ImageButton
+                      disabled={chatLoading || !canChat}
+                      onSelect={handleSelectChatImage}
+                      onSelectMultiple={handleSelectChatImages}
+                      multiple
+                    />
+                  </div>
+                </div>
                 <button
-                  onClick={() => {
-                    send(appStatusDomain.command.UpdateOpenCommand(true))
-                    onClose()
-                  }}
-                  className="px-2.5 py-1 text-xs font-bold rounded-full text-muted-foreground hover:text-foreground transition-all"
+                  onClick={sendFollowUpQuestion}
+                  disabled={chatLoading || !chatInput.trim() || !canChat}
+                  className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow hover:bg-primary/95 transition disabled:opacity-50 flex items-center justify-center"
                 >
-                  💬 {text.chatTab}
-                </button>
-                <button
-                  className="px-2.5 py-1 text-xs font-bold rounded-full bg-primary text-primary-foreground shadow-sm cursor-default"
-                  disabled
-                >
-                  ✨ {text.aiTab}
+                  <span className="mr-1">{text.chatSend}</span>
+                  <CornerDownLeftIcon className="text-primary-foreground/75" size={10}></CornerDownLeftIcon>
                 </button>
               </div>
             </div>

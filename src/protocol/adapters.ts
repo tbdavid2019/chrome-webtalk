@@ -1,4 +1,4 @@
-import type { AtUser, MessageUser, NormalMessage } from '@/domain/MessageList'
+import type { AtUser, MessageUser, NormalMessage, MessagePageContext } from '@/domain/MessageList'
 import { MessageType } from '@/domain/MessageList'
 import { compareHLC, createHLC } from '@/utils'
 import type {
@@ -14,6 +14,7 @@ import type {
   HLC,
   ProtocolAiMessageMeta,
   ProtocolHistorySyncMessage,
+  ProtocolPageContext,
   ProtocolPeerSyncMessage,
   ProtocolMention,
   ProtocolNetworkMessage,
@@ -62,17 +63,29 @@ export const fromProtocolAiMessageMeta = (meta: ProtocolAiMessageMeta): LegacyAi
   model: meta.model
 })
 
+export const toProtocolPageContext = (context: MessagePageContext): ProtocolPageContext => ({
+  url: context.url,
+  title: context.title
+})
+
+export const fromProtocolPageContext = (context: ProtocolPageContext): MessagePageContext => ({
+  url: context.url,
+  title: context.title
+})
+
 export const createProtocolTextExtension = (input: {
   senderType?: 'user' | 'ai'
   aiMeta?: LegacyAiMessageMeta
+  pageContext?: MessagePageContext
   isPrivate?: boolean
   toUser?: LegacyMessageUser | MessageUser
 }): ProtocolTextMessageExtension | undefined => {
   const hasSenderType = input.senderType && input.senderType !== 'user'
   const hasAiMeta = !!input.aiMeta
+  const hasPageContext = !!input.pageContext?.url
   const hasPrivate = !!(input.isPrivate && input.toUser)
 
-  if (!hasSenderType && !hasAiMeta && !hasPrivate) {
+  if (!hasSenderType && !hasAiMeta && !hasPageContext && !hasPrivate) {
     return undefined
   }
 
@@ -80,6 +93,7 @@ export const createProtocolTextExtension = (input: {
     namespace: 'chrome-webtalk',
     senderType: input.senderType,
     aiMeta: input.aiMeta ? toProtocolAiMessageMeta(input.aiMeta) : undefined,
+    pageContext: input.pageContext ? toProtocolPageContext(input.pageContext) : undefined,
     private: hasPrivate && input.toUser ? { toUser: toProtocolSender(input.toUser) } : undefined
   }
 }
@@ -104,6 +118,7 @@ export const toLegacyTextMessage = (message: ProtocolTextMessage): LegacyTextMes
     atUsers: message.mentions.map(fromProtocolMention),
     senderType: extension?.senderType,
     aiMeta: extension?.aiMeta ? fromProtocolAiMessageMeta(extension.aiMeta) : undefined,
+    pageContext: extension?.pageContext ? fromProtocolPageContext(extension.pageContext) : undefined,
     isPrivate: !!extension?.private,
     toUser: extension?.private ? fromProtocolSender(extension.private.toUser) : undefined
   }
@@ -201,6 +216,7 @@ export const denormalizeProtocolTextMessage = (
   options?: {
     senderType?: 'user' | 'ai'
     aiMeta?: LegacyAiMessageMeta
+    pageContext?: MessagePageContext
     isPrivate?: boolean
     toUser?: MessageUser
   }
@@ -220,6 +236,7 @@ export const denormalizeProtocolTextMessage = (
       hateUsers: message.reactions.hates.map(fromProtocolSender),
       senderType: options?.senderType ?? extension?.senderType,
       aiMeta: options?.aiMeta ?? (extension?.aiMeta ? fromProtocolAiMessageMeta(extension.aiMeta) : undefined),
+      pageContext: options?.pageContext ?? (extension?.pageContext ? fromProtocolPageContext(extension.pageContext) : undefined),
       isPrivate: options?.isPrivate ?? !!extension?.private,
       toUser: options?.toUser ?? (extension?.private ? fromProtocolSender(extension.private.toUser) : undefined)
     }
@@ -271,6 +288,7 @@ export const createProtocolTextMessage = (input: {
   hlc: HLC
   senderType?: 'user' | 'ai'
   aiMeta?: LegacyAiMessageMeta
+  pageContext?: MessagePageContext
   isPrivate?: boolean
   toUser?: MessageUser
 }): ProtocolTextMessage => ({

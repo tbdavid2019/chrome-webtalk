@@ -28,6 +28,11 @@ export interface AiMessageMeta {
   model?: string
 }
 
+export interface MessagePageContext {
+  url: string
+  title?: string
+}
+
 export interface NormalMessage extends MessageUser {
   type: MessageType.Normal
   id: string
@@ -40,6 +45,7 @@ export interface NormalMessage extends MessageUser {
   atUsers: AtUser[]
   senderType?: 'user' | 'ai'
   aiMeta?: AiMessageMeta
+  pageContext?: MessagePageContext
   isPrivate?: boolean
   toUser?: MessageUser
 }

@@ -1,5 +1,5 @@
 import { type FC } from 'react'
-import { BotIcon, CheckIcon, CopyIcon, ThumbsDownIcon, ThumbsUpIcon, UserXIcon } from 'lucide-react'
+import { BotIcon, CheckIcon, CopyIcon, ExternalLinkIcon, Link2Icon, ThumbsDownIcon, ThumbsUpIcon, UserXIcon } from 'lucide-react'
 import FormatDate from './FormatDate'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
@@ -17,6 +17,7 @@ export interface MessageItemProps {
   onLikeChange?: (checked: boolean) => void
   onHateChange?: (checked: boolean) => void
   onCopy?: (message: NormalMessage) => void
+  onOpenPage?: (message: NormalMessage) => void
   onAvatarClick?: (data: NormalMessage) => void
   className?: string
   currentUserId?: string
@@ -69,7 +70,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
       <div className="overflow-hidden pr-3">
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-2 leading-none mb-1">
           <div className="flex items-center gap-x-1.5 truncate">
-            <div className="truncate text-sm font-semibold text-foreground/80">{props.data.username}</div>
+            <div className="truncate text-base font-semibold text-foreground/85">{props.data.username}</div>
             {props.isAi && (
               <span className="inline-flex items-center gap-x-1 rounded-full border border-amber-300/70 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300">
                 <BotIcon size={11} />
@@ -90,10 +91,17 @@ const MessageItem: FC<MessageItemProps> = (props) => {
               </span>
             )}
           </div>
-          <FormatDate className="text-xs text-muted-foreground" date={props.data.sendTime}></FormatDate>
+          <FormatDate className="text-sm text-muted-foreground" date={props.data.sendTime}></FormatDate>
         </div>
         <div>
-          <div className="pb-1.5 text-base text-foreground/95 leading-relaxed">
+          {props.data.pageContext?.url && (
+            <div className="mb-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Link2Icon size={14} />
+              <span className="shrink-0 font-medium">{text.pageLabel}</span>
+              <span className="truncate">{props.data.pageContext.title || props.data.pageContext.url}</span>
+            </div>
+          )}
+          <div className="pb-1.5 text-lg text-foreground/95 leading-relaxed">
             <Markdown>{content}</Markdown>
           </div>
           <div className="flex flex-wrap items-center gap-1.5 pb-1 text-muted-foreground opacity-80 transition-opacity group-hover:opacity-100">
@@ -102,7 +110,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
               variant="ghost"
               size="xs"
               className={cn(
-                'h-7 rounded-full px-2 text-xs',
+                'h-8 rounded-full px-2.5 text-sm',
                 props.like && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
               )}
               onClick={() => props.onLikeChange?.(!props.like)}
@@ -116,7 +124,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
               variant="ghost"
               size="xs"
               className={cn(
-                'h-7 rounded-full px-2 text-xs',
+                'h-8 rounded-full px-2.5 text-sm',
                 props.hate && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
               )}
               onClick={() => props.onHateChange?.(!props.hate)}
@@ -129,20 +137,31 @@ const MessageItem: FC<MessageItemProps> = (props) => {
               type="button"
               variant="ghost"
               size="xs"
-              className="h-7 rounded-full px-2 text-xs"
+              className="h-8 rounded-full px-2 text-sm"
               onClick={() => props.onCopy?.(props.data)}
-              title={props.copied ? text.copiedTitle : text.copyMessageTitle}
+              title={props.copied ? text.copiedTitle : text.copyWithUrlTitle}
             >
               {props.copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
-              <span className="ml-1">{props.copied ? text.copied : text.copy}</span>
             </Button>
+            {props.data.pageContext?.url && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                className="h-8 rounded-full px-2 text-sm"
+                onClick={() => props.onOpenPage?.(props.data)}
+                title={text.openPageTitle}
+              >
+                <ExternalLinkIcon size={14} />
+              </Button>
+            )}
             {props.onToggleBanUser && (
               <Button
                 type="button"
                 variant="ghost"
                 size="xs"
                 className={cn(
-                  'h-7 rounded-full px-2 text-xs',
+                  'h-8 rounded-full px-2.5 text-sm',
                   props.isBanned && 'bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive'
                 )}
                 onClick={props.onToggleBanUser}

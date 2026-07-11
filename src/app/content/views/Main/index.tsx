@@ -89,11 +89,14 @@ const Main: FC = () => {
     }
   }
 
-  const handleCopyMessage = async (message: any) => {
+  const handleCopyMessage = async (message: NormalMessage) => {
     try {
-      await navigator.clipboard.writeText(message.body)
+      const payload = message.pageContext?.url
+        ? `${message.body}\n\n[${message.pageContext.title || 'Page Link'}](${message.pageContext.url})`
+        : message.body
+      await navigator.clipboard.writeText(payload)
       setCopiedMessageId(message.id)
-      send(toastDomain.command.SuccessCommand({ message: text.copySuccess, duration: 1500 }))
+      send(toastDomain.command.SuccessCommand({ message: text.copyWithUrlSuccess, duration: 1500 }))
       window.setTimeout(() => {
         setCopiedMessageId((current) => (current === message.id ? null : current))
       }, 1500)
@@ -101,6 +104,12 @@ const Main: FC = () => {
       console.error('[WebTalk] Failed to copy message', error)
       send(toastDomain.command.ErrorCommand(text.copyFail))
     }
+  }
+
+  const handleOpenMessagePage = (message: NormalMessage) => {
+    const url = message.pageContext?.url
+    if (!url) return
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const getBanTarget = (message: NormalMessage) => {
@@ -154,6 +163,7 @@ const Main: FC = () => {
             onLikeChange={canInteractWithMessage(message) ? () => handleLikeChange(message.id) : undefined}
             onHateChange={canInteractWithMessage(message) ? () => handleHateChange(message.id) : undefined}
             onCopy={handleCopyMessage}
+            onOpenPage={handleOpenMessagePage}
             onAvatarClick={handleAvatarClick}
             currentUserId={userInfo?.id}
             copied={copiedMessageId === message.id}

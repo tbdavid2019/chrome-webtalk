@@ -32,11 +32,15 @@ const defaultUserInfo: UserInfo = {
   developerMode: false,
   bannedUserIds: [],
   hideAllAiMessages: false,
+  aiTopicSuggestionsEnabled: true,
   danmakuEnabled: true,
   danmakuOpacity: 0.8,
   danmakuSpeed: 'normal',
   notificationEnabled: true,
-  notificationType: 'at'
+  notificationType: 'at',
+  roomAvatarsEnabled: true,
+  globalAvatar: '',
+  roomAvatars: {}
 }
 
 const formSchema = v.object({
@@ -73,6 +77,7 @@ const formSchema = v.object({
   developerMode: v.optional(v.boolean()),
   bannedUserIds: v.optional(v.array(v.string())),
   hideAllAiMessages: v.optional(v.boolean()),
+  aiTopicSuggestionsEnabled: v.optional(v.boolean()),
   danmakuEnabled: v.boolean(),
   danmakuOpacity: v.optional(v.pipe(v.number(), v.minValue(0.1), v.maxValue(1.0))),
   danmakuSpeed: v.optional(v.pipe(v.string(), v.union([v.literal('slow'), v.literal('normal'), v.literal('fast')]))),
@@ -80,7 +85,10 @@ const formSchema = v.object({
   notificationType: v.pipe(
     v.string(),
     v.union([v.literal('all'), v.literal('at')], 'Please select notification type. / 請選擇通知種類')
-  )
+  ),
+  roomAvatarsEnabled: v.optional(v.boolean()),
+  globalAvatar: v.optional(v.string()),
+  roomAvatars: v.optional(v.any())
 })
 const ProfileForm: FC = () => {
   const send = useRemeshSend()
@@ -105,7 +113,12 @@ const ProfileForm: FC = () => {
   const text = getUiText(form.watch('language'))
 
   const handleSubmit = (userInfo: UserInfo) => {
-    send(userInfoDomain.command.UpdateUserInfoCommand(userInfo))
+    const updated = { ...userInfo }
+    updated.globalAvatar = userInfo.avatar
+    if (!userInfo.roomAvatarsEnabled) {
+      updated.avatar = userInfo.avatar
+    }
+    send(userInfoDomain.command.UpdateUserInfoCommand(updated))
     toast.success('Saved successfully! / 儲存成功！')
   }
 
@@ -175,6 +188,32 @@ const ProfileForm: FC = () => {
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="roomAvatarsEnabled"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="enable-room-avatars"
+                    onCheckedChange={field.onChange}
+                    checked={field.value}
+                  />
+                  <FormLabel className="cursor-pointer font-semibold" htmlFor="enable-room-avatars">
+                    Different avatar per website 不同網站使用不同頭像
+                  </FormLabel>
+                </div>
+              </FormControl>
+              <FormDescription>
+                When enabled, you will automatically use a different randomly generated avatar on different websites. The avatar chosen above will be your default. /
+                開啟後，在不同網站聊天的頭像會自動隨機不同。上方設定的頭像會作為預設頭像。
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="language"
@@ -405,6 +444,29 @@ const ProfileForm: FC = () => {
                 </div>
               </FormControl>
               <FormDescription>{text.profileHideAllAiMessagesDescription}</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="aiTopicSuggestionsEnabled"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="ai-topic-suggestions-enabled"
+                    onCheckedChange={field.onChange}
+                    checked={field.value ?? true}
+                  />
+                  <FormLabel className="cursor-pointer font-semibold" htmlFor="ai-topic-suggestions-enabled">
+                    {text.profileAiTopicSuggestions}
+                  </FormLabel>
+                </div>
+              </FormControl>
+              <FormDescription>{text.profileAiTopicSuggestionsDescription}</FormDescription>
               <FormMessage />
             </FormItem>
           )}

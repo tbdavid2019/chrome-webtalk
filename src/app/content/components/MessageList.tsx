@@ -13,13 +13,13 @@ const MessageList: FC<MessageListProps> = ({ children }) => {
 
   if (!children || children.length === 0) {
     return (
-      <div className="flex size-full items-center justify-center p-6 bg-background">
-        <div className="flex flex-col items-center justify-center py-10 px-6 text-center gap-y-3 bg-muted/40 rounded-2xl border border-dashed border-border/80 w-full max-w-[280px] my-auto">
-          <span className="text-3xl animate-bounce">🐰</span>
-          <p className="text-sm text-muted-foreground font-semibold leading-relaxed">
+      <div className="flex size-full items-center justify-center bg-background p-4">
+        <div className="my-auto flex w-full max-w-[320px] flex-col items-center justify-center gap-y-4 rounded-3xl border border-dashed border-border/80 bg-muted/40 px-7 py-10 text-center shadow-sm">
+          <span className="text-4xl">✨</span>
+          <p className="text-lg font-medium leading-relaxed text-muted-foreground">
             目前聊天室沒有人發言。
             <br />
-            輸入訊息並按下 Enter 開始彈幕聊天！
+            輸入訊息並按下 Enter 開始聊天。
           </p>
         </div>
       </div>
@@ -27,7 +27,8 @@ const MessageList: FC<MessageListProps> = ({ children }) => {
   }
 
   return (
-    <ScrollArea ref={setScrollParentRef} className="size-full bg-background">
+    <div className="min-h-0 flex-1 bg-background p-4 pt-3">
+      <ScrollArea ref={setScrollParentRef} className="size-full rounded-3xl border border-border bg-muted/20">
       <Virtuoso
         defaultItemHeight={108}
         followOutput={(isAtBottom: boolean) => (isAtBottom ? 'smooth' : 'auto')}
@@ -36,7 +37,8 @@ const MessageList: FC<MessageListProps> = ({ children }) => {
         customScrollParent={scrollParentRef!}
         itemContent={(_: any, item: ReactElement<MessageItemProps | PromptItemProps>) => item}
       />
-    </ScrollArea>
+      </ScrollArea>
+    </div>
   )
 }
 

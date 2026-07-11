@@ -31,10 +31,16 @@ export interface ProtocolAiMessageMeta {
   model?: string
 }
 
+export interface ProtocolPageContext {
+  url: string
+  title?: string
+}
+
 export interface ProtocolTextMessageExtension {
   namespace: 'chrome-webtalk'
   senderType?: 'user' | 'ai'
   aiMeta?: ProtocolAiMessageMeta
+  pageContext?: ProtocolPageContext
   private?: {
     toUser: ProtocolSender
   }
@@ -112,10 +118,16 @@ const AiMessageMetaSchema = v.object({
   model: v.optional(v.string())
 })
 
+const PageContextSchema = v.object({
+  url: v.string(),
+  title: v.optional(v.string())
+})
+
 const ProtocolTextMessageExtensionSchema: v.GenericSchema<ProtocolTextMessageExtension> = v.object({
   namespace: v.literal('chrome-webtalk'),
   senderType: v.optional(v.union([v.literal('user'), v.literal('ai')])),
   aiMeta: v.optional(AiMessageMetaSchema),
+  pageContext: v.optional(PageContextSchema),
   private: v.optional(
     v.object({
       toUser: SenderSchema

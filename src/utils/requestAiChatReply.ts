@@ -8,6 +8,7 @@ export interface RequestAiChatReplyInput {
   pageUrl?: string
   pageText?: string
   pageSummary?: string
+  imageDataUrls?: string[]
   conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>
   language?: AppLocalePreference
   mode?: 'room' | 'workspace'
@@ -23,6 +24,8 @@ export const requestAiChatReply = async (input: RequestAiChatReplyInput): Promis
   const locale = resolveAppLocale(input.language)
   const text = getUiText(locale)
   const conversationHistory = input.conversationHistory ?? []
+  const imageDataUrls = input.imageDataUrls?.filter(Boolean) ?? []
+  const hasImages = imageDataUrls.length > 0
 
   const systemPrompt = [
     input.mode === 'workspace'
@@ -47,8 +50,20 @@ export const requestAiChatReply = async (input: RequestAiChatReplyInput): Promis
       messages: [
         { role: 'system', content: systemPrompt },
         ...conversationHistory,
-        { role: 'user', content: input.prompt }
-      ]
+        {
+          role: 'user',
+          content: hasImages
+            ? [
+                { type: 'text', text: input.prompt },
+                ...imageDataUrls.map((url) => ({
+                  type: 'image_url' as const,
+                  image_url: { url }
+                }))
+              ]
+            : input.prompt
+        }
+      ],
+      route: hasImages ? 'vision' : 'text'
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)

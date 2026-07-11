@@ -80,9 +80,14 @@ const Header: FC = () => {
             <Globe2Icon size="100%" className="text-muted-foreground" />
           </AvatarFallback>
         </Avatar>
-        <span className="truncate text-sm font-semibold text-foreground">
-          {siteInfo.hostname.replace(/^www\./i, '')}
-        </span>
+        <div className="min-w-0">
+          <span className="block truncate text-base font-extrabold tracking-wide text-foreground">
+            {siteInfo.hostname.replace(/^www\./i, '')}
+          </span>
+          <span className="block truncate text-[11px] text-muted-foreground">
+            {privateChatTarget ? `Private with @${privateChatTarget.username}` : siteInfo.title}
+          </span>
+        </div>
         {developerMode && virtualOnlineGroup.length > 1 && (
           <HoverCard>
             <HoverCardTrigger asChild>
@@ -94,7 +99,7 @@ const Header: FC = () => {
                 <span>Sites</span>
               </Button>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 rounded-lg p-0">
+            <HoverCardContent className="w-80 rounded-2xl p-0">
               <ScrollArea
                 type="scroll"
                 className="max-h-96 min-h-[72px] p-2"
@@ -108,7 +113,7 @@ const Header: FC = () => {
                     <Link
                       underline={false}
                       href={site.origin}
-                      className="grid cursor-pointer grid-cols-[auto_1fr] items-center gap-x-2 rounded-lg px-2 py-1.5 hover:bg-accent hover:text-accent-foreground"
+                      className="grid cursor-pointer grid-cols-[auto_1fr] items-center gap-x-2 rounded-xl px-2 py-2 hover:bg-accent hover:text-accent-foreground"
                     >
                       <Avatar className="size-10 rounded-sm">
                         <AvatarImage src={site.icon} alt="favicon" />
@@ -140,7 +145,7 @@ const Header: FC = () => {
               <PresenceCount count={cappedChatOnlineCount} capped={chatOnlineCount > 99} />
             </Button>
           </HoverCardTrigger>
-          <HoverCardContent className="w-36 rounded-lg p-0">
+          <HoverCardContent className="w-40 rounded-2xl p-0">
             <ScrollArea type="scroll" className="max-h-[204px] min-h-9 p-1" ref={setChatUserListScrollParentRef}>
               <Virtuoso
                 data={chatUserList}
@@ -160,7 +165,7 @@ const Header: FC = () => {
                         }
                       }}
                       className={cn(
-                        'flex items-center gap-x-2 rounded-md px-2 py-1 outline-none select-none my-0.5',
+                        'my-0.5 flex items-center gap-x-2 rounded-xl px-2 py-1.5 outline-none select-none',
                         !isMe && 'cursor-pointer hover:bg-accent/70 active:bg-accent transition-colors',
                         isSelected &&
                           'bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100/50 dark:border-indigo-900/50'
@@ -173,7 +178,7 @@ const Header: FC = () => {
                       </Avatar>
                       <div
                         className={cn(
-                          'flex-1 truncate text-xs text-slate-500 dark:text-slate-50',
+                          'flex-1 truncate text-sm text-slate-500 dark:text-slate-50',
                           isSelected && 'text-indigo-600 dark:text-indigo-400 font-semibold'
                         )}
                       >

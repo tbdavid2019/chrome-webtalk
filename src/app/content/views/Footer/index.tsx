@@ -1,4 +1,4 @@
-import { ChangeEvent, useMemo, useRef, useState, KeyboardEvent, type FC, ClipboardEvent } from 'react'
+import { ChangeEvent, useMemo, useRef, useState, KeyboardEvent, type FC, ClipboardEvent, useEffect } from 'react'
 import { CornerDownLeftIcon, LinkIcon, BotIcon } from 'lucide-react'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import MessageInput from '../../components/MessageInput'
@@ -15,7 +15,17 @@ import useTriggerAway from '@/hooks/useTriggerAway'
 import { ScrollArea } from '@/components/ui/ScrollArea'
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import UserInfoDomain from '@/domain/UserInfo'
-import { blobToBase64, cn, compressImage, getRootNode, getTextByteSize, getTextSimilarity, getUiText } from '@/utils'
+import {
+  blobToBase64,
+  cn,
+  compressImage,
+  getRootNode,
+  getTextByteSize,
+  getTextSimilarity,
+  getUiText,
+  requestPageSuggestions,
+  type PageSuggestion
+} from '@/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/Avatar'
 import { AvatarImage } from '@radix-ui/react-avatar'
 import ToastDomain from '@/domain/Toast'
@@ -24,6 +34,7 @@ import { nanoid } from 'nanoid'
 import type { AtUser } from '@/domain/MessageList'
 import { requestAiChatReply } from '@/utils'
 import { ToastImpl } from '@/domain/impls/Toast'
+import PanelModeSwitch from '@/app/content/components/PanelModeSwitch'
 
 interface AutoCompleteAiItem {
   kind: 'ai'
@@ -66,11 +77,14 @@ const Footer: FC = () => {
   const virtuosoRef = useRef<VirtuosoHandle>(null)
   const [inputLoading, setInputLoading] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [pageSuggestions, setPageSuggestions] = useState<PageSuggestion[]>([])
+  const [pageSuggestionsLoading, setPageSuggestionsLoading] = useState(false)
   const maxLengthWarnedRef = useRef(false)
   const aiRequestInFlightRef = useRef(false)
   const aiLastTriggeredAtRef = useRef(0)
 
   const shareRef = useShareRef(inputRef, setRef)
+  const aiTopicSuggestionsEnabled = userInfo?.aiTopicSuggestionsEnabled !== false
 
   /**
    * When inserting a username using the @ syntax, record the username's position information and the mapping relationship between the position information and userId to distinguish between users with the same name.
@@ -145,6 +159,37 @@ const Footer: FC = () => {
     return matchedUsers
   }, [searchNameKeyword, userList, userInfo])
 
+  useEffect(() => {
+    let active = true
+
+    if (!aiTopicSuggestionsEnabled || privateChatTarget) {
+      setPageSuggestions([])
+      setPageSuggestionsLoading(false)
+      return
+    }
+
+    setPageSuggestionsLoading(true)
+
+    requestPageSuggestions({
+      pageTitle: document.title,
+      pageUrl: window.location.href,
+      pageText: document.body.innerText,
+      language: userInfo?.language
+    })
+      .then((result) => {
+        if (!active) return
+        setPageSuggestions(result.chat)
+      })
+      .finally(() => {
+        if (!active) return
+        setPageSuggestionsLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [aiTopicSuggestionsEnabled, privateChatTarget, userInfo?.language])
+
   const selectedUser = autoCompleteList.find((_, index) => index === selectedUserIndex)!
 
   // Replace the hash URL in ![Image](hash:${hash}) with base64 and update the atUserRecord.
@@ -195,7 +240,11 @@ const Footer: FC = () => {
         .replace(/^@ai\s*/i, '')
         .trim()
       const triggerMessageId = nanoid()
-      const newMessage = { id: triggerMessageId, body: transformedMessage, atUsers }
+      const pageContext = {
+        url: window.location.href,
+        title: document.title
+      }
+      const newMessage = { id: triggerMessageId, body: transformedMessage, atUsers, pageContext }
       const byteSize = getTextByteSize(JSON.stringify(newMessage))
 
       if (byteSize > WEB_RTC_MAX_MESSAGE_SIZE) {
@@ -258,6 +307,7 @@ const Footer: FC = () => {
               senderType: 'ai',
               username: 'AI',
               userAvatar: userInfo.avatar,
+              pageContext,
               aiMeta: {
                 ownerUserId: userInfo.id,
                 ownerUsername: userInfo.name,
@@ -434,6 +484,26 @@ const Footer: FC = () => {
     })
   }
 
+  const handleInsertSuggestedPrompt = (prompt: string) => {
+    const trimmedPrompt = prompt.trim()
+    if (!trimmedPrompt) return
+
+    const before = message.slice(0, selectionStart)
+    const after = message.slice(selectionEnd)
+    const spacerBefore = before && !/\s$/.test(before) ? ' ' : ''
+    const spacerAfter = after && !/^\s/.test(after) ? ' ' : ''
+    const newMessage = `${before}${spacerBefore}${trimmedPrompt}${spacerAfter}${after}`
+    const cursor = before.length + spacerBefore.length + trimmedPrompt.length
+
+    updateAtUserAtRecord(newMessage, selectionStart, selectionEnd, 0)
+    send(messageInputDomain.command.InputCommand(newMessage))
+
+    requestIdleCallback(() => {
+      inputRef.current?.setSelectionRange(cursor, cursor)
+      inputRef.current?.focus()
+    })
+  }
+
   const handleAskAi = () => {
     const event = new CustomEvent('open-ai-summary-panel')
     window.dispatchEvent(event)
@@ -529,7 +599,7 @@ const Footer: FC = () => {
   const root = getRootNode()
 
   return (
-    <div className="relative grid gap-y-2 px-4 pb-4 pt-2 border-t border-border bg-background before:pointer-events-none before:absolute before:inset-x-4 before:-top-2 before:h-2 before:bg-gradient-to-t before:from-background before:from-30% before:to-transparent before:dark:from-background">
+    <div className="relative grid gap-y-3 border-t border-border bg-background px-4 pb-4 pt-3 before:pointer-events-none before:absolute before:inset-x-4 before:-top-2 before:h-2 before:bg-gradient-to-t before:from-background before:from-30% before:to-transparent before:dark:from-background">
       <Presence present={autoCompleteListShow}>
         <Portal
           container={root}
@@ -575,7 +645,7 @@ const Footer: FC = () => {
         </Portal>
       </Presence>
       {privateChatTarget && (
-        <div className="flex items-center justify-between rounded-lg bg-indigo-50 dark:bg-indigo-950/30 px-3 py-1.5 text-xs text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-950/50 mb-1.5 animate-in fade-in-0 slide-in-from-bottom-1">
+        <div className="mb-1.5 flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm animate-in fade-in-0 slide-in-from-bottom-1 dark:border-indigo-950/50 dark:bg-indigo-950/30 dark:text-indigo-400">
           <div className="flex items-center gap-1.5 truncate">
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -591,71 +661,85 @@ const Footer: FC = () => {
           </button>
         </div>
       )}
-      <MessageInput
-        ref={shareRef}
-        value={message}
-        onChange={handleChange}
-        onCompositionStart={handleCompositionStart}
-        onCompositionEnd={handleCompositionEnd}
-        loading={inputLoading}
-        onPaste={handlePaste}
-        onKeyDown={handleKeyDown}
-        maxLength={MESSAGE_MAX_LENGTH}
-        placeholder={
-          privateChatTarget
-            ? text.privateChatPlaceholder.replace('{username}', privateChatTarget.username)
-            : text.aiPromptPlaceholder
-        }
-      ></MessageInput>
-      <div className="flex items-center gap-2">
-        {/* 左下角功能切換雙鍵膠囊 */}
-        <div className="flex rounded-full bg-muted p-0.5 border border-border/80 shrink-0">
-          <button
-            className="px-2.5 py-1 text-xs font-bold rounded-full bg-primary text-primary-foreground shadow-sm cursor-default"
-            disabled
-          >
-            💬 {text.chatTab}
-          </button>
-          <button
-            onClick={handleAskAi}
-            className="px-2.5 py-1 text-xs font-bold rounded-full text-muted-foreground hover:text-foreground transition-all"
-          >
-            ✨ {text.aiTab}
-          </button>
+      {aiTopicSuggestionsEnabled && !privateChatTarget && (
+        <div className="rounded-3xl border border-border bg-muted/30 px-3 py-3 shadow-sm">
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <div className="text-sm font-semibold text-foreground">{text.chatSuggestionsTitle}</div>
+            {pageSuggestionsLoading && <div className="text-xs text-muted-foreground">{text.chatSuggestionsLoading}</div>}
+          </div>
+          <div className="mb-3 text-xs text-muted-foreground">{text.chatSuggestionsDescription}</div>
+          <div className="flex flex-wrap gap-2">
+            {pageSuggestions.map((item, index) => (
+              <Button
+                key={`${item.label}-${index}`}
+                type="button"
+                variant="outline"
+                size="xs"
+                className="h-auto rounded-full bg-background px-3 py-1.5 text-left text-sm whitespace-normal hover:bg-muted"
+                onClick={() => handleInsertSuggestedPrompt(item.prompt)}
+                title={item.prompt}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </div>
         </div>
-
-        <EmojiButton onSelect={handleInjectEmoji}></EmojiButton>
-        <ImageButton disabled={inputLoading} onSelect={handleInjectImage}></ImageButton>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground size-8 rounded-full"
-          onClick={handleInsertPageUrl}
-          title={text.insertPageLink}
-        >
-          <LinkIcon size={16} />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="rounded-full px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
-          onClick={handleInjectAiPrompt}
-          title={text.aiInsertTitle}
-        >
-          <BotIcon size={14} />
-          <span className="ml-1">{text.aiInvokeLabel}</span>
-        </Button>
-        <Button
-          className="ml-auto rounded-full text-sm font-bold px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95"
-          size="sm"
-          disabled={isSending || inputLoading}
-          onClick={handleSend}
-        >
-          <span className="mr-1.5">Send</span>
-          <CornerDownLeftIcon className="text-primary-foreground/75" size={10}></CornerDownLeftIcon>
-        </Button>
+      )}
+      <div className="rounded-3xl border border-border bg-muted/20 p-3 shadow-sm">
+        <MessageInput
+          ref={shareRef}
+          value={message}
+          onChange={handleChange}
+          onCompositionStart={handleCompositionStart}
+          onCompositionEnd={handleCompositionEnd}
+          loading={inputLoading}
+          onPaste={handlePaste}
+          onKeyDown={handleKeyDown}
+          maxLength={MESSAGE_MAX_LENGTH}
+          placeholder={
+            privateChatTarget
+              ? text.privateChatPlaceholder.replace('{username}', privateChatTarget.username)
+              : text.aiPromptPlaceholder
+          }
+        ></MessageInput>
+        <div className="mt-3 flex items-center justify-between gap-1">
+          <div className="flex min-w-0 flex-1 items-center gap-1">
+            <PanelModeSwitch active="chat" onAi={handleAskAi} chatLabel={text.chatTab} aiLabel={text.aiTab} />
+            <div className="flex items-center gap-0.5">
+              <EmojiButton onSelect={handleInjectEmoji}></EmojiButton>
+              <ImageButton disabled={inputLoading} onSelect={handleInjectImage}></ImageButton>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="rounded-full text-muted-foreground hover:text-foreground shrink-0"
+                onClick={handleInsertPageUrl}
+                title={text.insertPageLink}
+              >
+                <LinkIcon size={20} />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="rounded-full text-muted-foreground hover:text-foreground shrink-0"
+                onClick={handleInjectAiPrompt}
+                title={text.aiInsertTitle}
+              >
+                <BotIcon size={20} />
+              </Button>
+            </div>
+          </div>
+          <Button
+            className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/95 flex items-center justify-center"
+            size="sm"
+            disabled={isSending || inputLoading}
+            onClick={handleSend}
+          >
+            <span className="mr-1">{text.sendMessage}</span>
+            <CornerDownLeftIcon className="text-primary-foreground/75" size={10}></CornerDownLeftIcon>
+          </Button>
+        </div>
       </div>
     </div>
   )

@@ -51,6 +51,7 @@ export interface SendTextMessageInput {
   atUsers: AtUser[]
   senderType?: 'user' | 'ai'
   aiMeta?: AiMessageMeta
+  pageContext?: NormalMessage['pageContext']
   username?: string
   userAvatar?: string
 }
@@ -268,6 +269,7 @@ const ChatRoomDomain = Remesh.domain({
           atUsers: input.atUsers,
           senderType: input.senderType,
           aiMeta: input.aiMeta,
+          pageContext: input.pageContext,
           isPrivate,
           toUser: privateTarget
             ? {
@@ -288,6 +290,7 @@ const ChatRoomDomain = Remesh.domain({
               hlc: upstreamHLC ?? createPseudoHLC(sendTime),
               senderType: input.senderType,
               aiMeta: input.aiMeta,
+              pageContext: input.pageContext,
               isPrivate,
               toUser: privateTarget
                 ? {
@@ -309,6 +312,7 @@ const ChatRoomDomain = Remesh.domain({
           atUsers: input.atUsers,
           senderType: input.senderType,
           aiMeta: input.aiMeta,
+          pageContext: input.pageContext,
           isPrivate,
           toUser: privateTarget
             ? {

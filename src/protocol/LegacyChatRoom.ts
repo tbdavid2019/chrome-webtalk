@@ -25,6 +25,11 @@ export interface LegacyAiMessageMeta {
   model?: string
 }
 
+export interface LegacyPageContext {
+  url: string
+  title?: string
+}
+
 export interface LegacySyncUserMessage extends LegacyMessageUser {
   type: LegacySendType.SyncUser
   id: string
@@ -61,6 +66,7 @@ export interface LegacyTextMessage extends LegacyMessageUser {
   atUsers: LegacyAtUser[]
   senderType?: 'user' | 'ai'
   aiMeta?: LegacyAiMessageMeta
+  pageContext?: LegacyPageContext
   isPrivate?: boolean
   toUser?: LegacyMessageUser
 }
@@ -76,6 +82,7 @@ export interface LegacyStoredTextMessage extends LegacyMessageUser {
   hateUsers: LegacyMessageUser[]
   senderType?: 'user' | 'ai'
   aiMeta?: LegacyAiMessageMeta
+  pageContext?: LegacyPageContext
   isPrivate?: boolean
   toUser?: LegacyMessageUser
 }
@@ -105,6 +112,11 @@ const LegacyAiMessageMetaSchema = {
   model: v.optional(v.string())
 }
 
+const LegacyPageContextSchema = {
+  url: v.string(),
+  title: v.optional(v.string())
+}
+
 const LegacyStoredTextMessageSchema = v.object({
   id: v.string(),
   type: v.literal('normal'),
@@ -116,6 +128,7 @@ const LegacyStoredTextMessageSchema = v.object({
   atUsers: v.array(v.object(LegacyAtUserSchema)),
   senderType: v.optional(v.union([v.literal('user'), v.literal('ai')])),
   aiMeta: v.optional(v.object(LegacyAiMessageMetaSchema)),
+  pageContext: v.optional(v.object(LegacyPageContextSchema)),
   isPrivate: v.optional(v.boolean()),
   toUser: v.optional(v.object(LegacyMessageUserSchema)),
   ...LegacyMessageUserSchema
@@ -130,6 +143,7 @@ const LegacyRoomMessageSchema = v.union([
     atUsers: v.array(v.object(LegacyAtUserSchema)),
     senderType: v.optional(v.union([v.literal('user'), v.literal('ai')])),
     aiMeta: v.optional(v.object(LegacyAiMessageMetaSchema)),
+    pageContext: v.optional(v.object(LegacyPageContextSchema)),
     isPrivate: v.optional(v.boolean()),
     toUser: v.optional(v.object(LegacyMessageUserSchema)),
     ...LegacyMessageUserSchema
