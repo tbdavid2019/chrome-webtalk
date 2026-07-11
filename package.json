@@ -1,7 +1,7 @@
 {
   "name": "web-talk-333",
   "displayName": "WebTalk 333 - Chat and Summarize on any website.",
-  "version": "1.6.2",
+  "version": "2.0.1",
   "description": "Chat with friends on any website. Summary of the page content. WebRTC P2P.",
   "type": "module",
   "scripts": {
@@ -43,6 +43,14 @@
   },
   "homepage": "https://github.com/tbdavid2019/chrome-webtalk",
   "dependencies": {
+    "@dicebear/adventurer-neutral": "^9.4.2",
+    "@dicebear/big-ears-neutral": "^9.4.2",
+    "@dicebear/big-smile": "^9.4.2",
+    "@dicebear/core": "^9.4.3",
+    "@dicebear/lorelei": "^9.4.2",
+    "@dicebear/lorelei-neutral": "^9.4.2",
+    "@dicebear/notionists": "^9.4.2",
+    "@dicebear/pixel-art": "^9.4.2",
     "@hookform/resolvers": "^3.9.1",
     "@number-flow/react": "^0.3.4",
     "@perfsee/jsonr": "^1.13.0",

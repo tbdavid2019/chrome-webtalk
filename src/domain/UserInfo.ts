@@ -15,11 +15,15 @@ export interface UserInfo {
   developerMode?: boolean
   bannedUserIds?: string[]
   hideAllAiMessages?: boolean
+  aiTopicSuggestionsEnabled?: boolean
   danmakuEnabled: boolean
   danmakuOpacity?: number
   danmakuSpeed?: 'slow' | 'normal' | 'fast'
   notificationEnabled: boolean
   notificationType: 'all' | 'at'
+  roomAvatarsEnabled?: boolean
+  globalAvatar?: string
+  roomAvatars?: Record<string, string>
 }
 
 const UserInfoDomain = Remesh.domain({

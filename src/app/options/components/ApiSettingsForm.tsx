@@ -4,35 +4,45 @@ import { Label } from '@/components/ui/Label'
 import { Button } from '@/components/ui/Button'
 import { browser } from 'wxt/browser'
 import { ToastImpl } from '@/domain/impls/Toast'
-import { FALLBACK_GROQ_API_KEY, FALLBACK_GROQ_BASE_URL, FALLBACK_GROQ_MODEL } from '@/constants/apiDefaults'
+import {
+  FALLBACK_GROQ_API_KEY,
+  FALLBACK_GROQ_BASE_URL,
+  FALLBACK_GROQ_MODEL,
+  FALLBACK_GROQ_VISION_MODEL
+} from '@/constants/apiDefaults'
 
 const DEFAULT_BASE_URL = FALLBACK_GROQ_BASE_URL
 const DEFAULT_MODEL = FALLBACK_GROQ_MODEL
+const DEFAULT_VISION_MODEL = FALLBACK_GROQ_VISION_MODEL
 
 const ApiSettingsForm: FC = () => {
   const toast = ToastImpl.value
   const [apiKey, setApiKey] = useState(FALLBACK_GROQ_API_KEY)
   const [apiBaseURL, setApiBaseURL] = useState(DEFAULT_BASE_URL)
   const [apiModelName, setApiModelName] = useState(DEFAULT_MODEL)
+  const [apiVisionModelName, setApiVisionModelName] = useState(DEFAULT_VISION_MODEL)
   const [loading, setLoading] = useState(false)
   const [savedValues, setSavedValues] = useState({
     apiKey: '',
     apiBaseURL: DEFAULT_BASE_URL,
-    apiModelName: DEFAULT_MODEL
+    apiModelName: DEFAULT_MODEL,
+    apiVisionModelName: DEFAULT_VISION_MODEL
   })
 
   useEffect(() => {
     browser.storage.sync
-      .get(['groqApiKey', 'groqApiBaseURL', 'groqModelName'])
+      .get(['groqApiKey', 'groqApiBaseURL', 'groqModelName', 'groqVisionModelName'])
       .then((res: Record<string, any>) => {
         const nextValues = {
           apiKey: (res.groqApiKey as string) ?? FALLBACK_GROQ_API_KEY,
           apiBaseURL: (res.groqApiBaseURL as string) ?? DEFAULT_BASE_URL,
-          apiModelName: (res.groqModelName as string) ?? DEFAULT_MODEL
+          apiModelName: (res.groqModelName as string) ?? DEFAULT_MODEL,
+          apiVisionModelName: (res.groqVisionModelName as string) ?? DEFAULT_VISION_MODEL
         }
         setApiKey(nextValues.apiKey)
         setApiBaseURL(nextValues.apiBaseURL)
         setApiModelName(nextValues.apiModelName)
+        setApiVisionModelName(nextValues.apiVisionModelName)
         setSavedValues(nextValues)
       })
       .catch((error) => {
@@ -45,6 +55,7 @@ const ApiSettingsForm: FC = () => {
     setApiKey(savedValues.apiKey)
     setApiBaseURL(savedValues.apiBaseURL)
     setApiModelName(savedValues.apiModelName)
+    setApiVisionModelName(savedValues.apiVisionModelName)
   }
 
   const handleSave = async () => {
@@ -57,12 +68,14 @@ const ApiSettingsForm: FC = () => {
       await browser.storage.sync.set({
         groqApiKey: apiKey.trim(),
         groqApiBaseURL: apiBaseURL.trim() || DEFAULT_BASE_URL,
-        groqModelName: apiModelName.trim() || DEFAULT_MODEL
+        groqModelName: apiModelName.trim() || DEFAULT_MODEL,
+        groqVisionModelName: apiVisionModelName.trim() || DEFAULT_VISION_MODEL
       })
       const nextValues = {
         apiKey: apiKey.trim(),
         apiBaseURL: apiBaseURL.trim() || DEFAULT_BASE_URL,
-        apiModelName: apiModelName.trim() || DEFAULT_MODEL
+        apiModelName: apiModelName.trim() || DEFAULT_MODEL,
+        apiVisionModelName: apiVisionModelName.trim() || DEFAULT_VISION_MODEL
       }
       setSavedValues(nextValues)
       toast.success('API settings saved! / API 設定已保存')
@@ -122,6 +135,16 @@ const ApiSettingsForm: FC = () => {
           onChange={(event) => setApiModelName(event.target.value)}
         />
         <p className="text-xs text-muted-foreground">Default: {DEFAULT_MODEL}</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="font-semibold">Vision Model / 視覺模型</Label>
+        <Input
+          value={apiVisionModelName}
+          placeholder={DEFAULT_VISION_MODEL}
+          onChange={(event) => setApiVisionModelName(event.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">Default: {DEFAULT_VISION_MODEL}</p>
       </div>
 
       <div className="flex justify-end gap-3">

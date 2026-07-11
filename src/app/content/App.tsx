@@ -15,8 +15,9 @@ import { Toaster } from 'sonner'
 import DanmakuContainer from './components/DanmakuContainer'
 import DanmakuDomain from '@/domain/Danmaku'
 import AppStatusDomain from '@/domain/AppStatus'
-import { checkDarkMode, cn } from '@/utils'
+import { checkDarkMode, cn, generateRandomAvatar, getSiteInfo } from '@/utils'
 import VirtualRoomDomain from '@/domain/VirtualRoom'
+import { MAX_AVATAR_SIZE } from '@/constants/config'
 
 const OVERLAY_BASE_Z_INDEX = 2147482000
 
@@ -92,6 +93,58 @@ export default function App() {
       setShowSummary(false)
     }
   }, [appOpenStatus, showSummary])
+
+  // 🧠 初始化與同步不同網站使用不同頭像 (Room-specific avatar)
+  useEffect(() => {
+    if (!userInfoLoadFinished || !userInfo) return
+
+    const handleRoomAvatarInit = async () => {
+      let needsUpdate = false
+      const updatedUserInfo = { ...userInfo }
+
+      // 1. 初始化欄位
+      if (updatedUserInfo.roomAvatarsEnabled === undefined) {
+        updatedUserInfo.roomAvatarsEnabled = true
+        needsUpdate = true
+      }
+      if (!updatedUserInfo.globalAvatar) {
+        updatedUserInfo.globalAvatar = updatedUserInfo.avatar
+        needsUpdate = true
+      }
+      if (!updatedUserInfo.roomAvatars) {
+        updatedUserInfo.roomAvatars = {}
+        needsUpdate = true
+      }
+
+      if (updatedUserInfo.roomAvatarsEnabled) {
+        const hostname = getSiteInfo().hostname
+        const currentRoomAvatar = updatedUserInfo.roomAvatars[hostname]
+
+        if (!currentRoomAvatar) {
+          // 為該網站生成新頭像
+          const newAvatar = await generateRandomAvatar(MAX_AVATAR_SIZE)
+          updatedUserInfo.roomAvatars[hostname] = newAvatar
+          updatedUserInfo.avatar = newAvatar
+          needsUpdate = true
+        } else if (updatedUserInfo.avatar !== currentRoomAvatar) {
+          updatedUserInfo.avatar = currentRoomAvatar
+          needsUpdate = true
+        }
+      } else {
+        // 使用全域預設頭像
+        if (updatedUserInfo.avatar !== updatedUserInfo.globalAvatar) {
+          updatedUserInfo.avatar = updatedUserInfo.globalAvatar
+          needsUpdate = true
+        }
+      }
+
+      if (needsUpdate) {
+        send(userInfoDomain.command.UpdateUserInfoCommand(updatedUserInfo))
+      }
+    }
+
+    handleRoomAvatarInit()
+  }, [userInfoLoadFinished, userInfo, send, userInfoDomain])
 
   // 🧠 綁定事件：接收「reset-buttons-hidden」來重置按鈕隱藏狀態
   useEffect(() => {
