@@ -10,6 +10,7 @@ import MessageListDomain, { NormalMessage } from '@/domain/MessageList'
 import { compareMessageHLC } from '@/protocol'
 import ToastDomain from '@/domain/Toast'
 import { getUiText } from '@/utils'
+import { canRecallMessage } from '@/utils/messageRecall'
 
 const Main: FC = () => {
   const send = useRemeshSend()
@@ -52,7 +53,9 @@ const Main: FC = () => {
         return message
       })
       .toSorted((a, b) =>
-        a.type === MessageType.Normal && b.type === MessageType.Normal ? compareMessageHLC(a, b) : a.sendTime - b.sendTime
+        a.type === MessageType.Normal && b.type === MessageType.Normal
+          ? compareMessageHLC(a, b)
+          : a.sendTime - b.sendTime
       )
   }, [_messageList, userInfo?.id, bannedUserIds, hideAllAiMessages])
 
@@ -68,6 +71,10 @@ const Main: FC = () => {
 
   const handleHateChange = (messageId: string) => {
     send(chatRoomDomain.command.SendHateMessageCommand(messageId))
+  }
+
+  const handleRecall = (messageId: string) => {
+    send(chatRoomDomain.command.SendRecallMessageCommand(messageId))
   }
 
   const handleAvatarClick = (message: any) => {
@@ -162,6 +169,11 @@ const Main: FC = () => {
             hate={message.hate}
             onLikeChange={canInteractWithMessage(message) ? () => handleLikeChange(message.id) : undefined}
             onHateChange={canInteractWithMessage(message) ? () => handleHateChange(message.id) : undefined}
+            onRecall={
+              userInfo && message.senderType !== 'ai' && canRecallMessage(message, userInfo.id, Date.now())
+                ? () => handleRecall(message.id)
+                : undefined
+            }
             onCopy={handleCopyMessage}
             onOpenPage={handleOpenMessagePage}
             onAvatarClick={handleAvatarClick}

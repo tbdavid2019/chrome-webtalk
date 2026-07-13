@@ -18,6 +18,7 @@ import type {
   ProtocolPeerSyncMessage,
   ProtocolMention,
   ProtocolNetworkMessage,
+  ProtocolRecallMessage,
   ProtocolReactionMessage,
   ProtocolSender,
   ProtocolTextMessageExtension,
@@ -114,6 +115,7 @@ export const toLegacyTextMessage = (message: ProtocolTextMessage): LegacyTextMes
     type: LegacySendType.Text,
     id: message.id,
     body: message.body,
+    recalledAt: message.recalledAt,
     sendTime: message.sentAt,
     atUsers: message.mentions.map(fromProtocolMention),
     senderType: extension?.senderType,
@@ -135,6 +137,7 @@ export const normalizeLegacyTextMessage = (
   receivedAt: message.sendTime,
   sender: toProtocolSender(message),
   body: message.body,
+  recalledAt: message.recalledAt,
   mentions: message.atUsers.map(toProtocolMention),
   reactions: {
     likes: (reactions?.likes ?? []).map(toProtocolSender),
@@ -143,22 +146,22 @@ export const normalizeLegacyTextMessage = (
   extension: createProtocolTextExtension(message)
 })
 
-export const normalizeLegacyStoredTextMessage = (message: LegacyStoredTextMessage): ProtocolTextMessage =>
-  ({
-    type: MESSAGE_TYPE.TEXT,
-    id: message.id,
-    hlc: createPseudoHLC(message.sendTime),
-    sentAt: message.sendTime,
-    receivedAt: message.receiveTime,
-    sender: toProtocolSender(message),
-    body: message.body,
-    mentions: message.atUsers.map(toProtocolMention),
-    reactions: {
-      likes: message.likeUsers.map(toProtocolSender),
-      hates: message.hateUsers.map(toProtocolSender)
-    },
-    extension: createProtocolTextExtension(message)
-  })
+export const normalizeLegacyStoredTextMessage = (message: LegacyStoredTextMessage): ProtocolTextMessage => ({
+  type: MESSAGE_TYPE.TEXT,
+  id: message.id,
+  hlc: createPseudoHLC(message.sendTime),
+  sentAt: message.sendTime,
+  receivedAt: message.receiveTime,
+  sender: toProtocolSender(message),
+  body: message.body,
+  recalledAt: message.recalledAt,
+  mentions: message.atUsers.map(toProtocolMention),
+  reactions: {
+    likes: message.likeUsers.map(toProtocolSender),
+    hates: message.hateUsers.map(toProtocolSender)
+  },
+  extension: createProtocolTextExtension(message)
+})
 
 export const normalizeLegacyRoomMessage = (message: LegacyRoomMessage): ProtocolNetworkMessage => {
   switch (message.type) {
@@ -185,6 +188,16 @@ export const normalizeLegacyRoomMessage = (message: LegacyRoomMessage): Protocol
         receivedAt: message.sendTime,
         sender: toProtocolSender(message),
         reaction: REACTION_TYPE.HATE
+      }
+    case LegacySendType.Recall:
+      return {
+        type: MESSAGE_TYPE.RECALL,
+        id: message.id,
+        targetId: message.targetId,
+        hlc: createPseudoHLC(message.sendTime),
+        sentAt: message.sendTime,
+        receivedAt: message.sendTime,
+        sender: toProtocolSender(message)
       }
     case LegacySendType.SyncUser:
       return {
@@ -228,6 +241,7 @@ export const denormalizeProtocolTextMessage = (
       type: MessageType.Normal,
       id: message.id,
       body: message.body,
+      recalledAt: message.recalledAt,
       sendTime: message.sentAt,
       receiveTime: message.receivedAt,
       hlc: message.hlc,
@@ -236,7 +250,8 @@ export const denormalizeProtocolTextMessage = (
       hateUsers: message.reactions.hates.map(fromProtocolSender),
       senderType: options?.senderType ?? extension?.senderType,
       aiMeta: options?.aiMeta ?? (extension?.aiMeta ? fromProtocolAiMessageMeta(extension.aiMeta) : undefined),
-      pageContext: options?.pageContext ?? (extension?.pageContext ? fromProtocolPageContext(extension.pageContext) : undefined),
+      pageContext:
+        options?.pageContext ?? (extension?.pageContext ? fromProtocolPageContext(extension.pageContext) : undefined),
       isPrivate: options?.isPrivate ?? !!extension?.private,
       toUser: options?.toUser ?? (extension?.private ? fromProtocolSender(extension.private.toUser) : undefined)
     }
@@ -251,6 +266,7 @@ export const normalizeNormalMessage = (message: NormalMessage): ProtocolTextMess
   receivedAt: message.receiveTime,
   sender: toProtocolSender(message),
   body: message.body,
+  recalledAt: message.recalledAt,
   mentions: message.atUsers.map(toProtocolMention),
   reactions: {
     likes: message.likeUsers.map(toProtocolSender),
@@ -339,6 +355,22 @@ export const createProtocolReactionMessage = (input: {
   sender: toProtocolSender(input.sender),
   targetId: input.targetId,
   reaction: input.reaction === 'like' ? REACTION_TYPE.LIKE : REACTION_TYPE.HATE
+})
+
+export const createProtocolRecallMessage = (input: {
+  id: string
+  sender: MessageUser
+  sentAt: number
+  hlc: HLC
+  targetId: string
+}): ProtocolRecallMessage => ({
+  type: MESSAGE_TYPE.RECALL,
+  id: input.id,
+  hlc: input.hlc,
+  sentAt: input.sentAt,
+  receivedAt: input.sentAt,
+  sender: toProtocolSender(input.sender),
+  targetId: input.targetId
 })
 
 export const toLegacyReactionPayload = (message: ProtocolReactionMessage) => ({
