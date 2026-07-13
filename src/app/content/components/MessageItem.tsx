@@ -1,5 +1,15 @@
 import { type FC } from 'react'
-import { BotIcon, CheckIcon, CopyIcon, ExternalLinkIcon, Link2Icon, ThumbsDownIcon, ThumbsUpIcon, UserXIcon } from 'lucide-react'
+import {
+  BotIcon,
+  CheckIcon,
+  CopyIcon,
+  ExternalLinkIcon,
+  Link2Icon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
+  Undo2Icon,
+  UserXIcon
+} from 'lucide-react'
 import FormatDate from './FormatDate'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
@@ -8,6 +18,7 @@ import { Markdown } from '@/components/Markdown'
 import { type NormalMessage } from '@/domain/MessageList'
 import type { AppLocalePreference } from '@/utils'
 import { cn, getUiText } from '@/utils'
+import { isRecalledMessage } from '@/utils/messageRecall'
 
 export interface MessageItemProps {
   data: NormalMessage
@@ -16,6 +27,7 @@ export interface MessageItemProps {
   hate: boolean
   onLikeChange?: (checked: boolean) => void
   onHateChange?: (checked: boolean) => void
+  onRecall?: (message: NormalMessage) => void
   onCopy?: (message: NormalMessage) => void
   onOpenPage?: (message: NormalMessage) => void
   onAvatarClick?: (data: NormalMessage) => void
@@ -31,6 +43,7 @@ export interface MessageItemProps {
 
 const MessageItem: FC<MessageItemProps> = (props) => {
   const text = getUiText(props.locale)
+  const isRecalled = isRecalledMessage(props.data)
   let content = props.data.body
 
   // Check if the field exists, compatible with old data
@@ -94,7 +107,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
           <FormatDate className="text-sm text-muted-foreground" date={props.data.sendTime}></FormatDate>
         </div>
         <div>
-          {props.data.pageContext?.url && (
+          {!isRecalled && props.data.pageContext?.url && (
             <div className="mb-2 flex items-center gap-1.5 text-sm text-muted-foreground">
               <Link2Icon size={14} />
               <span className="shrink-0 font-medium">{text.pageLabel}</span>
@@ -102,76 +115,104 @@ const MessageItem: FC<MessageItemProps> = (props) => {
             </div>
           )}
           <div className="pb-1.5 text-lg text-foreground/95 leading-relaxed">
-            <Markdown>{content}</Markdown>
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5 pb-1 text-muted-foreground opacity-80 transition-opacity group-hover:opacity-100">
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              className={cn(
-                'h-8 rounded-full px-2.5 text-sm',
-                props.like && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
-              )}
-              onClick={() => props.onLikeChange?.(!props.like)}
-              title={text.likeTitle}
-            >
-              <ThumbsUpIcon size={14} />
-              <span className="ml-1 tabular-nums">{props.data.likeUsers.length}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              className={cn(
-                'h-8 rounded-full px-2.5 text-sm',
-                props.hate && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
-              )}
-              onClick={() => props.onHateChange?.(!props.hate)}
-              title={text.dislikeTitle}
-            >
-              <ThumbsDownIcon size={14} />
-              <span className="ml-1 tabular-nums">{props.data.hateUsers.length}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              className="h-8 rounded-full px-2 text-sm"
-              onClick={() => props.onCopy?.(props.data)}
-              title={props.copied ? text.copiedTitle : text.copyWithUrlTitle}
-            >
-              {props.copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
-            </Button>
-            {props.data.pageContext?.url && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="xs"
-                className="h-8 rounded-full px-2 text-sm"
-                onClick={() => props.onOpenPage?.(props.data)}
-                title={text.openPageTitle}
+            {isRecalled ? (
+              <div
+                role="status"
+                data-message-state="recalled"
+                aria-label={text.messageRecalled}
+                className="inline-flex items-center gap-2 rounded-md border border-dashed border-muted-foreground/40 bg-muted/30 px-3 py-2 text-sm text-muted-foreground"
               >
-                <ExternalLinkIcon size={14} />
-              </Button>
+                <Undo2Icon size={15} aria-hidden="true" />
+                <span className="font-medium italic">{text.messageRecalled}</span>
+              </div>
+            ) : (
+              <Markdown>{content}</Markdown>
             )}
-            {props.onToggleBanUser && (
+          </div>
+          {!isRecalled && (
+            <div className="flex flex-wrap items-center gap-1.5 pb-1 text-muted-foreground opacity-80 transition-opacity group-hover:opacity-100">
               <Button
                 type="button"
                 variant="ghost"
                 size="xs"
                 className={cn(
                   'h-8 rounded-full px-2.5 text-sm',
-                  props.isBanned && 'bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive'
+                  props.like && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
                 )}
-                onClick={props.onToggleBanUser}
-                title={props.isBanned ? text.unbanTitle : text.banTitle}
+                onClick={() => props.onLikeChange?.(!props.like)}
+                title={text.likeTitle}
               >
-                <UserXIcon size={14} />
-                <span className="ml-1">{props.isBanned ? text.unban : text.ban}</span>
+                <ThumbsUpIcon size={14} />
+                <span className="ml-1 tabular-nums">{props.data.likeUsers.length}</span>
               </Button>
-            )}
-          </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                className={cn(
+                  'h-8 rounded-full px-2.5 text-sm',
+                  props.hate && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
+                )}
+                onClick={() => props.onHateChange?.(!props.hate)}
+                title={text.dislikeTitle}
+              >
+                <ThumbsDownIcon size={14} />
+                <span className="ml-1 tabular-nums">{props.data.hateUsers.length}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                className="h-8 rounded-full px-2 text-sm"
+                onClick={() => props.onCopy?.(props.data)}
+                title={props.copied ? text.copiedTitle : text.copyWithUrlTitle}
+              >
+                {props.copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+              </Button>
+              {props.onRecall && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  className="h-8 rounded-full px-2.5 text-sm"
+                  onClick={() => props.onRecall?.(props.data)}
+                  title={text.recallTitle}
+                >
+                  <Undo2Icon size={14} />
+                  <span className="ml-1">{text.recall}</span>
+                </Button>
+              )}
+              {props.data.pageContext?.url && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  className="h-8 rounded-full px-2 text-sm"
+                  onClick={() => props.onOpenPage?.(props.data)}
+                  title={text.openPageTitle}
+                >
+                  <ExternalLinkIcon size={14} />
+                </Button>
+              )}
+              {props.onToggleBanUser && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  className={cn(
+                    'h-8 rounded-full px-2.5 text-sm',
+                    props.isBanned &&
+                      'bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive'
+                  )}
+                  onClick={props.onToggleBanUser}
+                  title={props.isBanned ? text.unbanTitle : text.banTitle}
+                >
+                  <UserXIcon size={14} />
+                  <span className="ml-1">{props.isBanned ? text.unban : text.ban}</span>
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import * as v from 'valibot'
 export const MESSAGE_TYPE = {
   TEXT: 'text',
   REACTION: 'reaction',
+  RECALL: 'recall',
   PEER_SYNC: 'peer-sync',
   HISTORY_SYNC: 'history-sync',
   SYSTEM_PROMPT: 'system-prompt'
@@ -61,6 +62,7 @@ export interface ProtocolMessageMeta {
 export interface ProtocolTextMessage extends ProtocolMessageMeta {
   type: typeof MESSAGE_TYPE.TEXT
   body: string
+  recalledAt?: number
   mentions: ProtocolMention[]
   reactions: {
     likes: ProtocolSender[]
@@ -73,6 +75,11 @@ export interface ProtocolReactionMessage extends ProtocolMessageMeta {
   type: typeof MESSAGE_TYPE.REACTION
   targetId: string
   reaction: (typeof REACTION_TYPE)[keyof typeof REACTION_TYPE]
+}
+
+export interface ProtocolRecallMessage extends ProtocolMessageMeta {
+  type: typeof MESSAGE_TYPE.RECALL
+  targetId: string
 }
 
 export interface ProtocolPeerSyncMessage extends ProtocolMessageMeta {
@@ -90,6 +97,7 @@ export interface ProtocolHistorySyncMessage extends ProtocolMessageMeta {
 export type ProtocolNetworkMessage =
   | ProtocolTextMessage
   | ProtocolReactionMessage
+  | ProtocolRecallMessage
   | ProtocolPeerSyncMessage
   | ProtocolHistorySyncMessage
 
@@ -147,6 +155,7 @@ const ProtocolTextMessageSchema: v.GenericSchema<ProtocolTextMessage> = v.object
   ...MessageMetaSchema,
   type: v.literal(MESSAGE_TYPE.TEXT),
   body: v.string(),
+  recalledAt: v.optional(v.number()),
   mentions: v.array(MentionSchema),
   reactions: v.object({
     likes: v.array(SenderSchema),
@@ -160,6 +169,12 @@ const ProtocolReactionMessageSchema: v.GenericSchema<ProtocolReactionMessage> = 
   type: v.literal(MESSAGE_TYPE.REACTION),
   targetId: v.string(),
   reaction: v.union([v.literal(REACTION_TYPE.LIKE), v.literal(REACTION_TYPE.HATE)])
+})
+
+const ProtocolRecallMessageSchema: v.GenericSchema<ProtocolRecallMessage> = v.object({
+  ...MessageMetaSchema,
+  type: v.literal(MESSAGE_TYPE.RECALL),
+  targetId: v.string()
 })
 
 const ProtocolPeerSyncMessageSchema: v.GenericSchema<ProtocolPeerSyncMessage> = v.object({
@@ -179,6 +194,7 @@ const ProtocolHistorySyncMessageSchema: v.GenericSchema<ProtocolHistorySyncMessa
 const ProtocolNetworkMessageSchema = v.union([
   ProtocolTextMessageSchema,
   ProtocolReactionMessageSchema,
+  ProtocolRecallMessageSchema,
   ProtocolPeerSyncMessageSchema,
   ProtocolHistorySyncMessageSchema
 ])

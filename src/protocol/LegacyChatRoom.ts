@@ -3,6 +3,7 @@ import * as v from 'valibot'
 export enum LegacySendType {
   Like = 'Like',
   Hate = 'Hate',
+  Recall = 'Recall',
   Text = 'Text',
   SyncUser = 'SyncUser',
   SyncHistory = 'SyncHistory'
@@ -58,6 +59,13 @@ export interface LegacyHateMessage extends LegacyMessageUser {
   id: string
 }
 
+export interface LegacyRecallMessage extends LegacyMessageUser {
+  type: LegacySendType.Recall
+  sendTime: number
+  id: string
+  targetId: string
+}
+
 export interface LegacyTextMessage extends LegacyMessageUser {
   type: LegacySendType.Text
   id: string
@@ -67,6 +75,7 @@ export interface LegacyTextMessage extends LegacyMessageUser {
   senderType?: 'user' | 'ai'
   aiMeta?: LegacyAiMessageMeta
   pageContext?: LegacyPageContext
+  recalledAt?: number
   isPrivate?: boolean
   toUser?: LegacyMessageUser
 }
@@ -83,6 +92,7 @@ export interface LegacyStoredTextMessage extends LegacyMessageUser {
   senderType?: 'user' | 'ai'
   aiMeta?: LegacyAiMessageMeta
   pageContext?: LegacyPageContext
+  recalledAt?: number
   isPrivate?: boolean
   toUser?: LegacyMessageUser
 }
@@ -92,6 +102,7 @@ export type LegacyRoomMessage =
   | LegacySyncHistoryMessage
   | LegacyLikeMessage
   | LegacyHateMessage
+  | LegacyRecallMessage
   | LegacyTextMessage
 
 const LegacyMessageUserSchema = {
@@ -129,6 +140,7 @@ const LegacyStoredTextMessageSchema = v.object({
   senderType: v.optional(v.union([v.literal('user'), v.literal('ai')])),
   aiMeta: v.optional(v.object(LegacyAiMessageMetaSchema)),
   pageContext: v.optional(v.object(LegacyPageContextSchema)),
+  recalledAt: v.optional(v.number()),
   isPrivate: v.optional(v.boolean()),
   toUser: v.optional(v.object(LegacyMessageUserSchema)),
   ...LegacyMessageUserSchema
@@ -144,6 +156,7 @@ const LegacyRoomMessageSchema = v.union([
     senderType: v.optional(v.union([v.literal('user'), v.literal('ai')])),
     aiMeta: v.optional(v.object(LegacyAiMessageMetaSchema)),
     pageContext: v.optional(v.object(LegacyPageContextSchema)),
+    recalledAt: v.optional(v.number()),
     isPrivate: v.optional(v.boolean()),
     toUser: v.optional(v.object(LegacyMessageUserSchema)),
     ...LegacyMessageUserSchema
@@ -157,6 +170,13 @@ const LegacyRoomMessageSchema = v.union([
   v.object({
     type: v.literal(LegacySendType.Hate),
     id: v.string(),
+    sendTime: v.number(),
+    ...LegacyMessageUserSchema
+  }),
+  v.object({
+    type: v.literal(LegacySendType.Recall),
+    id: v.string(),
+    targetId: v.string(),
     sendTime: v.number(),
     ...LegacyMessageUserSchema
   }),

@@ -1,11 +1,12 @@
 import { Remesh } from 'remesh'
-import { map, merge, of, EMPTY, mergeMap, fromEventPattern } from 'rxjs'
-import { AiMessageMeta, AtUser, NormalMessage, type MessageUser } from './MessageList'
+import { map, merge, of, EMPTY, mergeMap, fromEventPattern, filter } from 'rxjs'
+import { AiMessageMeta, AtUser, NormalMessage, type Message, type MessageUser } from './MessageList'
 import { ChatRoomExtern } from '@/domain/externs/ChatRoom'
 import MessageListDomain, { MessageType } from '@/domain/MessageList'
 import {
   compareMessageHLC,
   createPseudoHLC,
+  createProtocolRecallMessage,
   createProtocolReactionMessage,
   createProtocolTextMessage,
   createProtocolHistorySyncMessage,
@@ -19,6 +20,7 @@ import {
   toLegacyTextMessage,
   type LegacyHateMessage as HateMessage,
   type LegacyLikeMessage as LikeMessage,
+  type LegacyRecallMessage as RecallMessage,
   type LegacyRoomMessage,
   type LegacySyncHistoryMessage as SyncHistoryMessage,
   type LegacySyncUserMessage as SyncUserMessage,
@@ -28,6 +30,7 @@ import {
 import UserInfoDomain from '@/domain/UserInfo'
 import { compareHLC, createHLC, desert, getTextByteSize, maxHLC, receiveHLCEvent, sendHLCEvent, upsert } from '@/utils'
 import { nanoid } from 'nanoid'
+import { canRecallMessage, recallMessage } from '@/utils/messageRecall'
 import StatusModule from '@/domain/modules/Status'
 import {
   SYNC_HISTORY_MAX_DAYS,
@@ -37,9 +40,22 @@ import {
   SYNC_MESSAGE_DELAY_MS
 } from '@/constants/config'
 
+const MAX_PENDING_RECALLS = 1000
+
+interface RecallNotice {
+  id: string
+  targetId: string
+  sender: MessageUser
+  sentAt: number
+  hlc: { timestamp: number; counter: number }
+}
+
+const isRecalledMessage = (message: Message | undefined): message is NormalMessage =>
+  message?.type === MessageType.Normal && message.recalledAt !== undefined
+
 export { MessageType }
 export { SendType }
-export type { SyncHistoryMessage, SyncUserMessage, LikeMessage, HateMessage, TextMessage }
+export type { SyncHistoryMessage, SyncUserMessage, LikeMessage, HateMessage, RecallMessage, TextMessage }
 
 export type RoomMessage = LegacyRoomMessage | ProtocolNetworkMessage
 
@@ -137,6 +153,43 @@ const ChatRoomDomain = Remesh.domain({
       }
     })
 
+    const PendingRecallState = domain.state<RecallNotice[]>({
+      name: 'Room.PendingRecallState',
+      default: []
+    })
+
+    const PendingRecallQuery = domain.query({
+      name: 'Room.PendingRecallQuery',
+      impl: ({ get }) => get(PendingRecallState())
+    })
+
+    const ApplyRecallCommand = domain.command({
+      name: 'Room.ApplyRecallCommand',
+      impl: ({ get }, notice: RecallNotice) => {
+        if (!notice.targetId || notice.targetId.length > 256) return []
+
+        const target = get(messageListDomain.query.ItemQuery(notice.targetId))
+        if (!target || target.type !== MessageType.Normal) {
+          const pending = get(PendingRecallQuery()).filter((item) => item.targetId !== notice.targetId)
+          return [
+            UpdateHLCCommand(receiveHLCEvent(get(HLCState()), notice.hlc)),
+            PendingRecallState().new([...pending, notice].slice(-MAX_PENDING_RECALLS))
+          ]
+        }
+
+        const pending = get(PendingRecallQuery()).filter((item) => item.targetId !== notice.targetId)
+        if (!canRecallMessage(target, notice.sender.userId, notice.sentAt)) {
+          return [UpdateHLCCommand(receiveHLCEvent(get(HLCState()), notice.hlc)), PendingRecallState().new(pending)]
+        }
+
+        return [
+          UpdateHLCCommand(receiveHLCEvent(get(HLCState()), notice.hlc)),
+          PendingRecallState().new(pending),
+          messageListDomain.command.UpdateItemCommand(recallMessage(target, notice.sentAt))
+        ]
+      }
+    })
+
     const LastMessageTimeQuery = domain.query({
       name: 'Room.LastMessageTimeQuery',
       impl: ({ get }) => {
@@ -171,7 +224,9 @@ const ChatRoomDomain = Remesh.domain({
     const LastMessageHLCQuery = domain.query({
       name: 'Room.LastMessageHLCQuery',
       impl: ({ get }) => {
-        const messages = get(messageListDomain.query.ListQuery()).filter((message) => message.type === MessageType.Normal)
+        const messages = get(messageListDomain.query.ListQuery()).filter(
+          (message) => message.type === MessageType.Normal
+        )
         if (!messages.length) return createHLC()
         return messages
           .filter((message): message is NormalMessage => message.type === MessageType.Normal)
@@ -359,6 +414,68 @@ const ChatRoomDomain = Remesh.domain({
       }
     })
 
+    const SendRecallMessageCommand = domain.command({
+      name: 'Room.SendRecallMessageCommand',
+      impl: ({ get }, messageId: string) => {
+        const self = get(SelfUserQuery())
+        const localMessage = get(messageListDomain.query.ItemQuery(messageId))
+
+        if (!self || !localMessage || localMessage.type !== MessageType.Normal) {
+          return []
+        }
+
+        const recalledAt = Date.now()
+        if (!canRecallMessage(localMessage, self.userId, recalledAt)) {
+          return []
+        }
+
+        const upstreamMode = get(IsUpstreamModeQuery())
+        const upstreamHLC = upstreamMode ? sendHLCEvent(get(HLCState())) : undefined
+        const recallMessagePayload: RecallMessage = {
+          ...self,
+          id: nanoid(),
+          type: SendType.Recall,
+          targetId: messageId,
+          sendTime: recalledAt
+        }
+        const protocolMessage = upstreamMode
+          ? createProtocolRecallMessage({
+              id: recallMessagePayload.id,
+              sender: self,
+              targetId: messageId,
+              sentAt: recalledAt,
+              hlc: upstreamHLC ?? createPseudoHLC(recalledAt)
+            })
+          : null
+
+        const outgoingPayload = protocolMessage ?? recallMessagePayload
+        const messageSize = getTextByteSize(JSON.stringify(outgoingPayload))
+        if (messageSize >= WEB_RTC_MAX_MESSAGE_SIZE) {
+          return [OnErrorEvent(new Error('Recall message is too large to send.'))]
+        }
+
+        try {
+          if (localMessage.isPrivate && localMessage.toUser) {
+            const targetUser = get(UserListQuery()).find((user) => user.userId === localMessage.toUser?.userId)
+            if (targetUser) {
+              chatRoomExtern.sendMessage(protocolMessage ?? recallMessagePayload, targetUser.peerIds)
+            }
+          } else {
+            const peerIds = get(PeerListQuery())
+            peerIds.length && chatRoomExtern.sendMessage(protocolMessage ?? recallMessagePayload, peerIds)
+          }
+
+          return [
+            upstreamHLC ? UpdateHLCCommand(upstreamHLC) : null,
+            messageListDomain.command.UpdateItemCommand(recallMessage(localMessage, recalledAt))
+          ].filter(Boolean)
+        } catch (error) {
+          console.error('Failed to recall message:', error)
+          return [OnErrorEvent(error instanceof Error ? error : new Error(String(error)))]
+        }
+      }
+    })
+
     const SendLikeMessageCommand = domain.command({
       name: 'Room.SendLikeMessageCommand',
       impl: ({ get }, messageId: string) => {
@@ -393,7 +510,11 @@ const ChatRoomDomain = Remesh.domain({
           })
           const peerIds = get(PeerListQuery())
           peerIds.length && chatRoomExtern.sendMessage(protocolMessage, peerIds)
-          return [UpdateHLCCommand(newHLC), messageListDomain.command.UpdateItemCommand(listMessage), SendLikeMessageEvent(likeMessage)]
+          return [
+            UpdateHLCCommand(newHLC),
+            messageListDomain.command.UpdateItemCommand(listMessage),
+            SendLikeMessageEvent(likeMessage)
+          ]
         }
 
         if (localMessage.isPrivate && localMessage.toUser) {
@@ -446,7 +567,11 @@ const ChatRoomDomain = Remesh.domain({
           })
           const peerIds = get(PeerListQuery())
           peerIds.length && chatRoomExtern.sendMessage(protocolMessage, peerIds)
-          return [UpdateHLCCommand(newHLC), messageListDomain.command.UpdateItemCommand(listMessage), SendHateMessageEvent(hateMessage)]
+          return [
+            UpdateHLCCommand(newHLC),
+            messageListDomain.command.UpdateItemCommand(listMessage),
+            SendHateMessageEvent(hateMessage)
+          ]
         }
 
         if (localMessage.isPrivate && localMessage.toUser) {
@@ -562,26 +687,26 @@ const ChatRoomDomain = Remesh.domain({
           return historyMessages
             .toSorted(compareMessageHLC)
             .map((message) => {
-            const newHLC = sendHLCEvent(get(HLCState()))
-            const protocolMessage = createProtocolHistorySyncMessage({
-              id: nanoid(),
-              sender: self,
-              sentAt: Date.now(),
-              messages: [message],
-              hlc: newHLC
-            })
-            chatRoomExtern.sendMessage(protocolMessage, payload.peerId)
-            return [
-              UpdateHLCCommand(newHLC),
-              SendSyncHistoryMessageEvent({
-                ...self,
-                id: protocolMessage.id,
-                sendTime: protocolMessage.sentAt,
-                type: SendType.SyncHistory,
-                messages: [message]
+              const newHLC = sendHLCEvent(get(HLCState()))
+              const protocolMessage = createProtocolHistorySyncMessage({
+                id: nanoid(),
+                sender: self,
+                sentAt: Date.now(),
+                messages: [message],
+                hlc: newHLC
               })
-            ]
-          })
+              chatRoomExtern.sendMessage(protocolMessage, payload.peerId)
+              return [
+                UpdateHLCCommand(newHLC),
+                SendSyncHistoryMessageEvent({
+                  ...self,
+                  id: protocolMessage.id,
+                  sendTime: protocolMessage.sentAt,
+                  type: SendType.SyncHistory,
+                  messages: [message]
+                })
+              ]
+            })
             .flat()
         }
 
@@ -854,12 +979,16 @@ const ChatRoomDomain = Remesh.domain({
 
                 case SendType.SyncHistory: {
                   return of(
-                    ...parsedMessage.messages.map((message) =>
-                      messageListDomain.command.UpsertItemCommand({
-                        ...message,
-                        type: MessageType.Normal
-                      })
-                    )
+                    ...parsedMessage.messages.flatMap((message) => {
+                      const pendingRecall = get(PendingRecallQuery()).find((recall) => recall.targetId === message.id)
+                      return [
+                        messageListDomain.command.UpsertItemCommand({
+                          ...message,
+                          type: MessageType.Normal
+                        }),
+                        pendingRecall ? ApplyRecallCommand(pendingRecall) : null
+                      ].filter(Boolean)
+                    })
                   )
                 }
 
@@ -867,13 +996,23 @@ const ChatRoomDomain = Remesh.domain({
                   const maxMessageHLC = maxHLC(parsedMessage.messages.map((message) => message.hlc))
                   return of(
                     UpdateHLCCommand(receiveHLCEvent(get(HLCState()), maxMessageHLC)),
-                    ...parsedMessage.messages.map((message) =>
-                      messageListDomain.command.UpsertItemCommand(denormalizeProtocolTextMessage(message))
-                    )
+                    ...parsedMessage.messages.flatMap((message) => {
+                      const pendingRecall = get(PendingRecallQuery()).find((recall) => recall.targetId === message.id)
+                      return [
+                        messageListDomain.command.UpsertItemCommand(denormalizeProtocolTextMessage(message)),
+                        pendingRecall ? ApplyRecallCommand(pendingRecall) : null
+                      ].filter(Boolean)
+                    })
                   )
                 }
 
                 case SendType.Text:
+                  if (
+                    isRecalledMessage(get(messageListDomain.query.ItemQuery(parsedMessage.id))) &&
+                    !parsedMessage.recalledAt
+                  ) {
+                    return EMPTY
+                  }
                   return of(
                     messageListDomain.command.CreateItemCommand({
                       ...parsedMessage,
@@ -881,13 +1020,31 @@ const ChatRoomDomain = Remesh.domain({
                       receiveTime: Date.now(),
                       likeUsers: [],
                       hateUsers: []
-                    })
-                  )
+                    }),
+                    (() => {
+                      const pendingRecall = get(PendingRecallQuery()).find(
+                        (recall) => recall.targetId === parsedMessage.id
+                      )
+                      return pendingRecall ? ApplyRecallCommand(pendingRecall) : null
+                    })()
+                  ).pipe(filter(Boolean))
                 case 'text':
+                  if (
+                    isRecalledMessage(get(messageListDomain.query.ItemQuery(parsedMessage.id))) &&
+                    !parsedMessage.recalledAt
+                  ) {
+                    return EMPTY
+                  }
                   return of(
                     UpdateHLCCommand(receiveHLCEvent(get(HLCState()), parsedMessage.hlc)),
-                    messageListDomain.command.CreateItemCommand(denormalizeProtocolTextMessage(parsedMessage))
-                  )
+                    messageListDomain.command.CreateItemCommand(denormalizeProtocolTextMessage(parsedMessage)),
+                    (() => {
+                      const pendingRecall = get(PendingRecallQuery()).find(
+                        (recall) => recall.targetId === parsedMessage.id
+                      )
+                      return pendingRecall ? ApplyRecallCommand(pendingRecall) : null
+                    })()
+                  ).pipe(filter(Boolean))
                 case SendType.Like:
                 case SendType.Hate: {
                   if (!get(messageListDomain.query.HasItemQuery(parsedMessage.id))) {
@@ -911,6 +1068,20 @@ const ChatRoomDomain = Remesh.domain({
                     })
                   )
                 }
+                case SendType.Recall:
+                  return of(
+                    ApplyRecallCommand({
+                      id: parsedMessage.id,
+                      targetId: parsedMessage.targetId,
+                      sender: {
+                        userId: parsedMessage.userId,
+                        username: parsedMessage.username,
+                        userAvatar: parsedMessage.userAvatar
+                      },
+                      sentAt: parsedMessage.sendTime,
+                      hlc: createPseudoHLC(parsedMessage.sendTime)
+                    })
+                  )
                 case 'reaction': {
                   if (!get(messageListDomain.query.HasItemQuery(parsedMessage.targetId))) {
                     return EMPTY
@@ -933,6 +1104,16 @@ const ChatRoomDomain = Remesh.domain({
                     messageListDomain.command.UpdateItemCommand(updatedMessage)
                   )
                 }
+                case 'recall':
+                  return of(
+                    ApplyRecallCommand({
+                      id: parsedMessage.id,
+                      targetId: parsedMessage.targetId,
+                      sender: fromProtocolSender(parsedMessage.sender),
+                      sentAt: parsedMessage.sentAt,
+                      hlc: parsedMessage.hlc
+                    })
+                  )
                 default:
                   console.warn('Unsupported message type', parsedMessage)
                   return EMPTY
@@ -1002,6 +1183,7 @@ const ChatRoomDomain = Remesh.domain({
         JoinRoomCommand,
         LeaveRoomCommand,
         SendTextMessageCommand,
+        SendRecallMessageCommand,
         SendLikeMessageCommand,
         SendHateMessageCommand,
         SendSyncUserMessageCommand,

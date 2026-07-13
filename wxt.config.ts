@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { defineConfig } from 'wxt'
 import react from '@vitejs/plugin-react'
-import { name, displayName, homepage } from './package.json'
+import { name, displayName, homepage, version } from './package.json'
 import svgr from 'vite-plugin-svgr'
 
 export default defineConfig({
@@ -15,6 +15,7 @@ export default defineConfig({
   manifest: ({ browser }) => {
     const common = {
       name: displayName,
+      version,
       permissions: ['storage', 'notifications', 'tabs'],
       homepage_url: homepage,
       icons: {

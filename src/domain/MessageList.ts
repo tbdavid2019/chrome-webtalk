@@ -39,6 +39,7 @@ export interface NormalMessage extends MessageUser {
   body: string
   sendTime: number
   receiveTime: number
+  recalledAt?: number
   hlc?: HLC
   likeUsers: MessageUser[]
   hateUsers: MessageUser[]
