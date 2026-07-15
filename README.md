@@ -3,8 +3,8 @@
 > 在任何網站上與他人匿名即時聊天！可以提供LLM 幫你了解網頁內容
 >
 > ![alt text](image.png)
-![alt text](image-1.png)
-這是一款去中心化、無伺服器的瀏覽器聊天擴充功能，透過 WebRTC 實現端對端加密傳輸，保護你的隱私，所有資料皆儲存在本地裝置。
+> ![alt text](image-1.png)
+> 這是一款去中心化、無伺服器的瀏覽器聊天擴充功能，透過 WebRTC 實現端對端加密傳輸，保護你的隱私，所有資料皆儲存在本地裝置。
 
 本版本 fork 自 [molvqingtai/WebChat](https://github.com/molvqingtai/WebChat)，並進行以下改進：
 
@@ -25,7 +25,7 @@
 ></script>
 ```
 
-沒有 page meta 的頁面不應載入 Embed script，例如 Wiki edit 頁；CRM 則可以使用 `data-webtalk-auto-mount="false"`，在登入成功後呼叫 `window.WebTalk.mount()`。完整參數與 Vercel AI proxy 設定請參考 [Website Embed 說明](docs/web-embed.md)。
+沒有 page meta 的頁面不應載入 Embed script，例如 Wiki edit 頁；CRM 則可以使用 `data-webtalk-auto-mount="false"`，在登入成功後呼叫 `window.WebTalk.mount()`。完整參數請參考 [Website Embed 說明](docs/web-embed.md)，Vercel 部署步驟請參考 [Vercel 部署指南](docs/deploy-vercel.md)。
 
 安裝後，你將能在任何網站上開啟聊天室，再也不怕一個人上網啦！還能使用 AI 摘要功能快速了解網頁內容！
 
