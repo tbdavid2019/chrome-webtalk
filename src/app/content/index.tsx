@@ -23,6 +23,7 @@ import { createElement } from '@/utils'
 import { browser } from 'wxt/browser'
 import { configurePlatform } from '@/platform'
 import { createExtensionPlatform } from '@/platform/extension'
+import { observeWebTalkEmbed } from './embedPresence'
 
 // 為 window 添加自定義屬性
 declare global {
@@ -37,6 +38,17 @@ export default defineContentScript({
   matches: ['https://*/*'],
   excludeMatches: ['*://localhost/*', '*://127.0.0.1/*'],
   async main(ctx) {
+    let embedPresent = false
+    let ui: Awaited<ReturnType<typeof createShadowRootUi>> | undefined
+    const stopObservingEmbed = observeWebTalkEmbed(document, () => {
+      embedPresent = true
+      ui?.remove()
+      ui = undefined
+    })
+    ctx.onInvalidated(stopObservingEmbed)
+
+    if (embedPresent) return
+
     configurePlatform(createExtensionPlatform())
 
     // 🌈 初始化 CSS 變數
@@ -85,7 +97,7 @@ export default defineContentScript({
     }
 
     // ⛺ 掛載 Shadow DOM UI
-    const ui = await createShadowRootUi(ctx, {
+    ui = await createShadowRootUi(ctx, {
       name: __NAME__,
       position: 'inline',
       anchor: 'body',
@@ -130,6 +142,8 @@ export default defineContentScript({
       }
     })
 
-    ui.mount()
+    if (!embedPresent) {
+      ui.mount()
+    }
   }
 })

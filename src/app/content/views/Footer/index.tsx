@@ -53,7 +53,7 @@ interface AutoCompleteUserItem {
 
 type AutoCompleteItem = AutoCompleteAiItem | AutoCompleteUserItem
 
-const Footer: FC = () => {
+const Footer: FC<{ enableAi?: boolean }> = ({ enableAi = true }) => {
   const send = useRemeshSend()
   const toastDomain = useRemeshDomain(ToastDomain())
   const chatRoomDomain = useRemeshDomain(ChatRoomDomain())
@@ -84,7 +84,7 @@ const Footer: FC = () => {
   const aiLastTriggeredAtRef = useRef(0)
 
   const shareRef = useShareRef(inputRef, setRef)
-  const aiTopicSuggestionsEnabled = userInfo?.aiTopicSuggestionsEnabled !== false
+  const aiTopicSuggestionsEnabled = enableAi && userInfo?.aiTopicSuggestionsEnabled !== false
 
   /**
    * When inserting a username using the @ syntax, record the username's position information and the mapping relationship between the position information and userId to distinguish between users with the same name.
@@ -152,12 +152,12 @@ const Footer: FC = () => {
       }))
       .toSorted((a, b) => b.similarity - a.similarity)
 
-    if (!keyword || 'ai'.includes(keyword) || keyword.includes('ai')) {
+    if (enableAi && (!keyword || 'ai'.includes(keyword) || keyword.includes('ai'))) {
       return [aiItem, ...matchedUsers]
     }
 
     return matchedUsers
-  }, [searchNameKeyword, userList, userInfo])
+  }, [enableAi, searchNameKeyword, userList, userInfo])
 
   useEffect(() => {
     let active = true
@@ -234,7 +234,7 @@ const Footer: FC = () => {
 
     try {
       const transformedMessage = await transformMessage(currentMessage)
-      const isAiPrompt = /^@ai(?:\s|$)/i.test(transformedMessage.trim())
+      const isAiPrompt = enableAi && /^@ai(?:\s|$)/i.test(transformedMessage.trim())
       const aiPrompt = transformedMessage
         .trim()
         .replace(/^@ai\s*/i, '')
@@ -665,7 +665,9 @@ const Footer: FC = () => {
         <div className="rounded-3xl border border-border bg-muted/30 px-3 py-3 shadow-sm">
           <div className="mb-1 flex items-center justify-between gap-2">
             <div className="text-sm font-semibold text-foreground">{text.chatSuggestionsTitle}</div>
-            {pageSuggestionsLoading && <div className="text-xs text-muted-foreground">{text.chatSuggestionsLoading}</div>}
+            {pageSuggestionsLoading && (
+              <div className="text-xs text-muted-foreground">{text.chatSuggestionsLoading}</div>
+            )}
           </div>
           <div className="mb-3 text-xs text-muted-foreground">{text.chatSuggestionsDescription}</div>
           <div className="flex flex-wrap gap-2">
@@ -699,12 +701,16 @@ const Footer: FC = () => {
           placeholder={
             privateChatTarget
               ? text.privateChatPlaceholder.replace('{username}', privateChatTarget.username)
-              : text.aiPromptPlaceholder
+              : enableAi
+                ? text.aiPromptPlaceholder
+                : text.chatPlaceholder
           }
         ></MessageInput>
         <div className="mt-3 flex items-center justify-between gap-1">
           <div className="flex min-w-0 flex-1 items-center gap-1">
-            <PanelModeSwitch active="chat" onAi={handleAskAi} chatLabel={text.chatTab} aiLabel={text.aiTab} />
+            {enableAi && (
+              <PanelModeSwitch active="chat" onAi={handleAskAi} chatLabel={text.chatTab} aiLabel={text.aiTab} />
+            )}
             <div className="flex items-center gap-0.5">
               <EmojiButton onSelect={handleInjectEmoji}></EmojiButton>
               <ImageButton disabled={inputLoading} onSelect={handleInjectImage}></ImageButton>
@@ -718,16 +724,18 @@ const Footer: FC = () => {
               >
                 <LinkIcon size={20} />
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="rounded-full text-muted-foreground hover:text-foreground shrink-0"
-                onClick={handleInjectAiPrompt}
-                title={text.aiInsertTitle}
-              >
-                <BotIcon size={20} />
-              </Button>
+              {enableAi && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full text-muted-foreground hover:text-foreground shrink-0"
+                  onClick={handleInjectAiPrompt}
+                  title={text.aiInsertTitle}
+                >
+                  <BotIcon size={20} />
+                </Button>
+              )}
             </div>
           </div>
           <Button

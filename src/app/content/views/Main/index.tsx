@@ -12,7 +12,7 @@ import ToastDomain from '@/domain/Toast'
 import { getUiText } from '@/utils'
 import { canRecallMessage } from '@/utils/messageRecall'
 
-const Main: FC = () => {
+const Main: FC<{ enableAi?: boolean }> = ({ enableAi = true }) => {
   const send = useRemeshSend()
   const messageListDomain = useRemeshDomain(MessageListDomain())
   const chatRoomDomain = useRemeshDomain(ChatRoomDomain())
@@ -32,6 +32,7 @@ const Main: FC = () => {
     return _messageList
       .filter((message) => {
         if (message.type !== MessageType.Normal) return true
+        if (!enableAi && message.senderType === 'ai') return false
         if (hideAllAiMessages && message.senderType === 'ai') return false
         if (bannedUserIds.includes(message.userId)) return false
         if (message.senderType === 'ai' && message.aiMeta && bannedUserIds.includes(message.aiMeta.ownerUserId)) {
@@ -57,7 +58,7 @@ const Main: FC = () => {
           ? compareMessageHLC(a, b)
           : a.sendTime - b.sendTime
       )
-  }, [_messageList, userInfo?.id, bannedUserIds, hideAllAiMessages])
+  }, [_messageList, userInfo?.id, bannedUserIds, enableAi, hideAllAiMessages])
 
   const canInteractWithMessage = (message: any) => {
     if (message.type !== MessageType.Normal) return false

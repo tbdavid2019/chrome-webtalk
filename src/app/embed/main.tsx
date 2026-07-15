@@ -15,6 +15,7 @@ import { configurePlatform } from '@/platform'
 import { createWebPlatform } from '@/platform/web'
 import { setRootNode } from '@/utils'
 import type { RoomIdentityOptions } from '@/utils/roomId'
+import { readEmbedOptions, type MobilePlacement } from './options'
 
 import tailwindCss from '@/assets/styles/tailwind.css?inline'
 import sonnerCss from '@/assets/styles/sonner.css?inline'
@@ -25,6 +26,12 @@ export interface WebTalkEmbedOptions extends RoomIdentityOptions {
   enableVirtualRoom?: boolean
   /** Same-origin or absolute URL of the server-side AI proxy. */
   aiEndpoint?: string
+  /** Which half of a mobile viewport the overlay occupies. Defaults to bottom. */
+  mobilePlacement?: MobilePlacement
+}
+
+export interface WebTalkEmbedCapabilities {
+  enableAi: boolean
 }
 
 export interface WebTalkController {
@@ -59,7 +66,8 @@ const readScriptOptions = (script: HTMLScriptElement | null): WebTalkEmbedOption
     siteId: dataset.webtalkSiteId,
     metaName: dataset.webtalkMetaName,
     enableVirtualRoom: dataset.webtalkVirtualRoom === 'true',
-    aiEndpoint: dataset.webtalkAiEndpoint
+    aiEndpoint: dataset.webtalkAiEndpoint,
+    mobilePlacement: readEmbedOptions(dataset).mobilePlacement
   }
 }
 
@@ -69,84 +77,94 @@ const appendStyles = (shadowRoot: ShadowRoot): void => {
   shadowRoot.append(style)
 }
 
-export const mountWebTalk = (options: WebTalkEmbedOptions = {}): WebTalkController => {
-  const existing = document.querySelector(HOST_TAG)
-  if (existing) {
-    window.WebTalk?.unmount()
-  }
-
-  configurePlatform(createWebPlatform({ aiEndpoint: options.aiEndpoint }))
-
-  const chatRoom = createChatRoomImpl(options)
-  const roomId = chatRoom.value.roomId
-  const store = Remesh.store({
-    externs: [
-      LocalStorageImpl,
-      IndexDBStorageImpl,
-      BrowserSyncStorageImpl,
-      chatRoom,
-      VirtualRoomImpl,
-      ToastImpl,
-      DanmakuImpl,
-      NotificationImpl
-    ]
-  })
-
-  const host = document.createElement(HOST_TAG)
-  host.dataset.webtalkRoomId = roomId
-  host.style.setProperty('position', 'fixed', 'important')
-  host.style.setProperty('inset', '0', 'important')
-  host.style.setProperty('z-index', '2147482000', 'important')
-  host.style.setProperty('pointer-events', 'none', 'important')
-  const mountTarget = document.body ?? document.documentElement
-  mountTarget.append(host)
-
-  const shadowRoot = host.attachShadow({ mode: 'open' })
-  appendStyles(shadowRoot)
-  const rootElement = document.createElement('div')
-  rootElement.id = 'root'
-  shadowRoot.append(rootElement)
-  setRootNode(shadowRoot)
-
-  const root: Root = createRoot(rootElement)
-  root.render(
-    <React.StrictMode>
-      <RemeshRoot store={store}>
-        <RemeshScope domains={[NotificationDomain()]}>
-          <App enableVirtualRoom={options.enableVirtualRoom === true} />
-        </RemeshScope>
-      </RemeshRoot>
-    </React.StrictMode>
-  )
-
-  const controller: WebTalkController = {
-    roomId,
-    unmount: () => {
-      root.unmount()
-      setRootNode(null)
-      host.remove()
-      window.WebTalk = undefined
+export const createWebTalkMount = (capabilities: WebTalkEmbedCapabilities) => {
+  return (options: WebTalkEmbedOptions = {}): WebTalkController => {
+    const existing = document.querySelector(HOST_TAG)
+    if (existing) {
+      window.WebTalk?.unmount()
     }
-  }
 
+    configurePlatform(createWebPlatform({ aiEndpoint: options.aiEndpoint }))
+
+    const chatRoom = createChatRoomImpl(options)
+    const roomId = chatRoom.value.roomId
+    const store = Remesh.store({
+      externs: [
+        LocalStorageImpl,
+        IndexDBStorageImpl,
+        BrowserSyncStorageImpl,
+        chatRoom,
+        VirtualRoomImpl,
+        ToastImpl,
+        DanmakuImpl,
+        NotificationImpl
+      ]
+    })
+
+    const host = document.createElement(HOST_TAG)
+    host.dataset.webtalkRoomId = roomId
+    host.style.setProperty('position', 'fixed', 'important')
+    host.style.setProperty('inset', '0', 'important')
+    host.style.setProperty('z-index', '2147482000', 'important')
+    host.style.setProperty('pointer-events', 'none', 'important')
+    const mountTarget = document.body ?? document.documentElement
+    mountTarget.append(host)
+
+    const shadowRoot = host.attachShadow({ mode: 'open' })
+    appendStyles(shadowRoot)
+    const rootElement = document.createElement('div')
+    rootElement.id = 'root'
+    shadowRoot.append(rootElement)
+    setRootNode(shadowRoot)
+
+    const root: Root = createRoot(rootElement)
+    root.render(
+      <React.StrictMode>
+        <RemeshRoot store={store}>
+          <RemeshScope domains={[NotificationDomain()]}>
+            <App
+              enableVirtualRoom={options.enableVirtualRoom === true}
+              enableAi={capabilities.enableAi}
+              isEmbed
+              mobilePlacement={options.mobilePlacement}
+            />
+          </RemeshScope>
+        </RemeshRoot>
+      </React.StrictMode>
+    )
+
+    const controller: WebTalkController = {
+      roomId,
+      unmount: () => {
+        root.unmount()
+        setRootNode(null)
+        host.remove()
+        window.WebTalk = undefined
+      }
+    }
+
+    window.WebTalk = {
+      mount: createWebTalkMount(capabilities),
+      unmount: controller.unmount
+    }
+
+    return controller
+  }
+}
+
+export const bootstrapWebTalkEmbed = (capabilities: WebTalkEmbedCapabilities): void => {
+  const mount = createWebTalkMount(capabilities)
   window.WebTalk = {
-    mount: mountWebTalk,
-    unmount: controller.unmount
+    mount,
+    unmount: () => undefined
   }
 
-  return controller
-}
-
-window.WebTalk = {
-  mount: mountWebTalk,
-  unmount: () => undefined
-}
-
-const script = getCurrentScript()
-if (script?.dataset.webtalkAutoMount !== 'false') {
-  try {
-    mountWebTalk(readScriptOptions(script))
-  } catch (error) {
-    console.error('[WebTalk] Embed was not mounted.', error)
+  const script = getCurrentScript()
+  if (script?.dataset.webtalkAutoMount !== 'false') {
+    try {
+      mount(readScriptOptions(script))
+    } catch (error) {
+      console.error('[WebTalk] Embed was not mounted.', error)
+    }
   }
 }

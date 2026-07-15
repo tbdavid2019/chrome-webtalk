@@ -1,18 +1,29 @@
-import { type ReactNode, type FC } from 'react'
+import { type ReactNode, type FC, useEffect, useState } from 'react'
 import useResizable from '@/hooks/useResizable'
 import { motion, AnimatePresence } from 'framer-motion'
 import AppStatusDomain from '@/domain/AppStatus'
 import { useRemeshDomain, useRemeshQuery } from 'remesh-react'
 import { cn } from '@/utils'
+import type { MobilePlacement } from '@/app/embed/options'
+import { resolveEmbedPanelStyle } from './panelStyle'
 
 export interface AppMainProps {
   children?: ReactNode
   className?: string
   zIndex?: number
   onMouseDown?: React.MouseEventHandler<HTMLDivElement>
+  isEmbed?: boolean
+  mobilePlacement?: MobilePlacement
 }
 
-const AppMain: FC<AppMainProps> = ({ children, className, zIndex, onMouseDown }) => {
+const AppMain: FC<AppMainProps> = ({
+  children,
+  className,
+  zIndex,
+  onMouseDown,
+  isEmbed = false,
+  mobilePlacement = 'bottom'
+}) => {
   const appStatusDomain = useRemeshDomain(AppStatusDomain())
   const appOpenStatus = useRemeshQuery(appStatusDomain.query.OpenQuery())
 
@@ -23,6 +34,17 @@ const AppMain: FC<AppMainProps> = ({ children, className, zIndex, onMouseDown })
     minSize: 380, // 最小寬度
     direction: 'left' // 向左調整大小
   })
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 639px)').matches)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 639px)')
+    const handleChange = () => setIsMobile(mediaQuery.matches)
+    handleChange()
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  const embedPanelStyle = isEmbed ? resolveEmbedPanelStyle(isMobile, mobilePlacement) : undefined
 
   return (
     <AnimatePresence>
@@ -34,7 +56,8 @@ const AppMain: FC<AppMainProps> = ({ children, className, zIndex, onMouseDown })
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           style={{
             width: `${size}px`,
-            zIndex: zIndex
+            zIndex: zIndex,
+            ...embedPanelStyle
           }}
           className={cn(
             'fixed top-0 right-0 z-infinity h-full grid grid-rows-[auto_1fr_auto] border-l border-border bg-background font-sans text-foreground shadow-2xl',
@@ -43,10 +66,12 @@ const AppMain: FC<AppMainProps> = ({ children, className, zIndex, onMouseDown })
           onMouseDown={onMouseDown}
         >
           {children}
-          <div
-            ref={setRef}
-            className="absolute inset-y-0 -left-0.5 z-infinity w-1 cursor-ew-resize bg-primary/20 opacity-0 transition-opacity hover:opacity-100"
-          ></div>
+          {!(isEmbed && isMobile) && (
+            <div
+              ref={setRef}
+              className="absolute inset-y-0 -left-0.5 z-infinity w-1 cursor-ew-resize bg-primary/20 opacity-0 transition-opacity hover:opacity-100"
+            ></div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

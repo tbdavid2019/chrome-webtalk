@@ -1,9 +1,14 @@
 import path from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import svgr from 'vite-plugin-svgr'
+import { reactSvg } from './vite.react-svg'
+
+const variant = process.env.WEBTALK_EMBED_VARIANT === 'chat' ? 'chat' : 'hybrid'
+const entry = variant === 'chat' ? 'src/app/embed/chat.tsx' : 'src/app/embed/hybrid.tsx'
+const fileName = variant === 'chat' ? 'webtalk-chat.js' : 'webtalk.js'
 
 export default defineConfig({
+  publicDir: path.resolve('src/app/embed/public'),
   resolve: {
     alias: {
       '@': path.resolve('src')
@@ -14,16 +19,16 @@ export default defineConfig({
     __NAME__: JSON.stringify('webtalk-widget'),
     'process.env.NODE_ENV': JSON.stringify('production')
   },
-  plugins: [react(), svgr({ include: '**/*.svg' })],
+  plugins: [react(), reactSvg()],
   build: {
     outDir: 'output/webtalk',
-    emptyOutDir: true,
+    emptyOutDir: variant === 'chat',
     cssCodeSplit: false,
     lib: {
-      entry: path.resolve('src/app/embed/main.tsx'),
-      name: 'WebTalkEmbed',
+      entry: path.resolve(entry),
+      name: variant === 'chat' ? 'WebTalkChatEmbed' : 'WebTalkEmbed',
       formats: ['iife'],
-      fileName: () => 'webtalk.js'
+      fileName: () => fileName
     },
     rollupOptions: {
       output: {

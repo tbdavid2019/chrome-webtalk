@@ -18,18 +18,27 @@ import AppStatusDomain from '@/domain/AppStatus'
 import { checkDarkMode, cn, generateRandomAvatar, getSiteInfo } from '@/utils'
 import VirtualRoomDomain from '@/domain/VirtualRoom'
 import { MAX_AVATAR_SIZE } from '@/constants/config'
+import type { MobilePlacement } from '@/app/embed/options'
 
 const OVERLAY_BASE_Z_INDEX = 2147482000
 
 export interface AppProps {
   enableVirtualRoom?: boolean
+  enableAi?: boolean
+  isEmbed?: boolean
+  mobilePlacement?: MobilePlacement
 }
 
 if (import.meta.env.FIREFOX) {
   window.requestAnimationFrame = window.requestAnimationFrame.bind(window)
 }
 
-export default function App({ enableVirtualRoom = true }: AppProps) {
+export default function App({
+  enableVirtualRoom = true,
+  enableAi = true,
+  isEmbed = false,
+  mobilePlacement = 'bottom'
+}: AppProps) {
   const send = useRemeshSend()
 
   const chatRoomDomain = useRemeshDomain(ChatRoomDomain())
@@ -68,18 +77,24 @@ export default function App({ enableVirtualRoom = true }: AppProps) {
 
   // 🧠 綁定事件：接收「toggle-ai-summary-panel」來顯示／關閉面板
   useEffect(() => {
+    if (!enableAi) return
     const handler = () => setShowSummary((prev) => !prev)
     window.addEventListener('toggle-ai-summary-panel', handler)
     return () => window.removeEventListener('toggle-ai-summary-panel', handler)
-  }, [])
+  }, [enableAi])
 
   useEffect(() => {
+    if (!enableAi) return
     const handler = () => setShowSummary(true)
     window.addEventListener('open-ai-summary-panel', handler)
     return () => window.removeEventListener('open-ai-summary-panel', handler)
-  }, [])
+  }, [enableAi])
 
   useEffect(() => {
+    if (!enableAi) {
+      setShowSummary(false)
+      return
+    }
     if (!showSummary) {
       return
     }
@@ -87,7 +102,7 @@ export default function App({ enableVirtualRoom = true }: AppProps) {
     if (appOpenStatus) {
       send(appStatusDomain.command.UpdateOpenCommand(false))
     }
-  }, [showSummary, appOpenStatus, appStatusDomain, send])
+  }, [enableAi, showSummary, appOpenStatus, appStatusDomain, send])
 
   const previousAppOpenStatusRef = useRef(appOpenStatus)
 
@@ -214,12 +229,17 @@ export default function App({ enableVirtualRoom = true }: AppProps) {
     <div id="app" className={cn('contents', themeMode)}>
       {appStatusLoadIsFinished && (
         <>
-          <AppMain zIndex={getPanelZIndex('main')} onMouseDown={() => setTopPanel('main')}>
+          <AppMain
+            zIndex={getPanelZIndex('main')}
+            onMouseDown={() => setTopPanel('main')}
+            isEmbed={isEmbed}
+            mobilePlacement={mobilePlacement}
+          >
             <Header />
             <div className="flex size-full flex-1 overflow-hidden">
-              <Main key="chat-main" />
+              <Main key="chat-main" enableAi={enableAi} />
             </div>
-            <Footer />
+            <Footer enableAi={enableAi} />
             {notUserInfo && <Setup />}
             <Toaster
               richColors
@@ -236,7 +256,7 @@ export default function App({ enableVirtualRoom = true }: AppProps) {
           </AppMain>
         </>
       )}
-      {showSummary && (
+      {enableAi && showSummary && (
         <div
           onMouseDown={() => setTopPanel('summary')}
           style={{
@@ -252,7 +272,7 @@ export default function App({ enableVirtualRoom = true }: AppProps) {
           <SummaryPanel key="summary-panel" onClose={() => setShowSummary(false)} />
         </div>
       )}
-      {!buttonsHidden && <AppButton />}
+      {!buttonsHidden && <AppButton enableAi={enableAi} isEmbed={isEmbed} />}
       <DanmakuContainer ref={danmakuContainerRef} style={{ opacity: userInfo?.danmakuOpacity ?? 0.8 }} />
     </div>
   )

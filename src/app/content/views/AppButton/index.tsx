@@ -23,9 +23,11 @@ import { clamp } from '@/utils'
 
 export interface AppButtonProps {
   className?: string
+  enableAi?: boolean
+  isEmbed?: boolean
 }
 
-const AppButton: FC<AppButtonProps> = ({ className }) => {
+const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = false }) => {
   const send = useRemeshSend()
   const appStatusDomain = useRemeshDomain(AppStatusDomain())
   const toastDomain = useRemeshDomain(ToastDomain())
@@ -71,7 +73,7 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
   const handleSwitchTheme = () => {
     if (userInfo) {
       send(userInfoDomain.command.UpdateUserInfoCommand({ ...userInfo, themeMode: isDarkMode ? 'light' : 'dark' }))
-    } else {
+    } else if (!isEmbed) {
       handleOpenOptionsPage()
     }
   }
@@ -92,7 +94,11 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
   const handleCloseDock = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()
     send(appStatusDomain.command.UpdateButtonsHiddenCommand(true))
-    send(toastDomain.command.InfoCommand('懸浮按鈕已完全隱藏，可在擴充功能設定頁面重新顯示！'))
+    send(
+      toastDomain.command.InfoCommand(
+        isEmbed ? '懸浮按鈕已隱藏，重新整理頁面即可恢復。' : '懸浮按鈕已完全隱藏，可在擴充功能設定頁面重新顯示！'
+      )
+    )
   }
 
   return (
@@ -116,7 +122,7 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
     >
       {/* 關閉按鈕 X */}
       <AnimatePresence>
-        {hovered && (
+        {hovered && !isEmbed && (
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -159,14 +165,15 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
         <DayLogo className="relative z-20 size-7 overflow-hidden opacity-90"></DayLogo>
       </Button>
 
-      {/* 2. AI 摘要按鈕 (黃色兔子) */}
-      <Button
-        onClick={handleToggleSummary}
-        className="relative z-20 size-10 rounded-l-full rounded-r-none border-0 bg-secondary/80 p-0 text-xs text-secondary-foreground shadow-md shadow-secondary/20 hover:bg-secondary transition-transform hover:-translate-x-0.5"
-        title="網頁摘要與對話"
-      >
-        <LogoIcon6 className="relative z-20 size-7 overflow-hidden opacity-90" />
-      </Button>
+      {enableAi && (
+        <Button
+          onClick={handleToggleSummary}
+          className="relative z-20 size-10 rounded-l-full rounded-r-none border-0 bg-secondary/80 p-0 text-xs text-secondary-foreground shadow-md shadow-secondary/20 hover:bg-secondary transition-transform hover:-translate-x-0.5"
+          title="網頁摘要與對話"
+        >
+          <LogoIcon6 className="relative z-20 size-7 overflow-hidden opacity-90" />
+        </Button>
+      )}
 
       {/* 3. 主題切換按鈕 (太陽/月亮) */}
       <Button
@@ -177,14 +184,15 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
         {isDarkMode ? <SunIcon size={16} /> : <MoonIcon size={16} />}
       </Button>
 
-      {/* 4. 設定按鈕 (齒輪) */}
-      <Button
-        onClick={handleOpenOptionsPage}
-        className="relative z-20 size-10 rounded-l-full rounded-r-none border-0 bg-muted hover:bg-muted/80 text-muted-foreground p-0 text-xs shadow-sm hover:text-foreground transition-transform hover:-translate-x-0.5 flex items-center justify-center"
-        title="設定"
-      >
-        <SettingsIcon size={16} />
-      </Button>
+      {!isEmbed && (
+        <Button
+          onClick={handleOpenOptionsPage}
+          className="relative z-20 size-10 rounded-l-full rounded-r-none border-0 bg-muted hover:bg-muted/80 text-muted-foreground p-0 text-xs shadow-sm hover:text-foreground transition-transform hover:-translate-x-0.5 flex items-center justify-center"
+          title="設定"
+        >
+          <SettingsIcon size={16} />
+        </Button>
+      )}
     </div>
   )
 }
