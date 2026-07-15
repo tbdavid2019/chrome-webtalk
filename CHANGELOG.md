@@ -4,7 +4,7 @@
 
 ### Added
 
-- **Website Embed products**：`pnpm build:embed` 現在產生純 P2P 聊天的 `output/webtalk/webtalk-chat.js`、含 AI 的 `output/webtalk/webtalk.js`，以及可直接部署的繁中站長教學首頁 `output/webtalk/index.html`。
+- **Website Embed products**：`pnpm build:embed` 現在產生純 P2P 聊天的 `output/webtalk/webtalk-chat.js`、含 AI 的 `output/webtalk/webtalk.js`，以及可直接部署、可切換繁中／英文的站長教學頁（`output/webtalk/index.html`、`output/webtalk/en.html`）。
 - **Mobile half-screen overlay**：網站 Embed 在寬度小於 640px 時改為半螢幕覆蓋層，預設聊天室在下半部；可用 `data-webtalk-mobile-placement="top"` 改到上半部，不會改寫宿主網站的版面或捲動。
 
 ### Changed

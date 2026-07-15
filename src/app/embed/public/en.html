@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WebTalk Embed｜網站接入指南</title>
+    <title>WebTalk Embed Guide</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -156,31 +156,34 @@
   </head>
   <body>
     <nav class="language-switch" aria-label="Language">
-      <span lang="zh-Hant" aria-current="page">繁體中文</span>
-      <a href="./en.html" lang="en" data-language-switch="en">English</a>
+      <a href="./index.html" lang="zh-Hant" data-language-switch="zh-Hant">繁體中文</a>
+      <span lang="en" aria-current="page">English</span>
     </nav>
     <span class="tag">WebTalk Embed</span>
-    <h1>在任何網站加入 WebTalk</h1>
+    <h1>Add WebTalk to any website</h1>
     <p class="lead">
-      用一段 script 加入與目前頁面訪客互動的 P2P 聊天室。預設建議使用純聊天室版；需要 AI
-      摘要與頁面對話時，再選擇混合版。
+      Add a P2P chat room for visitors of the current page with one script. Start with the chat-only bundle; choose the
+      hybrid bundle only when you need AI summaries and page conversations.
     </p>
 
-    <h2>最快接入：純 P2P 聊天</h2>
-    <p>請在每個要開放聊天的頁面輸出不同的 page ID。以下範例適合文章、商品、知識庫與 Share 頁。</p>
-    <pre><code>&lt;meta name="webtalk-page-id" content="{{此頁穩定且唯一的 ID}}" /&gt;
+    <h2>Quick start: P2P chat only</h2>
+    <p>
+      Render a distinct page ID on each page where chat is available. This works well for articles, products,
+      knowledge-base entries, and shared pages.
+    </p>
+    <pre><code>&lt;meta name="webtalk-page-id" content="{{A stable, unique ID for this page}}" /&gt;
 &lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-site-id="your-site"
 &gt;&lt;/script&gt;</code></pre>
     <p>
-      這會載入 <code>webtalk-chat.js</code>：只有聊天室與必要的暱稱／頭像初始化，不含 AI 按鈕、AI 請求或 extension
-      設定頁入口。
+      This loads <code>webtalk-chat.js</code>: chat plus the required nickname/avatar initialization only. It has no AI
+      button, AI request, or extension settings entry point.
     </p>
 
-    <h2>需要 AI 時：混合版</h2>
-    <pre><code>&lt;meta name="webtalk-page-id" content="{{此頁穩定且唯一的 ID}}" /&gt;
+    <h2>When you need AI: hybrid bundle</h2>
+    <pre><code>&lt;meta name="webtalk-page-id" content="{{A stable, unique ID for this page}}" /&gt;
 &lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk.js"
@@ -188,151 +191,154 @@
   data-webtalk-ai-endpoint="__WEBTALK_DOMAIN__/api/webtalk/ai"
 &gt;&lt;/script&gt;</code></pre>
     <p>
-      <code>webtalk.js</code> 會多出 AI 摘要、頁面對話與聊天室 <code>@ai</code> 功能。使用前請先完成 Vercel AI proxy
-      的環境變數與來源 allowlist 設定。
+      <code>webtalk.js</code> also enables AI summaries, page conversations, and <code>@ai</code> in chat. Configure the
+      Vercel AI proxy environment variables and origin allowlist first.
     </p>
 
-    <h2>手機與版面</h2>
+    <h2>Mobile layout</h2>
     <div class="card">
       <p>
-        桌機為右側可調整寬度的聊天室。手機會變成<strong>半螢幕覆蓋層</strong>，不修改你的 DOM、CSS
-        或捲動行為：另一半畫面仍顯示你的網站。
+        On desktop, the chat room sits at the right and can be resized. On mobile, it becomes a
+        <strong>half-screen overlay</strong>; it does not change your DOM, CSS, or scrolling, and the other half still
+        shows your website.
       </p>
       <pre><code>&lt;script
   src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-mobile-placement="bottom"
 &gt;&lt;/script&gt;</code></pre>
       <p>
-        <code>bottom</code>（預設）讓網站顯示在上半部、聊天在下半部；設為
-        <code>top</code> 則聊天在上半部、網站顯示於下半部。
+        <code>bottom</code> (default) keeps the site on top and chat on the bottom. Set <code>top</code> to show chat on
+        top and your site below.
       </p>
     </div>
 
-    <h2>所有參數</h2>
+    <h2>All attributes</h2>
     <table>
       <thead>
         <tr>
-          <th>參數</th>
-          <th>可用值</th>
-          <th>用途</th>
+          <th>Attribute</th>
+          <th>Values</th>
+          <th>Purpose</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><code>data-webtalk-scope</code></td>
-          <td><code>meta</code>、<code>origin</code>、<code>path</code></td>
-          <td>房間策略；預設 <code>meta</code>，最安全。</td>
+          <td><code>meta</code>, <code>origin</code>, <code>path</code></td>
+          <td>Room strategy. <code>meta</code> is the default and safest option.</td>
         </tr>
         <tr>
           <td><code>data-webtalk-page-id</code></td>
-          <td>穩定頁面 ID</td>
-          <td>覆寫 <code>webtalk-page-id</code> meta，通常建議使用 meta。</td>
+          <td>Stable page ID</td>
+          <td>Overrides the <code>webtalk-page-id</code> meta tag; the meta tag is usually preferred.</td>
         </tr>
         <tr>
           <td><code>data-webtalk-site-id</code></td>
-          <td>穩定字串</td>
-          <td>網站 namespace；網址遷移後仍可維持房間識別。</td>
+          <td>Stable string</td>
+          <td>Site namespace; preserves room identification after a URL migration.</td>
         </tr>
         <tr>
           <td><code>data-webtalk-room-id</code></td>
-          <td>任意穩定字串</td>
-          <td>完全指定房間，優先權最高。</td>
+          <td>Any stable string</td>
+          <td>Specifies the room completely and has highest priority.</td>
         </tr>
         <tr>
           <td><code>data-webtalk-meta-name</code></td>
-          <td>meta 名稱</td>
-          <td>改用自訂的 page ID meta 名稱。</td>
+          <td>Meta name</td>
+          <td>Uses a custom meta tag name for the page ID.</td>
         </tr>
         <tr>
           <td><code>data-webtalk-auto-mount</code></td>
-          <td><code>true</code>、<code>false</code></td>
-          <td>是否載入後立即掛載；可用於登入後才啟用。</td>
+          <td><code>true</code>, <code>false</code></td>
+          <td>Mount immediately after loading, or wait until (for example) sign-in completes.</td>
         </tr>
         <tr>
           <td><code>data-webtalk-virtual-room</code></td>
-          <td><code>true</code>、<code>false</code></td>
-          <td>是否加入跨站 presence；預設關閉。</td>
+          <td><code>true</code>, <code>false</code></td>
+          <td>Join cross-site presence; disabled by default.</td>
         </tr>
         <tr>
           <td><code>data-webtalk-mobile-placement</code></td>
-          <td><code>bottom</code>、<code>top</code></td>
-          <td>手機半螢幕覆蓋位置；預設 <code>bottom</code>。</td>
+          <td><code>bottom</code>, <code>top</code></td>
+          <td>Mobile half-screen overlay location; default <code>bottom</code>.</td>
         </tr>
         <tr>
           <td><code>data-webtalk-ai-endpoint</code></td>
           <td>URL</td>
-          <td>只在混合版需要；指定 server-side AI proxy。</td>
+          <td>Required only for the hybrid bundle; points to a server-side AI proxy.</td>
         </tr>
       </tbody>
     </table>
 
-    <h2>房間策略</h2>
+    <h2>Room strategies</h2>
     <div class="card">
-      <h3>每個內容頁各自聊天（建議）</h3>
-      <p>使用預設 <code>meta</code>，並讓伺服器針對每頁輸出不同的 <code>webtalk-page-id</code>。</p>
+      <h3>One chat room per content page (recommended)</h3>
+      <p>Use the default <code>meta</code> scope and render a unique <code>webtalk-page-id</code> for each page.</p>
     </div>
     <div class="card">
-      <h3>全站共用一個聊天室</h3>
+      <h3>One shared chat room for the whole site</h3>
       <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-scope="origin"&gt;&lt;/script&gt;</code></pre>
     </div>
     <div class="card">
-      <h3>按網址路徑分房</h3>
+      <h3>One room per URL path</h3>
       <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-scope="path"&gt;&lt;/script&gt;</code></pre>
-      <p><code>/share/a</code> 與 <code>/share/a/</code> 會視為相同房間。</p>
+      <p><code>/share/a</code> and <code>/share/a/</code> are treated as the same room.</p>
     </div>
 
-    <h2>登入後才掛載</h2>
+    <h2>Mount only after sign-in</h2>
     <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-auto-mount="false"&gt;&lt;/script&gt;
 &lt;script&gt;
-  // 在你的登入流程完成後執行
+  // Run this after your sign-in flow is complete.
   window.WebTalk.mount({ scope: 'origin', mobilePlacement: 'bottom' })
 &lt;/script&gt;</code></pre>
 
-    <h2>隱私與資料流</h2>
+    <h2>Privacy and data flow</h2>
     <div class="notice">
-      <strong>P2P 聊天：</strong>聊天內容透過 WebRTC DataChannel 在使用者瀏覽器間傳輸，訊息與本機歷史不會寫入 Vercel AI
-      proxy。純聊天室版不會發出 AI 請求。
+      <strong>P2P chat:</strong> Chat content is transmitted between users' browsers over WebRTC DataChannel. Messages
+      and local history are not written to the Vercel AI proxy. The chat-only bundle makes no AI requests.
     </div>
     <div class="notice warning">
-      <strong>連線建立：</strong>WebRTC 仍需要 Artico signaling service 交換 SDP／ICE
-      連線資訊；它不是聊天室訊息儲存服務。請勿將產品描述為「所有資料完全不經過任何伺服器」。
+      <strong>Connection establishment:</strong> WebRTC still needs the Artico signaling service to exchange SDP/ICE
+      connection details. It is not a chat-message storage service. Do not describe the product as “all data never
+      passes through any server.”
     </div>
     <div class="notice warning">
-      <strong>混合版 AI：</strong>當使用者使用摘要、AI 對話或 <code>@ai</code> 時，頁面文字與提問會送往你設定的 Vercel
-      AI proxy，並由該 proxy 呼叫你的 LLM provider。請在隱私政策中揭露此流程。
+      <strong>Hybrid AI:</strong> When a user requests a summary, uses page AI, or types <code>@ai</code>, page text and
+      questions are sent to your configured Vercel AI proxy, which calls your LLM provider. Disclose this in your
+      privacy policy.
     </div>
 
-    <h2>與 Chrome extension 共存</h2>
+    <h2>Coexisting with the Chrome extension</h2>
     <p>
-      當使用者已安裝 WebTalk Chrome extension，而你的網站已掛載 WebTalk embed 時，extension 會自行偵測官方 widget
-      並停止自己的 UI 與連線。站長不需要新增額外判斷，也不需要偵測瀏覽器 extension。
+      When a visitor has the WebTalk Chrome extension installed and your site mounts a WebTalk embed, the extension
+      detects the official widget and stops its own UI and connection. Site owners do not need to add detection code or
+      check for browser extensions.
     </p>
     <p>
-      尚未安裝 extension 的使用者可前往
+      Visitors without the extension can install
       <a
         href="https://chromewebstore.google.com/detail/webtalk-333-chat-and-summ/hhhdloelamldfadfobnhdhpfmbbdppdb"
         target="_blank"
         rel="noreferrer"
         >WebTalk 333</a
-      >
-      安裝。
+      >.
     </p>
 
-    <h2>常見問題</h2>
+    <h2>FAQ</h2>
     <div class="card">
-      <strong>沒有出現聊天室？</strong><br />預設 <code>meta</code> 模式必須有
-      <code>webtalk-page-id</code>。若你要全站共用，明確改為 <code>data-webtalk-scope="origin"</code>。
+      <strong>No chat room appears?</strong><br />The default <code>meta</code> scope requires
+      <code>webtalk-page-id</code>. For one site-wide room, explicitly set <code>data-webtalk-scope="origin"</code>.
     </div>
     <div class="card">
-      <strong>網頁有 CSP？</strong><br />在你的 <code>script-src</code> allowlist 加入 Vercel 網域；混合版也需要在
-      <code>connect-src</code> 放行 AI endpoint。
+      <strong>Does the site use CSP?</strong><br />Add the Vercel domain to your <code>script-src</code> allowlist; the
+      hybrid bundle also needs its AI endpoint in <code>connect-src</code>.
     </div>
     <div class="card">
-      <strong>AI 不能用？</strong><br />確認 endpoint、<code>LLM_*</code> 環境變數與
-      <code>WEBTALK_ALLOWED_ORIGINS</code> 已設定，並使用混合版 <code>webtalk.js</code>。
+      <strong>AI does not work?</strong><br />Check the endpoint, <code>LLM_*</code> environment variables, and
+      <code>WEBTALK_ALLOWED_ORIGINS</code>; make sure you use the hybrid <code>webtalk.js</code> bundle.
     </div>
   </body>
 </html>

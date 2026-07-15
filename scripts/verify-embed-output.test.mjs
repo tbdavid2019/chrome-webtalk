@@ -7,8 +7,14 @@ test('embed build emits chat and hybrid bundles', () => {
   assert.equal(existsSync('output/webtalk/webtalk.js'), true)
 })
 
-test('embed build emits the Chinese integration guide', () => {
+test('embed build emits a bilingual integration guide', () => {
   assert.equal(existsSync('output/webtalk/index.html'), true)
+
+  const guide = readFileSync('output/webtalk/index.html', 'utf8')
+  assert.match(guide, /data-language-switch/)
+  assert.match(guide, /href="\.\/en\.html"/)
+  assert.equal(existsSync('output/webtalk/en.html'), true)
+  assert.match(readFileSync('output/webtalk/en.html', 'utf8'), /WebTalk Embed Guide/)
 })
 
 test('embed guide uses the default deployed domain when WEBTALK_DOMAIN is unset', () => {
