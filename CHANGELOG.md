@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [2.0.5] - 2026-07-15
+
+### Fixed
+
+- **Website Embed page room isolation**：聊天室訊息歷史的 IndexedDB key 改為依 WebRTC room ID 分區，避免不同 Wiki Share 頁在本機讀到彼此的歷史訊息。
+- **Safe `meta` scope**：`scope="meta"` 缺少 `webtalk-page-id` 時不再退回整站共用房間；Embed 會停止掛載並在 Console 顯示明確錯誤。需整站共用時請明確使用 `scope="origin"`。
+
 ## [2.0.4] - 2026-07-15
 
 ### Fixed

@@ -38,10 +38,13 @@ test('reads page metadata from the browser document by default', () => {
   }
 })
 
-test('falls back to the site origin when page metadata is absent', () => {
+test('rejects a meta-scoped room when page metadata is absent', () => {
   const documentWithoutMeta = { querySelector: () => null }
 
-  assert.equal(resolveRoomKey({ location, document: documentWithoutMeta }), 'origin:https://wiki.david888.com')
+  assert.throws(
+    () => resolveRoomKey({ scope: 'meta', location, document: documentWithoutMeta }),
+    /page id is required/i
+  )
 })
 
 test('supports a site-wide room explicitly', () => {

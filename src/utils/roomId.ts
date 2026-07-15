@@ -30,6 +30,13 @@ export interface RoomIdentityOptions {
 const DEFAULT_META_NAME = 'webtalk-page-id'
 const DEFAULT_SCOPE: RoomScope = 'meta'
 
+export class MissingWebTalkPageIdError extends Error {
+  constructor(metaName: string) {
+    super(`A WebTalk page id is required for scope "meta". Add meta[name="${metaName}"] or use scope "origin".`)
+    this.name = 'MissingWebTalkPageIdError'
+  }
+}
+
 const requireLocation = (location?: RoomLocationLike): RoomLocationLike => {
   if (location) return location
 
@@ -82,7 +89,11 @@ export const resolveRoomKey = (options: RoomIdentityOptions = {}): string => {
   }
 
   const pageId = resolvePageId(options)
-  return pageId ? `page:${siteId}:${pageId}` : `origin:${siteId}`
+  if (!pageId) {
+    throw new MissingWebTalkPageIdError(normalizeValue(options.metaName) || DEFAULT_META_NAME)
+  }
+
+  return `page:${siteId}:${pageId}`
 }
 
 export const resolveRoomId = (options: RoomIdentityOptions = {}): string => {

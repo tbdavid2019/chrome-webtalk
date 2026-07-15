@@ -12,7 +12,8 @@
 預設 `scope` 是 `meta`：
 
 - 有 `meta[name="webtalk-page-id"]` 時，使用 `page:<origin>:<pageId>`。
-- 沒有 page meta 時，退回 `origin:<origin>`，整個網站共用一個房間。
+- 沒有 page meta 時，Embed 不會掛載；這可避免不同內容頁意外共用同一個房間。
+- 若要整個網站共用一個房間，請明確設定 `data-webtalk-scope="origin"`。
 
 網站版預設把 AI 請求送到 `/api/webtalk/ai`，由網站後端代理到設定的 OpenAI-compatible LLM。Embed 腳本不包含 Extension 的 fallback API Key；若 Server 使用不同路徑，可透過 `data-webtalk-ai-endpoint` 或 `mount({ aiEndpoint })` 指定。
 
