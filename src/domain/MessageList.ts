@@ -1,9 +1,11 @@
 import { Remesh } from 'remesh'
 import { ListModule } from 'remesh/modules/list'
 import { IndexDBStorageExtern } from '@/domain/externs/Storage'
+import { ChatRoomExtern } from '@/domain/externs/ChatRoom'
 import StorageEffect from '@/domain/modules/StorageEffect'
 import StatusModule from './modules/Status'
 import { MESSAGE_LIST_STORAGE_KEY } from '@/constants/config'
+import { createRoomStorageKey } from '@/utils/roomStorageKey'
 import type { HLC } from '@/protocol'
 
 export enum MessageType {
@@ -64,10 +66,11 @@ export type Message = NormalMessage | PromptMessage
 const MessageListDomain = Remesh.domain({
   name: 'MessageListDomain',
   impl: (domain) => {
+    const chatRoom = domain.getExtern(ChatRoomExtern)
     const storageEffect = new StorageEffect({
       domain,
       extern: IndexDBStorageExtern,
-      key: MESSAGE_LIST_STORAGE_KEY
+      key: createRoomStorageKey(MESSAGE_LIST_STORAGE_KEY, chatRoom.roomId)
     })
 
     const MessageListModule = ListModule<Message>(domain, {

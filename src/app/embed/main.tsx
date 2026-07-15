@@ -13,7 +13,7 @@ import { VirtualRoomImpl } from '@/domain/impls/VirtualRoom'
 import NotificationDomain from '@/domain/Notification'
 import { configurePlatform } from '@/platform'
 import { createWebPlatform } from '@/platform/web'
-import { resolveRoomId, setRootNode } from '@/utils'
+import { setRootNode } from '@/utils'
 import type { RoomIdentityOptions } from '@/utils/roomId'
 
 import tailwindCss from '@/assets/styles/tailwind.css?inline'
@@ -77,8 +77,8 @@ export const mountWebTalk = (options: WebTalkEmbedOptions = {}): WebTalkControll
 
   configurePlatform(createWebPlatform({ aiEndpoint: options.aiEndpoint }))
 
-  const roomId = resolveRoomId(options)
-  const chatRoom = createChatRoomImpl({ ...options, roomId })
+  const chatRoom = createChatRoomImpl(options)
+  const roomId = chatRoom.value.roomId
   const store = Remesh.store({
     externs: [
       LocalStorageImpl,
@@ -144,5 +144,9 @@ window.WebTalk = {
 
 const script = getCurrentScript()
 if (script?.dataset.webtalkAutoMount !== 'false') {
-  mountWebTalk(readScriptOptions(script))
+  try {
+    mountWebTalk(readScriptOptions(script))
+  } catch (error) {
+    console.error('[WebTalk] Embed was not mounted.', error)
+  }
 }

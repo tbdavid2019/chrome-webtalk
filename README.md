@@ -32,6 +32,7 @@
 
 ## 🆕 近期更新
 
+- 🛠️ **Website Embed page room 隔離 (v2.0.5)**：房間 ID 的判定與 IndexedDB 訊息歷史改由核心層依 room 分區；Wiki 的每個 `webtalk-page-id` 會有獨立聊天與本機歷史。`meta` 模式缺少 page id 時不再悄悄退回整站共用房間，請明確使用 `origin` 模式才會共用。
 - 🛠️ **Website Embed 瀏覽器修正 (v2.0.4)**：修正一般網站載入 `webtalk.js` 時的 `process is not defined` runtime error，Embed 現在可正常初始化聊天室。
 - 🚀 **Website Embed 與 Vercel AI proxy (v2.0.3)**：新增可嵌入一般網站的 `webtalk.js`，支援動態 `webtalk-page-id`、`meta / origin / path` 房間策略、匿名本地頭像與 P2P 聊天；新增通用 `LLM_*` Vercel 環境變數，文字模型與 Vision 模型可使用不同 Base URL。Chrome Extension 維持原本的網域房間與直接 API 設定。
 - 👤 **Dicebear 更多風格與不同網站不同頭像選項 (v2.0.1)**：

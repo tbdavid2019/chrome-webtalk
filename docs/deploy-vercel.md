@@ -182,6 +182,8 @@ https://你的-project.vercel.app/api/webtalk/ai
 
 兩個 page ID 會進入不同聊天室。
 
+`scope="meta"` 缺少 `webtalk-page-id` 時，WebTalk 會停止掛載並在瀏覽器 Console 顯示錯誤；它不會退回成 Wiki 全站共用房間。若真的要整站共用，請使用 `data-webtalk-scope="origin"`。
+
 Wiki Edit 頁不要載入 WebTalk script，也不要加入 page meta。
 
 ## 6. CRM 登入後顯示
