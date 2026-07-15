@@ -2,8 +2,7 @@
 
 > 在任何網站上與他人匿名即時聊天！可以提供LLM 幫你了解網頁內容
 >
-> ![alt text](image.png)
-> ![alt text](image-1.png)
+> ![alt text](image.png) > ![alt text](image-1.png)
 > 這是一款去中心化、無伺服器的瀏覽器聊天擴充功能，透過 WebRTC 實現端對端加密傳輸，保護你的隱私，所有資料皆儲存在本地裝置。
 
 本版本 fork 自 [molvqingtai/WebChat](https://github.com/molvqingtai/WebChat)，並進行以下改進：
@@ -33,6 +32,7 @@
 
 ## 🆕 近期更新
 
+- 🛠️ **Website Embed 瀏覽器修正 (v2.0.4)**：修正一般網站載入 `webtalk.js` 時的 `process is not defined` runtime error，Embed 現在可正常初始化聊天室。
 - 🚀 **Website Embed 與 Vercel AI proxy (v2.0.3)**：新增可嵌入一般網站的 `webtalk.js`，支援動態 `webtalk-page-id`、`meta / origin / path` 房間策略、匿名本地頭像與 P2P 聊天；新增通用 `LLM_*` Vercel 環境變數，文字模型與 Vision 模型可使用不同 Base URL。Chrome Extension 維持原本的網域房間與直接 API 設定。
 - 👤 **Dicebear 更多風格與不同網站不同頭像選項 (v2.0.1)**：
   - **擴充 Dicebear 頭像包**：追加 `adventurer-neutral` (冒險者)、`big-smile` (笑臉)、`pixel-art` (像素風)、`notionists` (Notion 風) 四種新風格。

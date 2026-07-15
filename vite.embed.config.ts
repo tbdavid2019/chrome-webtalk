@@ -11,7 +11,8 @@ export default defineConfig({
   },
   define: {
     __DEV__: false,
-    __NAME__: JSON.stringify('webtalk-widget')
+    __NAME__: JSON.stringify('webtalk-widget'),
+    'process.env.NODE_ENV': JSON.stringify('production')
   },
   plugins: [react(), svgr({ include: '**/*.svg' })],
   build: {
