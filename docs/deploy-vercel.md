@@ -1,10 +1,11 @@
 # WebTalk Vercel 部署指南
 
-本專案部署到 Vercel 後，同一個 Project 會提供三個靜態檔與一個選用 API：
+本專案部署到 Vercel 後，同一個 Project 會提供四個靜態檔與一個選用 API：
 
 - `webtalk-chat.js`：主推的純 P2P 聊天 Embed
 - `webtalk.js`：含 AI 摘要與對話的混合 Embed
 - `index.html`：公開的繁中站長接入指南
+- `en.html`：公開的英文站長接入指南
 - `/api/webtalk/ai`：混合版使用的 server-side LLM proxy，保護 API key
 
 目前 Vercel 部署設定位於根目錄的 `vercel.json`。
@@ -47,6 +48,7 @@ Build 完成後，Vercel 會將：
 
 ```text
 output/webtalk/index.html
+output/webtalk/en.html
 output/webtalk/webtalk-chat.js
 output/webtalk/webtalk.js
 ```
@@ -57,6 +59,7 @@ output/webtalk/webtalk.js
 https://你的-project.vercel.app/webtalk.js
 https://你的-project.vercel.app/webtalk-chat.js
 https://你的-project.vercel.app/
+https://你的-project.vercel.app/en.html
 ```
 
 ## 3. Environment Variables
@@ -86,6 +89,24 @@ WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/
 | `WEBTALK_DOMAIN`          | `https://webtalk-nine.vercel.app/`          | 站長教學首頁中產生的 Embed script 網域 |
 
 Base URL 不要包含 `/chat/completions`，程式會自動補上。
+
+### `WEBTALK_DOMAIN`：Embed 對外公開網域
+
+`WEBTALK_DOMAIN` 是**本 Vercel Project 部署後提供 WebTalk 檔案的公開網址**，例如：
+
+```text
+WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/
+```
+
+它會在 `pnpm build:embed` 時寫入 `output/webtalk/index.html` 與 `output/webtalk/en.html`，使站長指南中的下列範例指向正確位置：
+
+- `https://你的-webtalk-domain/webtalk-chat.js`
+- `https://你的-webtalk-domain/webtalk.js`
+- `https://你的-webtalk-domain/api/webtalk/ai`
+
+請不要填入**合作網站／使用 Embed 的網站**網域，也不要填入 Vercel dashboard 的網址；應填 WebTalk 正式對外網址。尾端 `/` 可有可無，建置時會自動移除。未設定時會回退到 `https://webtalk-nine.vercel.app/`。
+
+在 Vercel 新增或修改此變數後，請確認套用到要部署的 Environment（通常是 Production），然後重新部署；環境變數是 build-time 值，既有的教學頁不會即時改變。
 
 例如正確：
 

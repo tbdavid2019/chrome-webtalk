@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="webtalk-page-id" content="webtalk-embed-guide-en" />
     <title>WebTalk Embed Guide</title>
     <style>
       :root {
@@ -195,6 +196,25 @@
       Vercel AI proxy environment variables and origin allowlist first.
     </p>
 
+    <h2>Deploy on Vercel: set the public domain</h2>
+    <div class="card">
+      <p>
+        In Vercel <strong>Settings → Environment Variables</strong>, add <code>WEBTALK_DOMAIN</code> with the
+        <strong>complete public URL where this WebTalk Project serves its Embed files</strong>:
+      </p>
+      <pre><code>WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/</code></pre>
+      <p>
+        At build time, the guide replaces the example URLs for <code>webtalk-chat.js</code>, <code>webtalk.js</code>,
+        and the AI endpoint with this domain. It is <strong>not</strong> the domain of the partner site embedding
+        WebTalk; use WebTalk's own deployed public domain. A trailing <code>/</code> is optional and is normalized
+        automatically.
+      </p>
+      <p>
+        If unset, the default is <code>https://webtalk-nine.vercel.app/</code>. Redeploy after changing the environment
+        variable so the code snippets are regenerated.
+      </p>
+    </div>
+
     <h2>Mobile layout</h2>
     <div class="card">
       <p>
@@ -340,5 +360,6 @@
       <strong>AI does not work?</strong><br />Check the endpoint, <code>LLM_*</code> environment variables, and
       <code>WEBTALK_ALLOWED_ORIGINS</code>; make sure you use the hybrid <code>webtalk.js</code> bundle.
     </div>
+    <script async src="__WEBTALK_DOMAIN__/webtalk-chat.js" data-webtalk-site-id="webtalk-embed-guide"></script>
   </body>
 </html>

@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="webtalk-page-id" content="webtalk-embed-guide-zh-Hant" />
     <title>WebTalk Embed｜網站接入指南</title>
     <style>
       :root {
@@ -192,6 +193,25 @@
       的環境變數與來源 allowlist 設定。
     </p>
 
+    <h2>部署到 Vercel：設定正式網域</h2>
+    <div class="card">
+      <p>
+        在 Vercel 的 <strong>Settings → Environment Variables</strong> 新增 <code>WEBTALK_DOMAIN</code>，填入<strong
+          >這個 WebTalk Project 對外提供 Embed 檔案的完整正式網址</strong
+        >：
+      </p>
+      <pre><code>WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/</code></pre>
+      <p>
+        每次 build 時，教學頁中的 <code>webtalk-chat.js</code>、<code>webtalk.js</code> 與 AI endpoint
+        範例都會自動替換成此網域。 它<strong>不是</strong>要嵌入 WebTalk 的合作網站網域；請填 WebTalk
+        自己部署後的公開網域。尾端的 <code>/</code> 可填可不填，系統會自動正規化。
+      </p>
+      <p>
+        未設定時預設使用
+        <code>https://webtalk-nine.vercel.app/</code>。變更環境變數後請重新部署，才會更新教學頁的程式碼範例。
+      </p>
+    </div>
+
     <h2>手機與版面</h2>
     <div class="card">
       <p>
@@ -334,5 +354,6 @@
       <strong>AI 不能用？</strong><br />確認 endpoint、<code>LLM_*</code> 環境變數與
       <code>WEBTALK_ALLOWED_ORIGINS</code> 已設定，並使用混合版 <code>webtalk.js</code>。
     </div>
+    <script async src="__WEBTALK_DOMAIN__/webtalk-chat.js" data-webtalk-site-id="webtalk-embed-guide"></script>
   </body>
 </html>

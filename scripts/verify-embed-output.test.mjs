@@ -13,8 +13,11 @@ test('embed build emits a bilingual integration guide', () => {
   const guide = readFileSync('output/webtalk/index.html', 'utf8')
   assert.match(guide, /data-language-switch/)
   assert.match(guide, /href="\.\/en\.html"/)
+  assert.match(guide, /data-webtalk-site-id="webtalk-embed-guide"/)
   assert.equal(existsSync('output/webtalk/en.html'), true)
-  assert.match(readFileSync('output/webtalk/en.html', 'utf8'), /WebTalk Embed Guide/)
+  const englishGuide = readFileSync('output/webtalk/en.html', 'utf8')
+  assert.match(englishGuide, /WebTalk Embed Guide/)
+  assert.match(englishGuide, /data-webtalk-site-id="webtalk-embed-guide"/)
 })
 
 test('embed guide uses the default deployed domain when WEBTALK_DOMAIN is unset', () => {

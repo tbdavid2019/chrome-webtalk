@@ -599,7 +599,7 @@ const Footer: FC<{ enableAi?: boolean }> = ({ enableAi = true }) => {
   const root = getRootNode()
 
   return (
-    <div className="relative grid gap-y-3 border-t border-border bg-background px-4 pb-4 pt-3 before:pointer-events-none before:absolute before:inset-x-4 before:-top-2 before:h-2 before:bg-gradient-to-t before:from-background before:from-30% before:to-transparent before:dark:from-background">
+    <div className="relative grid gap-y-3 border-t border-border bg-background px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 before:pointer-events-none before:absolute before:inset-x-4 before:-top-2 before:h-2 before:bg-gradient-to-t before:from-background before:from-30% before:to-transparent before:dark:from-background">
       <Presence present={autoCompleteListShow}>
         <Portal
           container={root}

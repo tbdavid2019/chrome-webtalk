@@ -1,5 +1,5 @@
 import { type FC, useState, type MouseEvent, useEffect } from 'react'
-import { SettingsIcon, MoonIcon, SunIcon, XIcon, GripVerticalIcon } from 'lucide-react'
+import { SettingsIcon, MoonIcon, SunIcon, XIcon, GripVerticalIcon, ChromeIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
@@ -20,6 +20,9 @@ import { getPlatform } from '@/platform'
 import useDraggable from '@/hooks/useDraggable'
 import { useFloatingDockOffset } from '@/hooks/useFloatingDockOffset'
 import { clamp } from '@/utils'
+
+const WEBTALK_CHROME_WEB_STORE_URL =
+  'https://chromewebstore.google.com/detail/webtalk-333-chat-and-summ/hhhdloelamldfadfobnhdhpfmbbdppdb'
 
 export interface AppButtonProps {
   className?: string
@@ -183,6 +186,23 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
       >
         {isDarkMode ? <SunIcon size={16} /> : <MoonIcon size={16} />}
       </Button>
+
+      {isEmbed && (
+        <Button
+          asChild
+          className="relative z-20 size-10 rounded-l-full rounded-r-none border-0 bg-muted p-0 text-xs text-muted-foreground shadow-sm transition-transform hover:-translate-x-0.5 hover:bg-muted/80 hover:text-foreground"
+          title="在 Chrome 安裝 WebTalk 333"
+        >
+          <a
+            href={WEBTALK_CHROME_WEB_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="在 Chrome 安裝 WebTalk 333"
+          >
+            <ChromeIcon size={17} />
+          </a>
+        </Button>
+      )}
 
       {!isEmbed && (
         <Button
