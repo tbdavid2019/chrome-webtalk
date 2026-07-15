@@ -12,12 +12,28 @@
 - 🎨 全新設計的使用者介面，提升操作體驗與可讀性
 - 🧠 新增 AI 摘要功能，一鍵生成網頁內容摘要，提高閱讀效率
 
+### 🌐 Website Embed
+
+除了 Chrome Extension，本專案也提供可嵌入一般網站的 `webtalk.js`。合作網站可以依需求選擇整個網域共用房間，或由每個 Share 頁動態提供：
+
+```html
+<meta name="webtalk-page-id" content="{{dynamic-page-id}}" />
+<script
+  src="https://your-webtalk-host.example/webtalk.js"
+  data-webtalk-scope="meta"
+  data-webtalk-ai-endpoint="https://your-webtalk-host.example/api/webtalk/ai"
+></script>
+```
+
+沒有 page meta 的頁面不應載入 Embed script，例如 Wiki edit 頁；CRM 則可以使用 `data-webtalk-auto-mount="false"`，在登入成功後呼叫 `window.WebTalk.mount()`。完整參數與 Vercel AI proxy 設定請參考 [Website Embed 說明](docs/web-embed.md)。
+
 安裝後，你將能在任何網站上開啟聊天室，再也不怕一個人上網啦！還能使用 AI 摘要功能快速了解網頁內容！
 
 ---
 
 ## 🆕 近期更新
 
+- 🚀 **Website Embed 與 Vercel AI proxy (v2.0.3)**：新增可嵌入一般網站的 `webtalk.js`，支援動態 `webtalk-page-id`、`meta / origin / path` 房間策略、匿名本地頭像與 P2P 聊天；新增通用 `LLM_*` Vercel 環境變數，文字模型與 Vision 模型可使用不同 Base URL。Chrome Extension 維持原本的網域房間與直接 API 設定。
 - 👤 **Dicebear 更多風格與不同網站不同頭像選項 (v2.0.1)**：
   - **擴充 Dicebear 頭像包**：追加 `adventurer-neutral` (冒險者)、`big-smile` (笑臉)、`pixel-art` (像素風)、`notionists` (Notion 風) 四種新風格。
   - **「不同網站不同頭像」選項**：設定頁新增開關，預設開啟。開啟後，在不同的網域中聊天的頭像會自動隨機產生且不同；關閉後則回退為全域頭像。

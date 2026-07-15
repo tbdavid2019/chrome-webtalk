@@ -3,11 +3,19 @@ import { stringToHex } from '@/utils'
 import { RoomMessage } from '@/domain/ChatRoom'
 import Peer from './Peer'
 import { BaseRoom } from './BaseRoom'
+import { resolveRoomId, type RoomIdentityOptions } from '@/utils/roomId'
 
 class ChatRoom extends BaseRoom<RoomMessage> {}
 
-const hostRoomId = stringToHex(document.location.host)
+export interface ChatRoomFactoryOptions extends RoomIdentityOptions {
+  peer?: Peer
+}
 
-const chatRoom = new ChatRoom({ roomId: hostRoomId, peer: Peer.createInstance() })
+export const createChatRoomImpl = (options: ChatRoomFactoryOptions = {}) => {
+  const roomId = options.roomId ?? resolveRoomId(options)
+  const peer = options.peer ?? Peer.createInstance()
+  return ChatRoomExtern.impl(new ChatRoom({ roomId, peer }))
+}
 
-export const ChatRoomImpl = ChatRoomExtern.impl(chatRoom)
+// Preserve the Extension's existing host-based room identity.
+export const ChatRoomImpl = createChatRoomImpl({ roomId: stringToHex(document.location.host) })

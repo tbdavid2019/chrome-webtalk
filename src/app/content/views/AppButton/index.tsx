@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import { Button } from '@/components/ui/Button'
-import { EVENT } from '@/constants/event'
 import UserInfoDomain from '@/domain/UserInfo'
 import ToastDomain from '@/domain/Toast'
 import { checkDarkMode, cn } from '@/utils'
@@ -17,7 +16,7 @@ import LogoIcon5 from '@/assets/images/logo-5.svg'
 import LogoIcon6 from '@/assets/images/logo-6.svg'
 import AppStatusDomain from '@/domain/AppStatus'
 import { getDay } from 'date-fns'
-import { messenger } from '@/messenger'
+import { getPlatform } from '@/platform'
 import useDraggable from '@/hooks/useDraggable'
 import { useFloatingDockOffset } from '@/hooks/useFloatingDockOffset'
 import { clamp } from '@/utils'
@@ -78,7 +77,7 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
   }
 
   const handleOpenOptionsPage = () => {
-    messenger.sendMessage(EVENT.OPTIONS_PAGE_OPEN, undefined)
+    getPlatform().openSettings()
   }
 
   const handleToggleApp = () => {
@@ -106,10 +105,12 @@ const AppButton: FC<AppButtonProps> = ({ className }) => {
       className={cn(
         'fixed top-1/2 right-0 z-infinity flex flex-col items-center gap-y-2 select-none transform transition-all duration-300 ease-in-out pointer-events-auto',
         'bg-background/40 backdrop-blur border border-r-0 border-border/40 shadow-lg rounded-l-2xl py-3 pl-2 pr-1.5 cursor-grab active:cursor-grabbing',
-        !hovered ? 'opacity-50 shadow-none border-transparent' : 'opacity-100 shadow-2xl bg-background/90 border-border',
+        !hovered
+          ? 'opacity-50 shadow-none border-transparent'
+          : 'opacity-100 shadow-2xl bg-background/90 border-border',
         className
       )}
-      style={{ 
+      style={{
         transform: `translateY(calc(-50% + ${y}px)) translateX(${!hovered ? '18px' : '0px'})`
       }}
     >

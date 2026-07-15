@@ -5,3 +5,8 @@ declare module '*.svg' {
 
   export default ReactComponent
 }
+
+declare module '*.css?inline' {
+  const css: string
+  export default css
+}

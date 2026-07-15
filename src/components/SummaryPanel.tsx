@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSummarize } from '@/hooks/useSummarize'
 import { marked } from 'marked'
 import html2canvas from 'html2canvas'
-import { browser } from 'wxt/browser'
+import { getPlatform } from '@/platform'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
@@ -10,7 +10,6 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { motion, AnimatePresence } from 'framer-motion'
 import { nanoid } from 'nanoid'
-import { FALLBACK_GROQ_API_KEY, FALLBACK_GROQ_BASE_URL, FALLBACK_GROQ_MODEL } from '@/constants/apiDefaults'
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY, HISTORY_LIMIT } from '@/types/summaryHistory'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import AppStatusDomain from '@/domain/AppStatus'
@@ -28,10 +27,6 @@ import ImageButton from '@/app/content/components/ImageButton'
 import PanelModeSwitch from '@/app/content/components/PanelModeSwitch'
 import MessageInput from '@/app/content/components/MessageInput'
 
-const DEFAULT_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || FALLBACK_GROQ_API_KEY
-const DEFAULT_API_BASE_URL = import.meta.env.VITE_GEMINI_API_BASE_URL || FALLBACK_GROQ_BASE_URL
-const DEFAULT_MODEL_NAME = import.meta.env.VITE_GEMINI_MODEL_NAME || FALLBACK_GROQ_MODEL
-
 type SummaryPanelProps = {
   onClose: () => void
 }
@@ -43,7 +38,6 @@ type ChatImageAttachment = {
   name: string
   dataUrl: string
 }
-
 
 const detectBrowserLang = (): Lang => {
   const lang = navigator.language
@@ -183,6 +177,10 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
 }
 
 export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
+  const aiConfig = getPlatform().ai
+  const defaultApiKey = aiConfig.apiKey || ''
+  const defaultApiBaseURL = aiConfig.endpoint
+  const defaultModelName = aiConfig.model
   const send = useRemeshSend()
   const appStatusDomain = useRemeshDomain(AppStatusDomain())
   const userInfoDomain = useRemeshDomain(UserInfoDomain())
@@ -190,9 +188,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const [language, setLanguage] = useState<Lang>(detectBrowserLang())
   const { summarize, loading, summary, clearSummary, restoreSummary } = useSummarize()
   const [pageText, setPageText] = useState('')
-  const [apiKey, setApiKey] = useState(DEFAULT_API_KEY)
-  const [apiBaseURL, setApiBaseURL] = useState(DEFAULT_API_BASE_URL)
-  const [apiModelName, setApiModelName] = useState(DEFAULT_MODEL_NAME)
+  const [apiKey, setApiKey] = useState(defaultApiKey)
+  const [apiBaseURL, setApiBaseURL] = useState(defaultApiBaseURL)
+  const [apiModelName, setApiModelName] = useState(defaultModelName)
   const [showApiSettings, setShowApiSettings] = useState(false)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
@@ -208,7 +206,8 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   })
   const historyEntryRef = useRef<SummaryHistoryEntry | null>(null)
   const text = LANG_MAP[language]
-  const hasApiKey = Boolean(apiKey.trim())
+  const aiProxyEnabled = aiConfig.mode === 'proxy'
+  const hasApiKey = aiProxyEnabled || Boolean(apiKey.trim())
   const aiTopicSuggestionsEnabled = userInfo?.aiTopicSuggestionsEnabled !== false
   const pageHost = useMemo(() => {
     try {
@@ -239,10 +238,8 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
 
   const persistHistoryEntry = async (entry: SummaryHistoryEntry) => {
     try {
-      const stored = await browser.storage.local.get(HISTORY_STORAGE_KEY)
-      const list: SummaryHistoryEntry[] = Array.isArray(stored[HISTORY_STORAGE_KEY])
-        ? stored[HISTORY_STORAGE_KEY]
-        : []
+      const stored = await getPlatform().storage.get<SummaryHistoryEntry[]>('local', HISTORY_STORAGE_KEY)
+      const list: SummaryHistoryEntry[] = Array.isArray(stored) ? stored : []
       const existIndex = list.findIndex((item) => item.id === entry.id)
       let nextList: SummaryHistoryEntry[]
       if (existIndex === -1) {
@@ -254,7 +251,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
       if (nextList.length > HISTORY_LIMIT) {
         nextList = nextList.slice(0, HISTORY_LIMIT)
       }
-      await browser.storage.local.set({ [HISTORY_STORAGE_KEY]: nextList })
+      await getPlatform().storage.set('local', HISTORY_STORAGE_KEY, nextList)
     } catch (error) {
       console.error('[WebTalk] ❌ 保存歷史記錄失敗', error)
     }
@@ -264,14 +261,14 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
     if (!entryId) return
 
     try {
-      const stored = await browser.storage.local.get(HISTORY_STORAGE_KEY)
-      const list: SummaryHistoryEntry[] = Array.isArray(stored[HISTORY_STORAGE_KEY])
-        ? stored[HISTORY_STORAGE_KEY]
-        : []
+      const stored = await getPlatform().storage.get<SummaryHistoryEntry[]>('local', HISTORY_STORAGE_KEY)
+      const list: SummaryHistoryEntry[] = Array.isArray(stored) ? stored : []
 
-      await browser.storage.local.set({
-        [HISTORY_STORAGE_KEY]: list.filter((item) => item.id !== entryId)
-      })
+      await getPlatform().storage.set(
+        'local',
+        HISTORY_STORAGE_KEY,
+        list.filter((item) => item.id !== entryId)
+      )
     } catch (error) {
       console.error('[WebTalk] ❌ 刪除歷史記錄失敗', error)
     }
@@ -290,8 +287,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   }
 
   const handleOpenHistory = () => {
-    const historyUrl = browser.runtime.getURL('/history.html')
-    window.open(historyUrl, '_blank', 'noopener,noreferrer')
+    getPlatform().openHistory()
   }
 
   const handleClear = () => {
@@ -313,36 +309,40 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
 
   // 檢查是否已經設置了 API key
   useEffect(() => {
-    browser.storage.sync
-      .get(['groqApiKey', 'groqApiBaseURL', 'groqModelName'])
-      .then((result: { groqApiKey?: string; groqApiBaseURL?: string; groqModelName?: string }) => {
-        if (typeof result.groqApiKey === 'string') {
-          setApiKey(result.groqApiKey)
+    if (aiProxyEnabled) return
+
+    Promise.all([
+      getPlatform().storage.get<string>('sync', 'groqApiKey'),
+      getPlatform().storage.get<string>('sync', 'groqApiBaseURL'),
+      getPlatform().storage.get<string>('sync', 'groqModelName')
+    ])
+      .then(([groqApiKey, groqApiBaseURL, groqModelName]) => {
+        if (typeof groqApiKey === 'string') {
+          setApiKey(groqApiKey)
         }
-        if (typeof result.groqApiBaseURL === 'string') {
-          setApiBaseURL(result.groqApiBaseURL)
+        if (typeof groqApiBaseURL === 'string') {
+          setApiBaseURL(groqApiBaseURL)
         }
-        if (typeof result.groqModelName === 'string') {
-          setApiModelName(result.groqModelName)
+        if (typeof groqModelName === 'string') {
+          setApiModelName(groqModelName)
         }
       })
       .catch((error) => {
         console.error('[WebTalk] ❌ 獲取 API key 失敗', error)
       })
-  }, [])
+  }, [aiProxyEnabled])
 
   // 保存 API 設置
   const saveApiSettings = () => {
     const trimmedApiKey = apiKey.trim()
-    const trimmedBaseURL = apiBaseURL.trim() || DEFAULT_API_BASE_URL
-    const trimmedModelName = apiModelName.trim() || DEFAULT_MODEL_NAME
+    const trimmedBaseURL = apiBaseURL.trim() || defaultApiBaseURL
+    const trimmedModelName = apiModelName.trim() || defaultModelName
 
-    browser.storage.sync
-      .set({
-        groqApiKey: trimmedApiKey,
-        groqApiBaseURL: trimmedBaseURL,
-        groqModelName: trimmedModelName
-      })
+    Promise.all([
+      getPlatform().storage.set('sync', 'groqApiKey', trimmedApiKey),
+      getPlatform().storage.set('sync', 'groqApiBaseURL', trimmedBaseURL),
+      getPlatform().storage.set('sync', 'groqModelName', trimmedModelName)
+    ])
       .then(() => {
         setApiKey(trimmedApiKey)
         setApiBaseURL(trimmedBaseURL)
@@ -366,12 +366,11 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
       console.error('[WebTalk] ❌ 直接獲取頁面內容失敗', error)
 
       // 備用方案：通過 message 獲取
-      browser.runtime
-        .sendMessage({ action: 'getPageContent' })
-        .then((response: any) => {
-          console.log('[WebTalk] ✅ 收到頁面內容 (前 100 字)', response?.content?.slice?.(0, 100))
-          if (response?.content) {
-            setPageText(response.content)
+      Promise.resolve(getPlatform().getPageContent())
+        .then((content) => {
+          console.log('[WebTalk] ✅ 收到頁面內容 (前 100 字)', content.slice(0, 100))
+          if (content) {
+            setPageText(content)
           } else {
             console.warn('[WebTalk] ❌ 沒有收到頁面內容')
             alert(text.pageFail)
@@ -387,10 +386,8 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   useEffect(() => {
     const restoreCachedEntry = async () => {
       try {
-        const stored = await browser.storage.local.get(HISTORY_STORAGE_KEY)
-        const list: SummaryHistoryEntry[] = Array.isArray(stored[HISTORY_STORAGE_KEY])
-          ? stored[HISTORY_STORAGE_KEY]
-          : []
+        const stored = await getPlatform().storage.get<SummaryHistoryEntry[]>('local', HISTORY_STORAGE_KEY)
+        const list: SummaryHistoryEntry[] = Array.isArray(stored) ? stored : []
 
         const currentUrl = pageMetaRef.current.url
         if (!currentUrl) return
@@ -671,7 +668,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
               <h3 className="text-base font-semibold text-slate-700">API setting</h3>
               <div className="space-y-2">
                 <Label htmlFor="api-key" className="text-sm text-slate-500 flex items-center justify-between">
-                  <span>Groq API Key <span className="text-red-500">*</span></span>
+                  <span>
+                    Groq API Key <span className="text-red-500">*</span>
+                  </span>
                   <a
                     href="https://console.groq.com/"
                     target="_blank"
@@ -702,7 +701,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                   onChange={(e) => setApiBaseURL(e.target.value)}
                   className="text-sm"
                 />
-                <p className="text-xs text-gray-500">預設default: {DEFAULT_API_BASE_URL}</p>
+                <p className="text-xs text-gray-500">預設default: {defaultApiBaseURL}</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="api-model-name" className="text-sm text-slate-500">
@@ -715,7 +714,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                   onChange={(e) => setApiModelName(e.target.value)}
                   className="text-sm"
                 />
-                <p className="text-xs text-gray-500">預設: {DEFAULT_MODEL_NAME}</p>
+                <p className="text-xs text-gray-500">預設: {defaultModelName}</p>
               </div>
               <div className="flex justify-end gap-2">
                 <button
@@ -739,9 +738,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
               <div className="mb-3 rounded-2xl border border-border bg-muted/30 p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-sm font-semibold text-foreground">{text.suggestedQuestions}</div>
-                  {suggestionsLoading && (
-                    <div className="text-xs text-muted-foreground">{text.suggestionsLoading}</div>
-                  )}
+                  {suggestionsLoading && <div className="text-xs text-muted-foreground">{text.suggestionsLoading}</div>}
                 </div>
                 {!!text.suggestionsDescription && (
                   <div className="mt-1 text-xs text-muted-foreground">{text.suggestionsDescription}</div>
@@ -835,13 +832,11 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                   const isUser = message.role === 'user'
                   return (
                     <div key={message.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} gap-y-1`}>
-                      <span className="text-xs text-muted-foreground px-1">
-                        {isUser ? '👤 你' : '🤖 AI'}
-                      </span>
+                      <span className="text-xs text-muted-foreground px-1">{isUser ? '👤 你' : '🤖 AI'}</span>
                       <div
                         className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-lg shadow-sm ${
-                          isUser 
-                            ? 'bg-primary text-primary-foreground rounded-tr-sm' 
+                          isUser
+                            ? 'bg-primary text-primary-foreground rounded-tr-sm'
                             : 'border border-border bg-background text-foreground rounded-tl-sm'
                         }`}
                       >

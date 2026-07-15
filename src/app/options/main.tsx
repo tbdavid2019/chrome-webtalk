@@ -7,6 +7,10 @@ import { BrowserSyncStorageImpl } from '@/domain/impls/Storage'
 import '@/assets/styles/tailwind.css'
 
 import { ToastImpl } from '@/domain/impls/Toast'
+import { configurePlatform } from '@/platform'
+import { createExtensionPlatform } from '@/platform/extension'
+
+configurePlatform(createExtensionPlatform())
 
 const store = Remesh.store({
   externs: [BrowserSyncStorageImpl, ToastImpl]

@@ -12,7 +12,7 @@ export { chunk, desert, upsert } from './array'
 export { default as generateRandomAvatar } from './generateRandomAvatar'
 export { default as getCursorPosition } from './getCursorPosition'
 export { default as getTextSimilarity } from './getTextSimilarity'
-export { default as getRootNode } from './getRootNode'
+export { default as getRootNode, setRootNode } from './getRootNode'
 export { default as blobToBase64 } from './blobToBase64'
 export * as JSONR from './jsonr'
 export { getTextByteSize } from './getTextByteSize'
@@ -24,5 +24,12 @@ export { loadAiApiConfig, requestAiCompletion } from './aiClient'
 export { detectAppLocale, getUiText, resolveAppLocale } from './uiText'
 export { compareHLC, createHLC, maxHLC, receiveHLCEvent, sendHLCEvent } from './hlc'
 export type { AppLocale, AppLocalePreference } from './uiText'
+export { resolvePageId, resolveRoomId, resolveRoomKey, WEBTALK_DEFAULT_META_NAME } from './roomId'
+export type { RoomDocumentLike, RoomIdentityOptions, RoomLocationLike, RoomScope } from './roomId'
 export type { AiApiConfig, AiChatMessage, AiCompletionResult } from './aiClient'
-export type { PageSuggestion, PageSuggestionCategory, PageSuggestionMode, RequestPageSuggestionsResult } from './requestPageSuggestions'
+export type {
+  PageSuggestion,
+  PageSuggestionCategory,
+  PageSuggestionMode,
+  RequestPageSuggestionsResult
+} from './requestPageSuggestions'
