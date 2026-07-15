@@ -70,6 +70,7 @@ LLM_MODEL=openai/gpt-oss-120b
 LLM_VISION_BASE_URL=https://api.groq.com/openai/v1
 LLM_VISION_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
 WEBTALK_ALLOWED_ORIGINS=https://wiki.david888.com,https://uat.open333crm.create360.ai
+WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/
 ```
 
 ### 變數說明
@@ -82,6 +83,7 @@ WEBTALK_ALLOWED_ORIGINS=https://wiki.david888.com,https://uat.open333crm.create3
 | `LLM_VISION_BASE_URL`     | `LLM_BASE_URL`                              | Vision 沿用一般模型 Base URL           |
 | `LLM_VISION_MODEL`        | `meta-llama/llama-4-scout-17b-16e-instruct` | 使用預設 Vision 模型                   |
 | `WEBTALK_ALLOWED_ORIGINS` | 空值（等同允許所有來源）                    | 僅適合測試，正式環境必須設定 allowlist |
+| `WEBTALK_DOMAIN`          | `https://webtalk-nine.vercel.app/`          | 站長教學首頁中產生的 Embed script 網域 |
 
 Base URL 不要包含 `/chat/completions`，程式會自動補上。
 

@@ -148,7 +148,7 @@
     <pre><code>&lt;meta name="webtalk-page-id" content="{{此頁穩定且唯一的 ID}}" /&gt;
 &lt;script
   async
-  src="https://你的-vercel-project.vercel.app/webtalk-chat.js"
+  src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-site-id="your-site"
 &gt;&lt;/script&gt;</code></pre>
     <p>
@@ -160,9 +160,9 @@
     <pre><code>&lt;meta name="webtalk-page-id" content="{{此頁穩定且唯一的 ID}}" /&gt;
 &lt;script
   async
-  src="https://你的-vercel-project.vercel.app/webtalk.js"
+  src="__WEBTALK_DOMAIN__/webtalk.js"
   data-webtalk-site-id="your-site"
-  data-webtalk-ai-endpoint="https://你的-vercel-project.vercel.app/api/webtalk/ai"
+  data-webtalk-ai-endpoint="__WEBTALK_DOMAIN__/api/webtalk/ai"
 &gt;&lt;/script&gt;</code></pre>
     <p>
       <code>webtalk.js</code> 會多出 AI 摘要、頁面對話與聊天室 <code>@ai</code> 功能。使用前請先完成 Vercel AI proxy
@@ -176,7 +176,7 @@
         或捲動行為：另一半畫面仍顯示你的網站。
       </p>
       <pre><code>&lt;script
-  src="https://你的-vercel-project.vercel.app/webtalk-chat.js"
+  src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-mobile-placement="bottom"
 &gt;&lt;/script&gt;</code></pre>
       <p>
@@ -250,18 +250,18 @@
     </div>
     <div class="card">
       <h3>全站共用一個聊天室</h3>
-      <pre><code>&lt;script src="https://你的-vercel-project.vercel.app/webtalk-chat.js"
+      <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-scope="origin"&gt;&lt;/script&gt;</code></pre>
     </div>
     <div class="card">
       <h3>按網址路徑分房</h3>
-      <pre><code>&lt;script src="https://你的-vercel-project.vercel.app/webtalk-chat.js"
+      <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-scope="path"&gt;&lt;/script&gt;</code></pre>
       <p><code>/share/a</code> 與 <code>/share/a/</code> 會視為相同房間。</p>
     </div>
 
     <h2>登入後才掛載</h2>
-    <pre><code>&lt;script src="https://你的-vercel-project.vercel.app/webtalk-chat.js"
+    <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-auto-mount="false"&gt;&lt;/script&gt;
 &lt;script&gt;
   // 在你的登入流程完成後執行
