@@ -103,6 +103,25 @@
         border-left-color: #d97706;
         background: #fffbeb;
       }
+      .language-switch {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+      }
+      .language-switch a,
+      .language-switch span {
+        padding: 5px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 999px;
+        text-decoration: none;
+      }
+      .language-switch span {
+        border-color: #2563eb;
+        color: #1d4ed8;
+        font-weight: 700;
+      }
       @media (prefers-color-scheme: dark) {
         body {
           color: #e5e7eb;
@@ -136,6 +155,10 @@
     </style>
   </head>
   <body>
+    <nav class="language-switch" aria-label="Language">
+      <span lang="zh-Hant" aria-current="page">繁體中文</span>
+      <a href="./en.html" lang="en" data-language-switch="en">English</a>
+    </nav>
     <span class="tag">WebTalk Embed</span>
     <h1>在任何網站加入 WebTalk</h1>
     <p class="lead">
@@ -286,6 +309,16 @@
     <p>
       當使用者已安裝 WebTalk Chrome extension，而你的網站已掛載 WebTalk embed 時，extension 會自行偵測官方 widget
       並停止自己的 UI 與連線。站長不需要新增額外判斷，也不需要偵測瀏覽器 extension。
+    </p>
+    <p>
+      尚未安裝 extension 的使用者可前往
+      <a
+        href="https://chromewebstore.google.com/detail/webtalk-333-chat-and-summ/hhhdloelamldfadfobnhdhpfmbbdppdb"
+        target="_blank"
+        rel="noreferrer"
+        >WebTalk 333</a
+      >
+      安裝。
     </p>
 
     <h2>常見問題</h2>

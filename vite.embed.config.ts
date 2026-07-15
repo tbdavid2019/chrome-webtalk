@@ -13,12 +13,14 @@ const webtalkDomain = resolveWebTalkDomain()
 const createEmbedGuide = (): Plugin => ({
   name: 'webtalk-embed-guide',
   generateBundle() {
-    const template = readFileSync(path.resolve('src/app/embed/public/index.html'), 'utf8')
-    this.emitFile({
-      type: 'asset',
-      fileName: 'index.html',
-      source: template.replaceAll('__WEBTALK_DOMAIN__', webtalkDomain)
-    })
+    for (const fileName of ['index.html', 'en.html']) {
+      const template = readFileSync(path.resolve(`src/app/embed/public/${fileName}`), 'utf8')
+      this.emitFile({
+        type: 'asset',
+        fileName,
+        source: template.replaceAll('__WEBTALK_DOMAIN__', webtalkDomain)
+      })
+    }
   }
 })
 
