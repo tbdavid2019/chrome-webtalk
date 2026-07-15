@@ -11,7 +11,7 @@
 ### Changed
 
 - **Embed-only UI**：網站 Embed 移除 extension 設定按鈕；純聊天版同時隱藏 AI workspace、`@ai`、AI 建議與 AI 訊息。
-- **Mobile footer visibility**：聊天室訊息區現在可在半螢幕高度內收縮並捲動，footer 的送出按鈕保留 iPhone safe area 間距；Embed 的原設定按鈕位置改為 WebTalk 333 Chrome Web Store 入口。
+- **Mobile footer visibility**：聊天室訊息區現在可在半螢幕高度內收縮並捲動；Embed 手機版的推薦議題卡也會在固定高度內獨立捲動，避免非同步載入議題後把 footer／送出按鈕推出畫面。footer 同時保留 iPhone safe area 間距；Embed 的原設定按鈕位置改為 WebTalk 333 Chrome Web Store 入口。
 - **Extension precedence**：Chrome extension 會偵測頁面上正式的 `webtalk-widget`，若網站已掛載 Embed，extension 不會掛載或會卸載自己的 UI，避免兩套 UI 與連線衝突。
 - **Embed documentation**：README、Vercel 部署與接入文件現在區分純 P2P 聊天、signaling 連線資訊與混合版 AI 資料流。
 - **Guide domain**：Vercel 建置時可用 `WEBTALK_DOMAIN` 為站長教學首頁帶入正式的 Embed／AI endpoint 網域；未設定時預設 `https://webtalk-nine.vercel.app/`，尾端 `/` 會自動正規化。
