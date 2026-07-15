@@ -5,17 +5,43 @@ interface AiRequestBody {
   route?: AiRoute
 }
 
-const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      ...headers
-    }
-  })
+interface VercelRequestLike {
+  method?: string
+  headers: Record<string, string | string[] | undefined>
+  body?: unknown
+}
 
-const getAllowedOrigin = (request: Request): string => {
-  const requestOrigin = request.headers.get('origin') || ''
+interface VercelResponseLike {
+  status: (statusCode: number) => VercelResponseLike
+  setHeader: (name: string, value: string) => void
+  end: (body?: string) => void
+}
+
+const setHeaders = (response: VercelResponseLike, headers: Record<string, string>): void => {
+  Object.entries(headers).forEach(([name, value]) => response.setHeader(name, value))
+}
+
+const json = (
+  response: VercelResponseLike,
+  body: unknown,
+  status = 200,
+  headers: Record<string, string> = {}
+): void => {
+  response.status(status)
+  setHeaders(response, {
+    'Content-Type': 'application/json; charset=utf-8',
+    ...headers
+  })
+  response.end(JSON.stringify(body))
+}
+
+const getHeader = (request: VercelRequestLike, name: string): string => {
+  const value = request.headers[name.toLowerCase()]
+  return typeof value === 'string' ? value : ''
+}
+
+const getAllowedOrigin = (request: VercelRequestLike): string => {
+  const requestOrigin = getHeader(request, 'origin')
   const configuredOrigins = (process.env.WEBTALK_ALLOWED_ORIGINS || '')
     .split(',')
     .map((origin) => origin.trim())
@@ -42,49 +68,59 @@ const isValidMessages = (messages: unknown): messages is Array<Record<string, un
   )
 }
 
-export default async function handler(request: Request): Promise<Response> {
+export default async function handler(request: VercelRequestLike, response: VercelResponseLike): Promise<void> {
   const origin = getAllowedOrigin(request)
   const headers = corsHeaders(origin)
+  setHeaders(response, headers)
 
   if (request.method === 'OPTIONS') {
-    return new Response(null, { status: origin ? 204 : 403, headers })
+    response.status(origin ? 204 : 403).end()
+    return
   }
 
   if (!origin) {
-    return json(
+    json(
+      response,
       { error: { code: 'ORIGIN_NOT_ALLOWED', message: 'This website is not allowed to use WebTalk AI.' } },
       403,
       headers
     )
+    return
   }
 
   if (request.method !== 'POST') {
-    return json({ error: { code: 'METHOD_NOT_ALLOWED', message: 'Only POST is supported.' } }, 405, headers)
+    json(response, { error: { code: 'METHOD_NOT_ALLOWED', message: 'Only POST is supported.' } }, 405, headers)
+    return
   }
 
   const apiKey = process.env.LLM_API_KEY?.trim()
   if (!apiKey) {
-    return json({ error: { code: 'AI_NOT_CONFIGURED', message: 'The AI service is not configured.' } }, 503, headers)
+    json(response, { error: { code: 'AI_NOT_CONFIGURED', message: 'The AI service is not configured.' } }, 503, headers)
+    return
   }
 
   let body: AiRequestBody
   try {
-    body = (await request.json()) as AiRequestBody
+    body = (typeof request.body === 'string' ? JSON.parse(request.body) : request.body) as AiRequestBody
   } catch {
-    return json({ error: { code: 'INVALID_JSON', message: 'Request body must be valid JSON.' } }, 400, headers)
+    json(response, { error: { code: 'INVALID_JSON', message: 'Request body must be valid JSON.' } }, 400, headers)
+    return
   }
 
   if (!isValidMessages(body.messages)) {
-    return json(
+    json(
+      response,
       { error: { code: 'INVALID_MESSAGES', message: 'A non-empty messages array is required.' } },
       422,
       headers
     )
+    return
   }
 
   const serializedMessages = JSON.stringify(body.messages)
   if (serializedMessages.length > 500_000) {
-    return json({ error: { code: 'PAYLOAD_TOO_LARGE', message: 'The AI request is too large.' } }, 413, headers)
+    json(response, { error: { code: 'PAYLOAD_TOO_LARGE', message: 'The AI request is too large.' } }, 413, headers)
+    return
   }
 
   const route: AiRoute = body.route === 'vision' ? 'vision' : 'text'
@@ -113,14 +149,18 @@ export default async function handler(request: Request): Promise<Response> {
     })
 
     const responseBody = await upstream.text()
-    return new Response(responseBody, {
-      status: upstream.status,
-      headers: {
-        ...headers,
-        'Content-Type': upstream.headers.get('content-type') || 'application/json; charset=utf-8'
-      }
+    response.status(upstream.status)
+    setHeaders(response, {
+      ...headers,
+      'Content-Type': upstream.headers.get('content-type') || 'application/json; charset=utf-8'
     })
+    response.end(responseBody)
   } catch {
-    return json({ error: { code: 'UPSTREAM_UNAVAILABLE', message: 'The AI provider is unavailable.' } }, 502, headers)
+    json(
+      response,
+      { error: { code: 'UPSTREAM_UNAVAILABLE', message: 'The AI provider is unavailable.' } },
+      502,
+      headers
+    )
   }
 }
