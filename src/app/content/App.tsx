@@ -239,7 +239,7 @@ export default function App({
             <div className="flex size-full min-h-0 flex-1 overflow-hidden">
               <Main key="chat-main" enableAi={enableAi} />
             </div>
-            <Footer enableAi={enableAi} />
+            <Footer enableAi={enableAi} isEmbed={isEmbed} />
             {notUserInfo && <Setup />}
             <Toaster
               richColors

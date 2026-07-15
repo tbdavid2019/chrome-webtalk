@@ -53,7 +53,7 @@ interface AutoCompleteUserItem {
 
 type AutoCompleteItem = AutoCompleteAiItem | AutoCompleteUserItem
 
-const Footer: FC<{ enableAi?: boolean }> = ({ enableAi = true }) => {
+const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true, isEmbed = false }) => {
   const send = useRemeshSend()
   const toastDomain = useRemeshDomain(ToastDomain())
   const chatRoomDomain = useRemeshDomain(ChatRoomDomain())
@@ -662,7 +662,12 @@ const Footer: FC<{ enableAi?: boolean }> = ({ enableAi = true }) => {
         </div>
       )}
       {aiTopicSuggestionsEnabled && !privateChatTarget && (
-        <div className="rounded-3xl border border-border bg-muted/30 px-3 py-3 shadow-sm">
+        <div
+          className={cn(
+            'rounded-3xl border border-border bg-muted/30 px-3 py-3 shadow-sm',
+            isEmbed && 'max-sm:max-h-28 max-sm:overflow-y-auto max-sm:overscroll-contain'
+          )}
+        >
           <div className="mb-1 flex items-center justify-between gap-2">
             <div className="text-sm font-semibold text-foreground">{text.chatSuggestionsTitle}</div>
             {pageSuggestionsLoading && (
