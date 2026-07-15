@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [2.0.4] - 2026-07-15
+
+### Fixed
+
+- **Website Embed browser runtime**：修正 `webtalk.js` 在一般網站執行時出現 `process is not defined`，導致聊天室無法掛載的問題。
+
 ## [2.0.3] - 2026-07-15
 
 ### Added
