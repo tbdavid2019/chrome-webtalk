@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [2.0.6] - 2026-07-15
+
+### Added
+
+- **Website Embed products**：`pnpm build:embed` 現在產生純 P2P 聊天的 `output/webtalk/webtalk-chat.js`、含 AI 的 `output/webtalk/webtalk.js`，以及可直接部署的繁中站長教學首頁 `output/webtalk/index.html`。
+- **Mobile half-screen overlay**：網站 Embed 在寬度小於 640px 時改為半螢幕覆蓋層，預設聊天室在下半部；可用 `data-webtalk-mobile-placement="top"` 改到上半部，不會改寫宿主網站的版面或捲動。
+
+### Changed
+
+- **Embed-only UI**：網站 Embed 移除 extension 設定按鈕；純聊天版同時隱藏 AI workspace、`@ai`、AI 建議與 AI 訊息。
+- **Extension precedence**：Chrome extension 會偵測頁面上正式的 `webtalk-widget`，若網站已掛載 Embed，extension 不會掛載或會卸載自己的 UI，避免兩套 UI 與連線衝突。
+- **Embed documentation**：README、Vercel 部署與接入文件現在區分純 P2P 聊天、signaling 連線資訊與混合版 AI 資料流。
+
 ## [2.0.5] - 2026-07-15
 
 ### Fixed

@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebTalk Embed｜網站接入指南</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+      body {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 24px 80px;
+        line-height: 1.65;
+        color: #1f2937;
+        background: #fafafa;
+      }
+      h1 {
+        font-size: clamp(2rem, 6vw, 3.5rem);
+        line-height: 1.05;
+        letter-spacing: -0.05em;
+        margin-bottom: 12px;
+      }
+      h2 {
+        margin-top: 52px;
+        font-size: 1.5rem;
+      }
+      h3 {
+        margin-top: 28px;
+      }
+      .lead {
+        font-size: 1.15rem;
+        color: #4b5563;
+        max-width: 720px;
+      }
+      .card,
+      pre {
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        border-radius: 14px;
+      }
+      .card {
+        padding: 22px;
+        margin: 16px 0;
+      }
+      pre {
+        padding: 18px;
+        overflow: auto;
+        line-height: 1.5;
+        background: #111827;
+        color: #e5e7eb;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      p code,
+      li code,
+      td code {
+        padding: 2px 5px;
+        border-radius: 5px;
+        background: #e5e7eb;
+        color: #111827;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.94rem;
+      }
+      th,
+      td {
+        padding: 11px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: top;
+      }
+      th {
+        color: #4b5563;
+      }
+      .tag {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+      .notice {
+        border-left: 4px solid #2563eb;
+        padding: 14px 18px;
+        background: #eff6ff;
+        border-radius: 0 10px 10px 0;
+      }
+      .warning {
+        border-left-color: #d97706;
+        background: #fffbeb;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #e5e7eb;
+          background: #111827;
+        }
+        .lead,
+        th {
+          color: #cbd5e1;
+        }
+        .card {
+          background: #1f2937;
+          border-color: #374151;
+        }
+        p code,
+        li code,
+        td code {
+          background: #374151;
+          color: #f9fafb;
+        }
+        th,
+        td {
+          border-color: #374151;
+        }
+        .notice {
+          background: #172554;
+        }
+        .warning {
+          background: #451a03;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <span class="tag">WebTalk Embed</span>
+    <h1>在任何網站加入 WebTalk</h1>
+    <p class="lead">
+      用一段 script 加入與目前頁面訪客互動的 P2P 聊天室。預設建議使用純聊天室版；需要 AI
+      摘要與頁面對話時，再選擇混合版。
+    </p>
+
+    <h2>最快接入：純 P2P 聊天</h2>
+    <p>請在每個要開放聊天的頁面輸出不同的 page ID。以下範例適合文章、商品、知識庫與 Share 頁。</p>
+    <pre><code>&lt;meta name="webtalk-page-id" content="{{此頁穩定且唯一的 ID}}" /&gt;
+&lt;script
+  async
+  src="https://你的-vercel-project.vercel.app/webtalk-chat.js"
+  data-webtalk-site-id="your-site"
+&gt;&lt;/script&gt;</code></pre>
+    <p>
+      這會載入 <code>webtalk-chat.js</code>：只有聊天室與必要的暱稱／頭像初始化，不含 AI 按鈕、AI 請求或 extension
+      設定頁入口。
+    </p>
+
+    <h2>需要 AI 時：混合版</h2>
+    <pre><code>&lt;meta name="webtalk-page-id" content="{{此頁穩定且唯一的 ID}}" /&gt;
+&lt;script
+  async
+  src="https://你的-vercel-project.vercel.app/webtalk.js"
+  data-webtalk-site-id="your-site"
+  data-webtalk-ai-endpoint="https://你的-vercel-project.vercel.app/api/webtalk/ai"
+&gt;&lt;/script&gt;</code></pre>
+    <p>
+      <code>webtalk.js</code> 會多出 AI 摘要、頁面對話與聊天室 <code>@ai</code> 功能。使用前請先完成 Vercel AI proxy
+      的環境變數與來源 allowlist 設定。
+    </p>
+
+    <h2>手機與版面</h2>
+    <div class="card">
+      <p>
+        桌機為右側可調整寬度的聊天室。手機會變成<strong>半螢幕覆蓋層</strong>，不修改你的 DOM、CSS
+        或捲動行為：另一半畫面仍顯示你的網站。
+      </p>
+      <pre><code>&lt;script
+  src="https://你的-vercel-project.vercel.app/webtalk-chat.js"
+  data-webtalk-mobile-placement="bottom"
+&gt;&lt;/script&gt;</code></pre>
+      <p>
+        <code>bottom</code>（預設）讓網站顯示在上半部、聊天在下半部；設為
+        <code>top</code> 則聊天在上半部、網站顯示於下半部。
+      </p>
+    </div>
+
+    <h2>所有參數</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>參數</th>
+          <th>可用值</th>
+          <th>用途</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>data-webtalk-scope</code></td>
+          <td><code>meta</code>、<code>origin</code>、<code>path</code></td>
+          <td>房間策略；預設 <code>meta</code>，最安全。</td>
+        </tr>
+        <tr>
+          <td><code>data-webtalk-page-id</code></td>
+          <td>穩定頁面 ID</td>
+          <td>覆寫 <code>webtalk-page-id</code> meta，通常建議使用 meta。</td>
+        </tr>
+        <tr>
+          <td><code>data-webtalk-site-id</code></td>
+          <td>穩定字串</td>
+          <td>網站 namespace；網址遷移後仍可維持房間識別。</td>
+        </tr>
+        <tr>
+          <td><code>data-webtalk-room-id</code></td>
+          <td>任意穩定字串</td>
+          <td>完全指定房間，優先權最高。</td>
+        </tr>
+        <tr>
+          <td><code>data-webtalk-meta-name</code></td>
+          <td>meta 名稱</td>
+          <td>改用自訂的 page ID meta 名稱。</td>
+        </tr>
+        <tr>
+          <td><code>data-webtalk-auto-mount</code></td>
+          <td><code>true</code>、<code>false</code></td>
+          <td>是否載入後立即掛載；可用於登入後才啟用。</td>
+        </tr>
+        <tr>
+          <td><code>data-webtalk-virtual-room</code></td>
+          <td><code>true</code>、<code>false</code></td>
+          <td>是否加入跨站 presence；預設關閉。</td>
+        </tr>
+        <tr>
+          <td><code>data-webtalk-mobile-placement</code></td>
+          <td><code>bottom</code>、<code>top</code></td>
+          <td>手機半螢幕覆蓋位置；預設 <code>bottom</code>。</td>
+        </tr>
+        <tr>
+          <td><code>data-webtalk-ai-endpoint</code></td>
+          <td>URL</td>
+          <td>只在混合版需要；指定 server-side AI proxy。</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>房間策略</h2>
+    <div class="card">
+      <h3>每個內容頁各自聊天（建議）</h3>
+      <p>使用預設 <code>meta</code>，並讓伺服器針對每頁輸出不同的 <code>webtalk-page-id</code>。</p>
+    </div>
+    <div class="card">
+      <h3>全站共用一個聊天室</h3>
+      <pre><code>&lt;script src="https://你的-vercel-project.vercel.app/webtalk-chat.js"
+  data-webtalk-scope="origin"&gt;&lt;/script&gt;</code></pre>
+    </div>
+    <div class="card">
+      <h3>按網址路徑分房</h3>
+      <pre><code>&lt;script src="https://你的-vercel-project.vercel.app/webtalk-chat.js"
+  data-webtalk-scope="path"&gt;&lt;/script&gt;</code></pre>
+      <p><code>/share/a</code> 與 <code>/share/a/</code> 會視為相同房間。</p>
+    </div>
+
+    <h2>登入後才掛載</h2>
+    <pre><code>&lt;script src="https://你的-vercel-project.vercel.app/webtalk-chat.js"
+  data-webtalk-auto-mount="false"&gt;&lt;/script&gt;
+&lt;script&gt;
+  // 在你的登入流程完成後執行
+  window.WebTalk.mount({ scope: 'origin', mobilePlacement: 'bottom' })
+&lt;/script&gt;</code></pre>
+
+    <h2>隱私與資料流</h2>
+    <div class="notice">
+      <strong>P2P 聊天：</strong>聊天內容透過 WebRTC DataChannel 在使用者瀏覽器間傳輸，訊息與本機歷史不會寫入 Vercel AI
+      proxy。純聊天室版不會發出 AI 請求。
+    </div>
+    <div class="notice warning">
+      <strong>連線建立：</strong>WebRTC 仍需要 Artico signaling service 交換 SDP／ICE
+      連線資訊；它不是聊天室訊息儲存服務。請勿將產品描述為「所有資料完全不經過任何伺服器」。
+    </div>
+    <div class="notice warning">
+      <strong>混合版 AI：</strong>當使用者使用摘要、AI 對話或 <code>@ai</code> 時，頁面文字與提問會送往你設定的 Vercel
+      AI proxy，並由該 proxy 呼叫你的 LLM provider。請在隱私政策中揭露此流程。
+    </div>
+
+    <h2>與 Chrome extension 共存</h2>
+    <p>
+      當使用者已安裝 WebTalk Chrome extension，而你的網站已掛載 WebTalk embed 時，extension 會自行偵測官方 widget
+      並停止自己的 UI 與連線。站長不需要新增額外判斷，也不需要偵測瀏覽器 extension。
+    </p>
+
+    <h2>常見問題</h2>
+    <div class="card">
+      <strong>沒有出現聊天室？</strong><br />預設 <code>meta</code> 模式必須有
+      <code>webtalk-page-id</code>。若你要全站共用，明確改為 <code>data-webtalk-scope="origin"</code>。
+    </div>
+    <div class="card">
+      <strong>網頁有 CSP？</strong><br />在你的 <code>script-src</code> allowlist 加入 Vercel 網域；混合版也需要在
+      <code>connect-src</code> 放行 AI endpoint。
+    </div>
+    <div class="card">
+      <strong>AI 不能用？</strong><br />確認 endpoint、<code>LLM_*</code> 環境變數與
+      <code>WEBTALK_ALLOWED_ORIGINS</code> 已設定，並使用混合版 <code>webtalk.js</code>。
+    </div>
+  </body>
+</html>

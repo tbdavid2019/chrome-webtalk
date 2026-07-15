@@ -1,4 +1,4 @@
-import { createAvatar } from '@dicebear/core'
+import { createAvatar, type Style } from '@dicebear/core'
 import { create as createLorelei, meta as metaLorelei, schema as schemaLorelei } from '@dicebear/lorelei'
 import { create as createLoreleiNeutral, meta as metaLoreleiNeutral, schema as schemaLoreleiNeutral } from '@dicebear/lorelei-neutral'
 import { create as createBigEarsNeutral, meta as metaBigEarsNeutral, schema as schemaBigEarsNeutral } from '@dicebear/big-ears-neutral'
@@ -7,7 +7,7 @@ import { create as createBigSmile, meta as metaBigSmile, schema as schemaBigSmil
 import { create as createPixelArt, meta as metaPixelArt, schema as schemaPixelArt } from '@dicebear/pixel-art'
 import { create as createNotionists, meta as metaNotionists, schema as schemaNotionists } from '@dicebear/notionists'
 
-const STYLES = [
+const STYLES: Style<any>[] = [
   { create: createLorelei, meta: metaLorelei, schema: schemaLorelei },
   { create: createLoreleiNeutral, meta: metaLoreleiNeutral, schema: schemaLoreleiNeutral },
   { create: createBigEarsNeutral, meta: metaBigEarsNeutral, schema: schemaBigEarsNeutral },

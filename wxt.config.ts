@@ -2,7 +2,7 @@ import path from 'node:path'
 import { defineConfig } from 'wxt'
 import react from '@vitejs/plugin-react'
 import { name, displayName, homepage, version } from './package.json'
-import svgr from 'vite-plugin-svgr'
+import { reactSvg } from './vite.react-svg'
 
 export default defineConfig({
   srcDir: path.resolve('src'),
@@ -30,8 +30,8 @@ export default defineConfig({
       },
       web_accessible_resources: [
         {
-          resources: ["history.html", "options.html", "fonts/*.woff2"],
-          matches: ["<all_urls>"]
+          resources: ['history.html', 'options.html', 'fonts/*.woff2'],
+          matches: ['<all_urls>']
         }
       ]
     }
@@ -53,11 +53,6 @@ export default defineConfig({
       __DEV__: env.mode === 'development',
       __NAME__: JSON.stringify(name)
     },
-    plugins: [
-      react(),
-      svgr({
-        include: '**/*.svg'
-      })
-    ]
+    plugins: [react(), reactSvg()]
   })
 })

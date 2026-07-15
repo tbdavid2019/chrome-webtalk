@@ -13,18 +13,18 @@
 
 ### 🌐 Website Embed
 
-除了 Chrome Extension，本專案也提供可嵌入一般網站的 `webtalk.js`。合作網站可以依需求選擇整個網域共用房間，或由每個 Share 頁動態提供：
+除了 Chrome Extension，本專案也提供可嵌入一般網站的兩個版本：主推的純 P2P 聊天版 `webtalk-chat.js`，以及含 AI 摘要／對話的混合版 `webtalk.js`。合作網站可由每個 Share 頁動態提供房間 ID：
 
 ```html
 <meta name="webtalk-page-id" content="{{dynamic-page-id}}" />
 <script
-  src="https://your-webtalk-host.example/webtalk.js"
+  src="https://your-webtalk-host.example/webtalk-chat.js"
   data-webtalk-scope="meta"
-  data-webtalk-ai-endpoint="https://your-webtalk-host.example/api/webtalk/ai"
+  data-webtalk-site-id="your-site"
 ></script>
 ```
 
-沒有 page meta 的頁面不應載入 Embed script，例如 Wiki edit 頁；CRM 則可以使用 `data-webtalk-auto-mount="false"`，在登入成功後呼叫 `window.WebTalk.mount()`。完整參數請參考 [Website Embed 說明](docs/web-embed.md)，Vercel 部署步驟請參考 [Vercel 部署指南](docs/deploy-vercel.md)。
+手機預設是下半螢幕聊天覆蓋層，可用 `data-webtalk-mobile-placement="top"` 改為上半部。沒有 page meta 的頁面不應載入 Embed script，例如 Wiki edit 頁；CRM 則可以使用 `data-webtalk-auto-mount="false"`，在登入成功後呼叫 `window.WebTalk.mount()`。完整參數與 P2P／AI 資料流請參考部署後的 [站長教學首頁](https://your-webtalk-host.example/) 或 [Website Embed 說明](docs/web-embed.md)，Vercel 部署步驟請參考 [Vercel 部署指南](docs/deploy-vercel.md)。
 
 安裝後，你將能在任何網站上開啟聊天室，再也不怕一個人上網啦！還能使用 AI 摘要功能快速了解網頁內容！
 
@@ -32,6 +32,7 @@
 
 ## 🆕 近期更新
 
+- 🚀 **Website Embed 雙版本與手機 RWD (v2.0.6)**：Embed 現在同時產生純 P2P 的 `webtalk-chat.js` 與含 AI 的 `webtalk.js`；手機以不修改宿主網站的半螢幕覆蓋方式呈現聊天室。網站 Embed 隱藏 extension 專屬設定入口；使用者若已安裝 extension，extension 偵測到官方 widget 後會主動讓位。Vercel 根目錄新增可直接給站長閱讀的繁中接入指南。
 - 🛠️ **Website Embed page room 隔離 (v2.0.5)**：房間 ID 的判定與 IndexedDB 訊息歷史改由核心層依 room 分區；Wiki 的每個 `webtalk-page-id` 會有獨立聊天與本機歷史。`meta` 模式缺少 page id 時不再悄悄退回整站共用房間，請明確使用 `origin` 模式才會共用。
 - 🛠️ **Website Embed 瀏覽器修正 (v2.0.4)**：修正一般網站載入 `webtalk.js` 時的 `process is not defined` runtime error，Embed 現在可正常初始化聊天室。
 - 🚀 **Website Embed 與 Vercel AI proxy (v2.0.3)**：新增可嵌入一般網站的 `webtalk.js`，支援動態 `webtalk-page-id`、`meta / origin / path` 房間策略、匿名本地頭像與 P2P 聊天；新增通用 `LLM_*` Vercel 環境變數，文字模型與 Vision 模型可使用不同 Base URL。Chrome Extension 維持原本的網域房間與直接 API 設定。

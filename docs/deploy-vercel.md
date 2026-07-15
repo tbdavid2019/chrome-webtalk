@@ -1,9 +1,11 @@
 # WebTalk Vercel 部署指南
 
-本專案部署到 Vercel 後，同一個 Project 會提供兩個功能：
+本專案部署到 Vercel 後，同一個 Project 會提供三個靜態檔與一個選用 API：
 
-- `webtalk.js`：合作網站嵌入的前端腳本
-- `/api/webtalk/ai`：server-side LLM proxy，保護 API key
+- `webtalk-chat.js`：主推的純 P2P 聊天 Embed
+- `webtalk.js`：含 AI 摘要與對話的混合 Embed
+- `index.html`：公開的繁中站長接入指南
+- `/api/webtalk/ai`：混合版使用的 server-side LLM proxy，保護 API key
 
 目前 Vercel 部署設定位於根目錄的 `vercel.json`。
 
@@ -44,6 +46,8 @@ Push 到 `main` 後，Vercel 會自動建立新的 Deployment。
 Build 完成後，Vercel 會將：
 
 ```text
+output/webtalk/index.html
+output/webtalk/webtalk-chat.js
 output/webtalk/webtalk.js
 ```
 
@@ -51,6 +55,8 @@ output/webtalk/webtalk.js
 
 ```text
 https://你的-project.vercel.app/webtalk.js
+https://你的-project.vercel.app/webtalk-chat.js
+https://你的-project.vercel.app/
 ```
 
 ## 3. Environment Variables
@@ -133,15 +139,17 @@ https://wiki.david888.com/share/ffrk4e
 
 ## 4. 驗證部署
 
-### 驗證 Embed JavaScript
+### 驗證 Embed JavaScript 與站長指南
 
 瀏覽：
 
 ```text
 https://你的-project.vercel.app/webtalk.js
+https://你的-project.vercel.app/webtalk-chat.js
+https://你的-project.vercel.app/
 ```
 
-如果看到壓縮後的 JavaScript 內容，代表 Embed 檔案已成功部署。
+前兩個 URL 應顯示壓縮後 JavaScript；根目錄應顯示繁中站長接入指南。
 
 ### 驗證 AI endpoint
 
@@ -161,10 +169,9 @@ https://你的-project.vercel.app/api/webtalk/ai
 <meta name="webtalk-page-id" content="{{dynamic-page-id}}" />
 
 <script
-  src="https://你的-project.vercel.app/webtalk.js"
+  src="https://你的-project.vercel.app/webtalk-chat.js"
   data-webtalk-scope="meta"
   data-webtalk-site-id="david888-wiki"
-  data-webtalk-ai-endpoint="https://你的-project.vercel.app/api/webtalk/ai"
 ></script>
 ```
 
@@ -215,16 +222,17 @@ window.WebTalk.unmount()
 
 ## 7. 可用的 Embed 參數
 
-| Script attribute            | 可用值                   | 說明                        |
-| --------------------------- | ------------------------ | --------------------------- |
-| `data-webtalk-scope`        | `meta`、`origin`、`path` | 房間分流策略，預設為 `meta` |
-| `data-webtalk-page-id`      | page ID                  | 覆寫頁面 meta，通常不使用   |
-| `data-webtalk-site-id`      | 穩定字串                 | 建立網站 namespace          |
-| `data-webtalk-room-id`      | 任意穩定字串             | 完全指定 room，優先權最高   |
-| `data-webtalk-meta-name`    | meta name                | 使用自訂 page meta 名稱     |
-| `data-webtalk-auto-mount`   | `true`、`false`          | 是否載入後自動顯示          |
-| `data-webtalk-virtual-room` | `true`、`false`          | 是否加入跨站 Virtual Room   |
-| `data-webtalk-ai-endpoint`  | URL                      | 指定 AI proxy endpoint      |
+| Script attribute                | 可用值                   | 說明                              |
+| ------------------------------- | ------------------------ | --------------------------------- |
+| `data-webtalk-scope`            | `meta`、`origin`、`path` | 房間分流策略，預設為 `meta`       |
+| `data-webtalk-page-id`          | page ID                  | 覆寫頁面 meta，通常不使用         |
+| `data-webtalk-site-id`          | 穩定字串                 | 建立網站 namespace                |
+| `data-webtalk-room-id`          | 任意穩定字串             | 完全指定 room，優先權最高         |
+| `data-webtalk-meta-name`        | meta name                | 使用自訂 page meta 名稱           |
+| `data-webtalk-auto-mount`       | `true`、`false`          | 是否載入後自動顯示                |
+| `data-webtalk-virtual-room`     | `true`、`false`          | 是否加入跨站 Virtual Room         |
+| `data-webtalk-mobile-placement` | `bottom`、`top`          | 手機半螢幕覆蓋位置，預設 `bottom` |
+| `data-webtalk-ai-endpoint`      | URL                      | 指定 AI proxy endpoint            |
 
 ## 8. 常見錯誤
 
