@@ -68,14 +68,14 @@ WEBTALK_ALLOWED_ORIGINS=https://wiki.david888.com,https://uat.open333crm.create3
 
 ### 變數說明
 
-| 變數                      | 說明                                                  |
-| ------------------------- | ----------------------------------------------------- |
-| `LLM_API_KEY`             | LLM provider 的 API key，只能放在 Vercel server-side  |
-| `LLM_BASE_URL`            | 一般文字模型的 OpenAI-compatible Base URL             |
-| `LLM_MODEL`               | 一般文字模型名稱                                      |
-| `LLM_VISION_BASE_URL`     | Vision 模型專用 Base URL；未設定時退回 `LLM_BASE_URL` |
-| `LLM_VISION_MODEL`        | Vision 模型名稱                                       |
-| `WEBTALK_ALLOWED_ORIGINS` | 允許呼叫 AI proxy 的網站 origin，使用逗號分隔         |
+| 變數                      | 預設值                                      | 未設定時行為                           |
+| ------------------------- | ------------------------------------------- | -------------------------------------- |
+| `LLM_API_KEY`             | 無                                          | 回傳 `AI_NOT_CONFIGURED`               |
+| `LLM_BASE_URL`            | `https://api.groq.com/openai/v1`            | 使用 Groq OpenAI-compatible API        |
+| `LLM_MODEL`               | `openai/gpt-oss-120b`                       | 使用預設文字模型                       |
+| `LLM_VISION_BASE_URL`     | `LLM_BASE_URL`                              | Vision 沿用一般模型 Base URL           |
+| `LLM_VISION_MODEL`        | `meta-llama/llama-4-scout-17b-16e-instruct` | 使用預設 Vision 模型                   |
+| `WEBTALK_ALLOWED_ORIGINS` | 空值（等同允許所有來源）                    | 僅適合測試，正式環境必須設定 allowlist |
 
 Base URL 不要包含 `/chat/completions`，程式會自動補上。
 
@@ -91,10 +91,36 @@ https://api.groq.com/openai/v1
 https://api.groq.com/openai/v1/chat/completions
 ```
 
-`WEBTALK_ALLOWED_ORIGINS` 只填 origin，不要填頁面路徑：
+`WEBTALK_ALLOWED_ORIGINS` 要包含 `https://`，但不要包含最後的 `/`，也不要填頁面路徑。
+
+單一網站：
+
+```text
+https://wiki.david888.com
+```
+
+不要填成：
+
+```text
+https://wiki.david888.com/
+```
+
+也不要填成：
+
+```text
+https://wiki.david888.com/share/ffrk4e
+```
+
+兩個以上網站使用逗號分隔：
 
 ```text
 https://wiki.david888.com,https://uat.open333crm.create360.ai
+```
+
+如果有 `www`、不同子網域或不同協定，必須分別列出：
+
+```text
+https://wiki.david888.com,https://www.wiki.david888.com,https://uat.open333crm.create360.ai,http://localhost:3000
 ```
 
 不要寫成：
