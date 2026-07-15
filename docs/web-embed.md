@@ -141,4 +141,29 @@ WEBTALK_ALLOWED_ORIGINS=https://wiki.david888.com
 
 `LLM_API_KEY` 只在 Vercel server-side 使用，不會進入 Embed bundle。`LLM_BASE_URL` 預設為 Groq；`LLM_VISION_BASE_URL` 若未設定，會退回使用 `LLM_BASE_URL`。兩個 Base URL 都必須提供 OpenAI-compatible `/chat/completions` API。正式環境應設定 `WEBTALK_ALLOWED_ORIGINS`，並在 Vercel 或前置服務加上 rate limit；未設定 allowlist 時，Function 會允許所有來源，適合本機測試，不適合公開正式環境。
 
+預設值：
+
+| 變數                      | 預設值                                      | 未設定時行為                 |
+| ------------------------- | ------------------------------------------- | ---------------------------- |
+| `LLM_API_KEY`             | 無                                          | 回傳 `AI_NOT_CONFIGURED`     |
+| `LLM_BASE_URL`            | `https://api.groq.com/openai/v1`            | 使用 Groq API                |
+| `LLM_MODEL`               | `openai/gpt-oss-120b`                       | 使用預設文字模型             |
+| `LLM_VISION_BASE_URL`     | `LLM_BASE_URL`                              | Vision 沿用一般模型 Base URL |
+| `LLM_VISION_MODEL`        | `meta-llama/llama-4-scout-17b-16e-instruct` | 使用預設 Vision 模型         |
+| `WEBTALK_ALLOWED_ORIGINS` | 空值                                        | 允許所有來源，僅適合測試     |
+
+`WEBTALK_ALLOWED_ORIGINS` 必須包含 `https://`，但不能包含最後的 `/` 或頁面路徑。
+
+```text
+# 正確：單一網站
+https://wiki.david888.com
+
+# 正確：多個網站，用逗號分隔
+https://wiki.david888.com,https://uat.open333crm.create360.ai
+
+# 錯誤：多了最後的斜線或加入頁面路徑
+https://wiki.david888.com/
+https://wiki.david888.com/share/ffrk4e
+```
+
 聊天本身仍使用現有 Artico WebRTC 信令與 P2P DataChannel；訊息不寫入這個 AI proxy。若日後要自建信令服務，應另設可維持 WebSocket／連線狀態的服務，不要把 AI proxy 當成聊天 relay。
