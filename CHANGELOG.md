@@ -266,7 +266,7 @@
 
 ### Added
 
-- **預埋實驗額度 Key 與防呆引導**：預置了實驗性 Groq API 金鑰 `gsk_ZXLmQTdpmUAIHGMnIfmQWGdyb3FYR4YeJg3gf7` 供直接使用。當請求失敗（如额度用盡、失效）時，系統會彈出中文/英文的醒目警示，主動引導使用者前往 Groq Console 申請自己的 API Key 並在設定中進行替換。
+- **預埋實驗額度 Key 與防呆引導**：曾預置實驗性 Groq API 金鑰供直接使用。當請求失敗（如额度用盡、失效）時，系統會彈出中文/英文的醒目警示，主動引導使用者前往 Groq Console 申請自己的 API Key 並在設定中進行替換。歷史文件不保留金鑰內容。
 
 ### Fixed
 
