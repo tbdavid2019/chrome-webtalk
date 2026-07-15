@@ -1,10 +1,4 @@
-import { browser } from 'wxt/browser'
-import {
-  FALLBACK_GROQ_API_KEY,
-  FALLBACK_GROQ_BASE_URL,
-  FALLBACK_GROQ_MODEL,
-  FALLBACK_GROQ_VISION_MODEL
-} from '@/constants/apiDefaults'
+import { getPlatform } from '@/platform'
 
 export interface AiApiConfig {
   apiKey: string
@@ -37,18 +31,28 @@ export interface AiCompletionResult {
 }
 
 export const loadAiApiConfig = async (): Promise<AiApiConfig> => {
-  const { groqApiKey, groqApiBaseURL, groqModelName, groqVisionModelName } = await browser.storage.sync.get([
-    'groqApiKey',
-    'groqApiBaseURL',
-    'groqModelName',
-    'groqVisionModelName'
+  const platformAi = getPlatform().ai
+  if (platformAi.mode === 'proxy') {
+    return {
+      apiKey: '',
+      baseURL: platformAi.endpoint,
+      model: platformAi.model,
+      visionModel: platformAi.visionModel
+    }
+  }
+
+  const [groqApiKey, groqApiBaseURL, groqModelName, groqVisionModelName] = await Promise.all([
+    getPlatform().storage.get<string>('sync', 'groqApiKey'),
+    getPlatform().storage.get<string>('sync', 'groqApiBaseURL'),
+    getPlatform().storage.get<string>('sync', 'groqModelName'),
+    getPlatform().storage.get<string>('sync', 'groqVisionModelName')
   ])
 
   return {
-    apiKey: String(groqApiKey || import.meta.env.VITE_GEMINI_API_KEY || FALLBACK_GROQ_API_KEY).trim(),
-    baseURL: String(groqApiBaseURL || import.meta.env.VITE_GEMINI_API_BASE_URL || FALLBACK_GROQ_BASE_URL).trim(),
-    model: String(groqModelName || import.meta.env.VITE_GEMINI_MODEL_NAME || FALLBACK_GROQ_MODEL).trim(),
-    visionModel: String(groqVisionModelName || FALLBACK_GROQ_VISION_MODEL).trim()
+    apiKey: String(groqApiKey || platformAi.apiKey || '').trim(),
+    baseURL: String(groqApiBaseURL || platformAi.endpoint).trim(),
+    model: String(groqModelName || platformAi.model).trim(),
+    visionModel: String(groqVisionModelName || platformAi.visionModel).trim()
   }
 }
 
@@ -61,25 +65,27 @@ export const requestAiCompletion = async (input: {
   route?: 'text' | 'vision'
 }): Promise<AiCompletionResult> => {
   const stored = await loadAiApiConfig()
+  const isProxy = getPlatform().ai.mode === 'proxy'
   const apiKey = (input.apiKey || stored.apiKey).trim()
   const baseURL = (input.baseURL || stored.baseURL).trim()
-  const preferredTextModel = (input.model || stored.model).trim() || FALLBACK_GROQ_MODEL
-  const preferredVisionModel = (input.visionModel || stored.visionModel).trim() || FALLBACK_GROQ_VISION_MODEL
+  const preferredTextModel = (input.model || stored.model).trim()
+  const preferredVisionModel = (input.visionModel || stored.visionModel).trim()
   const model = input.route === 'vision' ? preferredVisionModel : preferredTextModel
 
-  if (!apiKey) {
+  if (!isProxy && !apiKey) {
     throw new Error('API key is required')
   }
 
-  const response = await fetch(`${baseURL}/chat/completions`, {
+  const response = await fetch(isProxy ? baseURL : `${baseURL}/chat/completions`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      ...(isProxy ? {} : { Authorization: `Bearer ${apiKey}` }),
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       model,
-      messages: input.messages
+      messages: input.messages,
+      ...(isProxy && input.route ? { route: input.route } : {})
     })
   })
 
@@ -90,11 +96,11 @@ export const requestAiCompletion = async (input: {
     throw new Error(errorMessage)
   }
 
-  const content = json?.choices?.[0]?.message?.content?.trim()
+  const content = (json?.choices?.[0]?.message?.content || json?.content)?.trim()
   if (!content) {
     const apiError = json?.error?.message || 'Unknown API Error'
     throw new Error(apiError)
   }
 
-  return { content, model }
+  return { content, model: json?.model || model }
 }

@@ -21,11 +21,15 @@ import { MAX_AVATAR_SIZE } from '@/constants/config'
 
 const OVERLAY_BASE_Z_INDEX = 2147482000
 
+export interface AppProps {
+  enableVirtualRoom?: boolean
+}
+
 if (import.meta.env.FIREFOX) {
   window.requestAnimationFrame = window.requestAnimationFrame.bind(window)
 }
 
-export default function App() {
+export default function App({ enableVirtualRoom = true }: AppProps) {
   const send = useRemeshSend()
 
   const chatRoomDomain = useRemeshDomain(ChatRoomDomain())
@@ -52,12 +56,14 @@ export default function App() {
 
   const joinRoom = () => {
     send(chatRoomDomain.command.JoinRoomCommand())
-    send(virtualRoomDomain.command.JoinRoomCommand())
+    if (enableVirtualRoom) {
+      send(virtualRoomDomain.command.JoinRoomCommand())
+    }
   }
 
   const leaveRoom = () => {
     if (chatRoomJoinIsFinished) send(chatRoomDomain.command.LeaveRoomCommand())
-    if (virtualRoomJoinIsFinished) send(virtualRoomDomain.command.LeaveRoomCommand())
+    if (enableVirtualRoom && virtualRoomJoinIsFinished) send(virtualRoomDomain.command.LeaveRoomCommand())
   }
 
   // 🧠 綁定事件：接收「toggle-ai-summary-panel」來顯示／關閉面板
@@ -202,7 +208,7 @@ export default function App() {
         : 'light'
       : (userInfo?.themeMode ?? (checkDarkMode() ? 'dark' : 'light'))
   const getPanelZIndex = (panel: 'main' | 'summary') =>
-    (topPanel === panel ? OVERLAY_BASE_Z_INDEX + 1 : OVERLAY_BASE_Z_INDEX)
+    topPanel === panel ? OVERLAY_BASE_Z_INDEX + 1 : OVERLAY_BASE_Z_INDEX
 
   return (
     <div id="app" className={cn('contents', themeMode)}>

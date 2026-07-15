@@ -1,12 +1,10 @@
 import { NotificationExtern } from '@/domain/externs/Notification'
 import { TextMessage } from '@/domain/ChatRoom'
-import { EVENT } from '@/constants/event'
-import { messenger } from '@/messenger'
+import { getPlatform } from '@/platform'
 
 class Notification {
   async push(message: TextMessage) {
-    await messenger.sendMessage(EVENT.NOTIFICATION_PUSH, message)
-    return message.id
+    return getPlatform().pushNotification(message)
   }
 }
 

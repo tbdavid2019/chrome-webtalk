@@ -21,6 +21,8 @@ import NotificationDomain from '@/domain/Notification'
 import AppStatusDomain from '@/domain/AppStatus'
 import { createElement } from '@/utils'
 import { browser } from 'wxt/browser'
+import { configurePlatform } from '@/platform'
+import { createExtensionPlatform } from '@/platform/extension'
 
 // 為 window 添加自定義屬性
 declare global {
@@ -35,6 +37,8 @@ export default defineContentScript({
   matches: ['https://*/*'],
   excludeMatches: ['*://localhost/*', '*://127.0.0.1/*'],
   async main(ctx) {
+    configurePlatform(createExtensionPlatform())
+
     // 🌈 初始化 CSS 變數
     window.CSS.registerProperty({
       name: '--shimmer-angle',

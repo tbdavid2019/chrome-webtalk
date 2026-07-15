@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [2.0.3] - 2026-07-15
+
+### Added
+
+- **Website Embed**：新增 `output/webtalk/webtalk.js` 建置入口，可將 WebTalk 嵌入一般合作網站。
+- **動態 page room**：網站可透過 `meta[name="webtalk-page-id"]` 為每個 Share 頁提供不同房間 ID，並支援 `meta`、`origin`、`path` 與自訂 room 參數。
+- **Vercel AI proxy**：新增 `api/webtalk/ai.ts`，支援 `LLM_API_KEY`、一般模型與 Vision 模型的獨立 Base URL，API key 不進入 Embed bundle。
+
+### Changed
+
+- **平台抽象**：網站 Embed 使用 Shadow DOM、LocalStorage／IndexedDB；Chrome Extension 維持原有 Extension storage 與網域房間機制。
+- **Storage 相容性**：patch 版本升級至 `2.0.3` 時維持既有 storage namespace，避免升級後遺失本地設定與資料。
+
+### Fixed
+
+- 修正網站 Embed 預設無法直接讀取瀏覽器頁面 meta 的問題。
+
 ## [2.0.1] - 2026-07-11
 
 ### Added
