@@ -1,7 +1,7 @@
 {
   "name": "web-talk-333",
   "displayName": "WebTalk 333 - Chat and Summarize on any website.",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "Chat with friends on any website. Summary of the page content. WebRTC P2P.",
   "type": "module",
   "scripts": {
@@ -13,7 +13,7 @@
     "build:embed:chat": "cross-env WEBTALK_EMBED_VARIANT=chat vite build --config vite.embed.config.ts",
     "build:embed:hybrid": "cross-env WEBTALK_EMBED_VARIANT=hybrid vite build --config vite.embed.config.ts",
     "build:firefox": "wxt build -b firefox",
-    "test": "node --experimental-strip-types --test src/utils/messageRecall.test.ts src/protocol/Message.test.ts src/utils/roomId.test.ts src/utils/roomStorageKey.test.ts src/app/embed/domain.test.ts src/app/embed/options.test.ts src/app/embed/userInfo.test.ts src/domain/impls/roomTargets.test.ts src/domain/impls/pendingMessages.test.ts src/app/content/embedPresence.test.ts src/app/content/views/AppMain/panelStyle.test.ts",
+    "test": "node --experimental-strip-types --test src/utils/messageRecall.test.ts src/protocol/Message.test.ts src/utils/roomId.test.ts src/utils/roomStorageKey.test.ts src/app/embed/domain.test.ts src/app/embed/options.test.ts src/app/embed/userInfo.test.ts src/domain/impls/roomTargets.test.ts src/domain/impls/pendingMessages.test.ts src/domain/impls/roomLifecycle.test.ts src/app/content/embedPresence.test.ts src/app/content/views/AppMain/panelStyle.test.ts",
     "pack": "cross-env NODE_ENV=production run-p pack:*",
     "pack:chrome": "wxt zip -b chrome",
     "pack:firefox": "wxt zip -b firefox",
