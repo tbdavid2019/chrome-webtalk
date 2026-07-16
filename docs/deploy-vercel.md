@@ -72,7 +72,7 @@ LLM_BASE_URL=https://api.groq.com/openai/v1
 LLM_MODEL=openai/gpt-oss-120b
 LLM_VISION_BASE_URL=https://api.groq.com/openai/v1
 LLM_VISION_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
-WEBTALK_ALLOWED_ORIGINS=https://david888.com,https://blog.david888.com,https://wiki.david888.com,https://uat.open333crm.create360.ai
+# WEBTALK_ALLOWED_ORIGINS=
 WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/
 ```
 
@@ -85,7 +85,7 @@ WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/
 | `LLM_MODEL`               | `openai/gpt-oss-120b`                       | 使用預設文字模型                       |
 | `LLM_VISION_BASE_URL`     | `LLM_BASE_URL`                              | Vision 沿用一般模型 Base URL           |
 | `LLM_VISION_MODEL`        | `meta-llama/llama-4-scout-17b-16e-instruct` | 使用預設 Vision 模型                   |
-| `WEBTALK_ALLOWED_ORIGINS` | 空值（等同允許所有來源）                    | 僅適合測試，正式環境必須設定 allowlist |
+| `WEBTALK_ALLOWED_ORIGINS` | 空值（等同允許所有來源）                    | 未設定時全開；填入逗號分隔 origin 後改為限制清單 |
 | `WEBTALK_DOMAIN`          | `https://webtalk-nine.vercel.app/`          | 站長教學首頁中產生的 Embed script 網域 |
 
 Base URL 不要包含 `/chat/completions`，程式會自動補上。
@@ -290,6 +290,6 @@ data-webtalk-ai-endpoint="https://你的-project.vercel.app/api/webtalk/ai"
 
 - 不要把 `LLM_API_KEY` 寫進 HTML 或 `webtalk.js`。
 - 不要把 API key 放在 GitHub。
-- 正式環境必須設定 `WEBTALK_ALLOWED_ORIGINS`。
-- 建議在 Vercel 或前置服務加入 rate limit。
+- 未設定 `WEBTALK_ALLOWED_ORIGINS` 時公開 endpoint 允許所有來源；未來可填入逗號分隔 origin 以恢復限制。
+- 公開使用時務必在 Vercel 或前置服務加入 rate limit、配額或驗證。
 - 這個 AI proxy 不保存聊天室 history；聊天本身仍使用現有 WebRTC／P2P 機制。
