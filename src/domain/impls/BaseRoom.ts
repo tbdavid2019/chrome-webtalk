@@ -3,6 +3,7 @@ import EventHub from '@resreq/event-hub'
 import { JSONR } from '@/utils'
 import Peer from './Peer'
 import { PendingRoomMessages } from './pendingMessages'
+import { leaveAttachedRoom } from './roomLifecycle'
 import { resolveRoomSendTargets } from './roomTargets'
 
 export interface RoomConfig {
@@ -191,17 +192,7 @@ export class BaseRoom<M> extends EventHub {
   }
 
   leaveRoom() {
-    if (!this.room) {
-      this.once('action', () => {
-        if (!this.room) {
-          this.emit('error', new Error('Room not joined'))
-        } else {
-          this.room.leave()
-          this.detachRoom()
-        }
-      })
-    } else {
-      this.room.leave()
+    if (leaveAttachedRoom(this.room)) {
       this.detachRoom()
     }
     return this
