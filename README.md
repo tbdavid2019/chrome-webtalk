@@ -161,7 +161,7 @@ pnpm build
 
 ## 📜 授權條款
 
-本專案採用 MIT 授權，詳情請參閱 [LICENSE](https://github.com/tbdavid2019/chrome-webtalk/blob/main/LICENSE)。
+本專案採用 GNU Affero General Public License v3.0（AGPL-3.0-only），詳情請參閱 [LICENSE](https://github.com/tbdavid2019/chrome-webtalk/blob/main/LICENSE)。
 
 ---
 
@@ -219,4 +219,4 @@ Built upon amazing open-source tools:
 
 ## 📜 License
 
-MIT License – see [LICENSE](https://github.com/tbdavid2019/chrome-webtalk/blob/main/LICENSE) for details.
+GNU Affero General Public License v3.0 – see [LICENSE](https://github.com/tbdavid2019/chrome-webtalk/blob/main/LICENSE) for details.
