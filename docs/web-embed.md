@@ -140,10 +140,10 @@ LLM_BASE_URL=https://api.groq.com/openai/v1
 LLM_MODEL=openai/gpt-oss-120b
 LLM_VISION_BASE_URL=https://api.groq.com/openai/v1
 LLM_VISION_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
-WEBTALK_ALLOWED_ORIGINS=https://david888.com,https://blog.david888.com,https://wiki.david888.com
+# WEBTALK_ALLOWED_ORIGINS=
 ```
 
-`LLM_API_KEY` 只在 Vercel server-side 使用，不會進入 Embed bundle。`LLM_BASE_URL` 預設為 Groq；`LLM_VISION_BASE_URL` 若未設定，會退回使用 `LLM_BASE_URL`。兩個 Base URL 都必須提供 OpenAI-compatible `/chat/completions` API。正式環境應設定 `WEBTALK_ALLOWED_ORIGINS`，並在 Vercel 或前置服務加上 rate limit；未設定 allowlist 時，Function 會允許所有來源，適合本機測試，不適合公開正式環境。
+`LLM_API_KEY` 只在 Vercel server-side 使用，不會進入 Embed bundle。`LLM_BASE_URL` 預設為 Groq；`LLM_VISION_BASE_URL` 若未設定，會退回使用 `LLM_BASE_URL`。兩個 Base URL 都必須提供 OpenAI-compatible `/chat/completions` API。未設定 `WEBTALK_ALLOWED_ORIGINS` 時預設允許所有來源；未來若要限制，填入逗號分隔的 origin 清單即可。公開使用時仍應在 Vercel 或前置服務加上 rate limit，避免消耗過多 Groq 額度。
 
 預設值：
 
