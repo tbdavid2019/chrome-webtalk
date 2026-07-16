@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [Unreleased]
+## [2.1.0] - Unreleased
 
 ### Removed
 
@@ -11,6 +11,10 @@
 ### Changed
 
 - **Embed 傳輸層回歸 P2P**：公開訊息現在走 `DeterministicRoom.send()`，與 Extension 使用完全相同的 DataChannel 路徑。不再有兩條公開廣播路徑。
+
+### Fixed
+
+- **P2P 文字訊息 race condition**：signaling 已發現 peer、但 WebRTC DataChannel 尚未 `open` 時，公開文字訊息不再因 `room.peers` 暫時為空而被丟棄；訊息會排隊，待 peer ready 後送出。按讚／倒讚原本較晚操作所以能即時到達，文字訊息則可能在連線 ready 前遺失。
 
 ## [2.0.9] - 2026-07-16
 

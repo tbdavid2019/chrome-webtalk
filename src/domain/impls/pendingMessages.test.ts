@@ -22,3 +22,11 @@ test('drops pending messages when a peer leaves', () => {
 
   assert.deepEqual(pending.drain('peer-b'), [])
 })
+
+test('keeps a broadcast queued when no peer is ready yet', () => {
+  const pending = new PendingRoomMessages()
+  pending.enqueueBroadcast('message-before-peer-open')
+
+  assert.deepEqual(pending.drainBroadcast(), ['message-before-peer-open'])
+  assert.deepEqual(pending.drainBroadcast(), [])
+})
