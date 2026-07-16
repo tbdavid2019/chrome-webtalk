@@ -71,7 +71,7 @@ const Markdown: FC<MarkdownProps> = ({ children = '', className }) => {
         ),
         ul: ({ className, ...props }) => {
           Reflect.deleteProperty(props, 'ordered')
-          return <ul className={cn('text-base [&:not([depth="0"])]:my-0 ', className)} {...props} />
+          return <ul className={cn('text-sm [&:not([depth="0"])]:my-0 ', className)} {...props} />
         },
         input: ({ className, ...props }) => <input className={cn('my-0', className)} {...props} />,
         table: ({ className, ...props }) => (
@@ -116,13 +116,13 @@ const Markdown: FC<MarkdownProps> = ({ children = '', className }) => {
          */
         code: ({ className, ...props }) => (
           <ScrollArea className="overscroll-y-auto" scrollLock={false}>
-            <code className={cn('text-base', className)} {...props}></code>
+            <code className={cn('text-sm', className)} {...props}></code>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
         )
       }}
       remarkPlugins={[remarkGfm, remarkBreaks]}
-      className={cn(className, 'prose prose-base prose-slate break-words dark:text-slate-50')}
+      className={cn(className, 'prose prose-sm prose-slate break-words dark:text-slate-50')}
     >
       {children}
     </ReactMarkdown>
