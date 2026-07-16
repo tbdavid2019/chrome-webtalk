@@ -1,10 +1,7 @@
+import { Room } from '@rtco/client'
 import EventHub from '@resreq/event-hub'
 import { JSONR } from '@/utils'
-import { DeterministicRoom } from './DeterministicRoom'
 import Peer from './Peer'
-import { PendingRoomMessages } from './pendingMessages'
-import { leaveAttachedRoom } from './roomLifecycle'
-import { resolveRoomSendTargets } from './roomTargets'
 
 export interface RoomConfig {
   peer: Peer
@@ -17,8 +14,7 @@ export class BaseRoom<M> extends EventHub {
   readonly peer: Peer
   readonly roomId: string
   readonly peerId: string
-  protected room?: DeterministicRoom
-  private readonly pendingMessages = new PendingRoomMessages()
+  protected room?: Room
 
   constructor(config: RoomConfig) {
     super()
@@ -34,43 +30,16 @@ export class BaseRoom<M> extends EventHub {
     this.onError = this.onError.bind(this)
   }
 
-  private readonly handlePeerJoin = (peerId: string): void => {
-    this.pendingMessages.drainBroadcast().forEach((serializedMessage) => {
-      this.sendSerializedMessage(serializedMessage, peerId)
-    })
-    this.pendingMessages.drain(peerId).forEach((serializedMessage) => {
-      this.sendSerializedMessage(serializedMessage, peerId)
-    })
-  }
-
-  private readonly handlePeerLeave = (peerId: string): void => {
-    this.pendingMessages.remove(peerId)
-  }
-
-  private attachRoom(room: DeterministicRoom): void {
-    this.room = room
-    room.on('join', this.handlePeerJoin)
-    room.on('leave', this.handlePeerLeave)
-  }
-
-  private detachRoom(): void {
-    if (this.room) {
-      this.room.off('join', this.handlePeerJoin)
-      this.room.off('leave', this.handlePeerLeave)
-    }
-    this.pendingMessages.clear()
-    this.room = undefined
-  }
-
   private sendSerializedMessage(serializedMessage: string, id?: string | string[], retryCount = 0) {
     if (!this.room) {
       this.emit('error', new Error('Connection is not established yet.'))
       return
     }
 
-    const recipientIds = resolveRoomSendTargets(id, this.room.peers)
+    const recipientIds = id ? (Array.isArray(id) ? id : [id]) : []
+
     if (recipientIds.length === 0) {
-      if (id === undefined) this.pendingMessages.enqueueBroadcast(serializedMessage)
+      this.room.send(serializedMessage)
       return
     }
 
@@ -79,19 +48,16 @@ export class BaseRoom<M> extends EventHub {
         this.room?.send(serializedMessage, peerId)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
-        const isConnectionNotReady = message.includes('Connection is not established yet.')
+        const shouldRetry =
+          message.includes('Connection is not established yet.') && retryCount < BaseRoom.MAX_SEND_RETRIES
 
-        if (isConnectionNotReady) {
-          if (retryCount < BaseRoom.MAX_SEND_RETRIES) {
-            setTimeout(
-              () => {
-                this.sendSerializedMessage(serializedMessage, peerId, retryCount + 1)
-              },
-              BaseRoom.SEND_RETRY_DELAY_MS * (retryCount + 1)
-            )
-          } else {
-            this.pendingMessages.enqueue(peerId, serializedMessage)
-          }
+        if (shouldRetry) {
+          setTimeout(
+            () => {
+              this.sendSerializedMessage(serializedMessage, peerId, retryCount + 1)
+            },
+            BaseRoom.SEND_RETRY_DELAY_MS * (retryCount + 1)
+          )
           return
         }
 
@@ -103,16 +69,14 @@ export class BaseRoom<M> extends EventHub {
   joinRoom() {
     if (this.room) {
       this.emit('action')
+    } else if (this.peer.state === 'ready') {
+      this.room = this.peer.join(this.roomId)
+      this.emit('action')
     } else {
-      if (this.peer.state === 'ready') {
-        this.attachRoom(this.peer.joinDeterministicRoom(this.roomId))
+      this.peer.on('open', () => {
+        this.room = this.peer.join(this.roomId)
         this.emit('action')
-      } else {
-        this.peer.on('open', () => {
-          this.attachRoom(this.peer.joinDeterministicRoom(this.roomId))
-          this.emit('action')
-        })
-      }
+      })
     }
     return this
   }
@@ -161,11 +125,11 @@ export class BaseRoom<M> extends EventHub {
         if (!this.room) {
           this.emit('error', new Error('Room not joined'))
         } else {
-          this.room.on('message', (message: string) => callback(JSONR.parse(message) as M))
+          this.room.on('message', (message) => callback(JSONR.parse(message) as M))
         }
       })
     } else {
-      this.room.on('message', (message: string) => callback(JSONR.parse(message) as M))
+      this.room.on('message', (message) => callback(JSONR.parse(message) as M))
     }
     return this
   }
@@ -176,11 +140,11 @@ export class BaseRoom<M> extends EventHub {
         if (!this.room) {
           this.emit('error', new Error('Room not joined'))
         } else {
-          this.room.on('join', (id: string) => callback(id))
+          this.room.on('join', (id) => callback(id))
         }
       })
     } else {
-      this.room.on('join', (id: string) => callback(id))
+      this.room.on('join', (id) => callback(id))
     }
     return this
   }
@@ -191,18 +155,28 @@ export class BaseRoom<M> extends EventHub {
         if (!this.room) {
           this.emit('error', new Error('Room not joined'))
         } else {
-          this.room.on('leave', (id: string) => callback(id))
+          this.room.on('leave', (id) => callback(id))
         }
       })
     } else {
-      this.room.on('leave', (id: string) => callback(id))
+      this.room.on('leave', (id) => callback(id))
     }
     return this
   }
 
   leaveRoom() {
-    if (leaveAttachedRoom(this.room)) {
-      this.detachRoom()
+    if (!this.room) {
+      this.once('action', () => {
+        if (!this.room) {
+          this.emit('error', new Error('Room not joined'))
+        } else {
+          this.room.leave()
+          this.room = undefined
+        }
+      })
+    } else {
+      this.room.leave()
+      this.room = undefined
     }
     return this
   }
