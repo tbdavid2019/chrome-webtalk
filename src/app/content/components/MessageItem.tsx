@@ -172,6 +172,12 @@ const MessageItem: FC<MessageItemProps> = (props) => {
             )}
           </div>
 
+          {!isRecalled && props.isAi && props.onForwardAi && (
+            <div className="mt-2 rounded-lg border border-amber-200/80 bg-amber-100/50 px-2.5 py-2 text-xs text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-200">
+              {text.aiLocalOnlyPrompt}
+            </div>
+          )}
+
           {!isRecalled && (
             <div
               className={cn(
