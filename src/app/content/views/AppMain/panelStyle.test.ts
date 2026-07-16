@@ -7,17 +7,31 @@ test('uses the same half-screen overlay geometry for every embed panel', () => {
   assert.deepEqual(resolveEmbedMobileOverlayStyle('bottom'), {
     top: '50dvh',
     height: '50dvh',
-    width: '100vw'
+    left: '0',
+    right: '0',
+    width: 'auto'
   })
-  assert.deepEqual(resolveEmbedMobileOverlayStyle('top'), { top: '0', height: '50dvh', width: '100vw' })
+  assert.deepEqual(resolveEmbedMobileOverlayStyle('top'), { top: '0', height: '50dvh', left: '0', right: '0', width: 'auto' })
 })
 
 test('uses the lower viewport half for default embed mobile placement', () => {
-  assert.deepEqual(resolveEmbedPanelStyle(true, 'bottom'), { top: '50dvh', height: '50dvh', width: '100vw' })
+  assert.deepEqual(resolveEmbedPanelStyle(true, 'bottom'), {
+    top: '50dvh',
+    height: '50dvh',
+    left: '0',
+    right: '0',
+    width: 'auto'
+  })
 })
 
 test('uses the upper viewport half when requested', () => {
-  assert.deepEqual(resolveEmbedPanelStyle(true, 'top'), { top: '0', height: '50dvh', width: '100vw' })
+  assert.deepEqual(resolveEmbedPanelStyle(true, 'top'), {
+    top: '0',
+    height: '50dvh',
+    left: '0',
+    right: '0',
+    width: 'auto'
+  })
 })
 
 test('leaves desktop panel dimensions to the resizable sidebar', () => {
