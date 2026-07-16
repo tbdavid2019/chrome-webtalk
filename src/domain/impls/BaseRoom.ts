@@ -5,10 +5,12 @@ import Peer from './Peer'
 import { PendingRoomMessages } from './pendingMessages'
 import { leaveAttachedRoom } from './roomLifecycle'
 import { resolveRoomSendTargets } from './roomTargets'
+import type { MessageRelay } from './WebSocketRelay'
 
 export interface RoomConfig {
   peer: Peer
   roomId: string
+  relay?: MessageRelay
 }
 
 export class BaseRoom<M> extends EventHub {
@@ -18,6 +20,7 @@ export class BaseRoom<M> extends EventHub {
   readonly roomId: string
   readonly peerId: string
   protected room?: DeterministicRoom
+  private readonly relay?: MessageRelay
   private readonly pendingMessages = new PendingRoomMessages()
 
   constructor(config: RoomConfig) {
@@ -25,6 +28,8 @@ export class BaseRoom<M> extends EventHub {
     this.peer = config.peer
     this.roomId = config.roomId
     this.peerId = config.peer.id
+    this.relay = config.relay
+    this.relay?.onError((error) => this.emit('error', error))
     this.joinRoom = this.joinRoom.bind(this)
     this.sendMessage = this.sendMessage.bind(this)
     this.onMessage = this.onMessage.bind(this)
@@ -92,6 +97,7 @@ export class BaseRoom<M> extends EventHub {
   }
 
   joinRoom() {
+    this.relay?.connect()
     if (this.room) {
       this.emit('action')
     } else {
@@ -120,7 +126,8 @@ export class BaseRoom<M> extends EventHub {
               this.emit('error', new Error('Failed to serialize message'))
               return
             }
-            this.sendSerializedMessage(serializedMessage, id)
+            if (this.relay && id === undefined) this.relay.send(serializedMessage)
+            else this.sendSerializedMessage(serializedMessage, id)
           } catch (error) {
             this.emit('error', new Error(`Failed to send message: ${error}`))
           }
@@ -138,7 +145,8 @@ export class BaseRoom<M> extends EventHub {
           this.emit('error', new Error('Failed to serialize message'))
           return this
         }
-        this.sendSerializedMessage(serializedMessage, id)
+        if (this.relay && id === undefined) this.relay.send(serializedMessage)
+        else this.sendSerializedMessage(serializedMessage, id)
       } catch (error) {
         this.emit('error', new Error(`Failed to send message: ${error}`))
       }
@@ -147,6 +155,7 @@ export class BaseRoom<M> extends EventHub {
   }
 
   onMessage(callback: (message: M) => void) {
+    this.relay?.onMessage((message) => callback(JSONR.parse(message) as M))
     if (!this.room) {
       this.once('action', () => {
         if (!this.room) {
@@ -192,6 +201,7 @@ export class BaseRoom<M> extends EventHub {
   }
 
   leaveRoom() {
+    this.relay?.close()
     if (leaveAttachedRoom(this.room)) {
       this.detachRoom()
     }
