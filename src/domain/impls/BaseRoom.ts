@@ -2,6 +2,7 @@ import { Room } from '@rtco/client'
 import EventHub from '@resreq/event-hub'
 import { JSONR } from '@/utils'
 import Peer from './Peer'
+import { PendingRoomMessages } from './pendingMessages'
 import { resolveRoomSendTargets } from './roomTargets'
 
 export interface RoomConfig {
@@ -16,6 +17,7 @@ export class BaseRoom<M> extends EventHub {
   readonly roomId: string
   readonly peerId: string
   protected room?: Room
+  private readonly pendingMessages = new PendingRoomMessages()
 
   constructor(config: RoomConfig) {
     super()
@@ -29,6 +31,31 @@ export class BaseRoom<M> extends EventHub {
     this.onLeaveRoom = this.onLeaveRoom.bind(this)
     this.leaveRoom = this.leaveRoom.bind(this)
     this.onError = this.onError.bind(this)
+  }
+
+  private readonly handlePeerJoin = (peerId: string): void => {
+    this.pendingMessages.drain(peerId).forEach((serializedMessage) => {
+      this.sendSerializedMessage(serializedMessage, peerId)
+    })
+  }
+
+  private readonly handlePeerLeave = (peerId: string): void => {
+    this.pendingMessages.remove(peerId)
+  }
+
+  private attachRoom(room: Room): void {
+    this.room = room
+    room.on('join', this.handlePeerJoin)
+    room.on('leave', this.handlePeerLeave)
+  }
+
+  private detachRoom(): void {
+    if (this.room) {
+      this.room.off('join', this.handlePeerJoin)
+      this.room.off('leave', this.handlePeerLeave)
+    }
+    this.pendingMessages.clear()
+    this.room = undefined
   }
 
   private sendSerializedMessage(serializedMessage: string, id?: string | string[], retryCount = 0) {
@@ -45,12 +72,16 @@ export class BaseRoom<M> extends EventHub {
         this.room?.send(serializedMessage, peerId)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
-        const shouldRetry = message.includes('Connection is not established yet.') && retryCount < BaseRoom.MAX_SEND_RETRIES
+        const isConnectionNotReady = message.includes('Connection is not established yet.')
 
-        if (shouldRetry) {
-          setTimeout(() => {
-            this.sendSerializedMessage(serializedMessage, peerId, retryCount + 1)
-          }, BaseRoom.SEND_RETRY_DELAY_MS * (retryCount + 1))
+        if (isConnectionNotReady) {
+          if (retryCount < BaseRoom.MAX_SEND_RETRIES) {
+            setTimeout(() => {
+              this.sendSerializedMessage(serializedMessage, peerId, retryCount + 1)
+            }, BaseRoom.SEND_RETRY_DELAY_MS * (retryCount + 1))
+          } else {
+            this.pendingMessages.enqueue(peerId, serializedMessage)
+          }
           return
         }
 
@@ -64,11 +95,11 @@ export class BaseRoom<M> extends EventHub {
       this.emit('action')
     } else {
       if (this.peer.state === 'ready') {
-        this.room = this.peer.join(this.roomId)
+        this.attachRoom(this.peer.join(this.roomId))
         this.emit('action')
       } else {
         this.peer.on('open', () => {
-          this.room = this.peer.join(this.roomId)
+          this.attachRoom(this.peer.join(this.roomId))
           this.emit('action')
         })
       }
@@ -166,12 +197,12 @@ export class BaseRoom<M> extends EventHub {
           this.emit('error', new Error('Room not joined'))
         } else {
           this.room.leave()
-          this.room = undefined
+          this.detachRoom()
         }
       })
     } else {
       this.room.leave()
-      this.room = undefined
+      this.detachRoom()
     }
     return this
   }
