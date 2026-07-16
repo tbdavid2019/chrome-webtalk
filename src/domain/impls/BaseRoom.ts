@@ -1,6 +1,6 @@
-import { Room } from '@rtco/client'
 import EventHub from '@resreq/event-hub'
 import { JSONR } from '@/utils'
+import { DeterministicRoom } from './DeterministicRoom'
 import Peer from './Peer'
 import { PendingRoomMessages } from './pendingMessages'
 import { leaveAttachedRoom } from './roomLifecycle'
@@ -17,7 +17,7 @@ export class BaseRoom<M> extends EventHub {
   readonly peer: Peer
   readonly roomId: string
   readonly peerId: string
-  protected room?: Room
+  protected room?: DeterministicRoom
   private readonly pendingMessages = new PendingRoomMessages()
 
   constructor(config: RoomConfig) {
@@ -44,7 +44,7 @@ export class BaseRoom<M> extends EventHub {
     this.pendingMessages.remove(peerId)
   }
 
-  private attachRoom(room: Room): void {
+  private attachRoom(room: DeterministicRoom): void {
     this.room = room
     room.on('join', this.handlePeerJoin)
     room.on('leave', this.handlePeerLeave)
@@ -96,11 +96,11 @@ export class BaseRoom<M> extends EventHub {
       this.emit('action')
     } else {
       if (this.peer.state === 'ready') {
-        this.attachRoom(this.peer.join(this.roomId))
+        this.attachRoom(this.peer.joinDeterministicRoom(this.roomId))
         this.emit('action')
       } else {
         this.peer.on('open', () => {
-          this.attachRoom(this.peer.join(this.roomId))
+          this.attachRoom(this.peer.joinDeterministicRoom(this.roomId))
           this.emit('action')
         })
       }
@@ -152,11 +152,11 @@ export class BaseRoom<M> extends EventHub {
         if (!this.room) {
           this.emit('error', new Error('Room not joined'))
         } else {
-          this.room.on('message', (message) => callback(JSONR.parse(message) as M))
+          this.room.on('message', (message: string) => callback(JSONR.parse(message) as M))
         }
       })
     } else {
-      this.room.on('message', (message) => callback(JSONR.parse(message) as M))
+      this.room.on('message', (message: string) => callback(JSONR.parse(message) as M))
     }
     return this
   }
@@ -167,11 +167,11 @@ export class BaseRoom<M> extends EventHub {
         if (!this.room) {
           this.emit('error', new Error('Room not joined'))
         } else {
-          this.room.on('join', (id) => callback(id))
+          this.room.on('join', (id: string) => callback(id))
         }
       })
     } else {
-      this.room.on('join', (id) => callback(id))
+      this.room.on('join', (id: string) => callback(id))
     }
     return this
   }
@@ -182,11 +182,11 @@ export class BaseRoom<M> extends EventHub {
         if (!this.room) {
           this.emit('error', new Error('Room not joined'))
         } else {
-          this.room.on('leave', (id) => callback(id))
+          this.room.on('leave', (id: string) => callback(id))
         }
       })
     } else {
-      this.room.on('leave', (id) => callback(id))
+      this.room.on('leave', (id: string) => callback(id))
     }
     return this
   }
