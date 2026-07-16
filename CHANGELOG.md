@@ -2,8 +2,11 @@
 
 ## [Unreleased]
 
+## [2.0.8] - 2026-07-16
+
 ### Fixed
 
+- **雙向即時傳輸**：替換 `@rtco/client` 會讓同一對 peer 同時建立兩條 room Call 的競態邏輯。現在固定只由 peer ID 排序較前的一端發起，雙方共用同一條 DataChannel，避免使用者同步、公開訊息、歷史同步與彈幕只成功單一方向。
 - **Embed 即時收訊與彈幕**：修正 React 初始化 cleanup 在 room 尚未建立時，延後執行離房動作的生命週期錯誤。Embed 自動建立匿名使用者後，不會再把剛加入的 WebRTC room 關掉；其他使用者收到公開訊息時會立即新增訊息並觸發彈幕，不需重新整理。
 - **Website Embed message delivery**：修正公開聊天室只依賴應用層 `UserList` 判定收件 peer 的問題。新使用者可能已完成 WebRTC 連線，但使用者同步訊息尚未更新清單；此時 A 傳送公開訊息時，目標清單可能為空，B 會收不到訊息。
 - **Connected peer broadcast**：公開文字、收回、讚與倒讚現在直接廣播到 WebRTC room 實際已連線的 peers。私聊、使用者同步與歷史同步仍維持指定 peer 傳送。
