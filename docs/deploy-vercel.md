@@ -72,7 +72,7 @@ LLM_BASE_URL=https://api.groq.com/openai/v1
 LLM_MODEL=openai/gpt-oss-120b
 LLM_VISION_BASE_URL=https://api.groq.com/openai/v1
 LLM_VISION_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
-WEBTALK_ALLOWED_ORIGINS=https://wiki.david888.com,https://uat.open333crm.create360.ai
+WEBTALK_ALLOWED_ORIGINS=https://david888.com,https://blog.david888.com,https://wiki.david888.com,https://uat.open333crm.create360.ai
 WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/
 ```
 
@@ -120,7 +120,7 @@ https://api.groq.com/openai/v1
 https://api.groq.com/openai/v1/chat/completions
 ```
 
-`WEBTALK_ALLOWED_ORIGINS` 要包含 `https://`，但不要包含最後的 `/`，也不要填頁面路徑。
+`WEBTALK_ALLOWED_ORIGINS` 要包含 `https://`，但不要包含最後的 `/`，也不要填頁面路徑。正式 WebTalk 站點 `david888.com`、`blog.david888.com` 與 `wiki.david888.com` 已由 API 內建允許；其他合作站點仍要在這個變數以逗號追加。
 
 單一網站：
 
