@@ -27,6 +27,7 @@ const Main: FC<{ enableAi?: boolean }> = ({ enableAi = true }) => {
   const privateChatTarget = useRemeshQuery(chatRoomDomain.query.PrivateChatTargetQuery())
   const bannedUserIds = userInfo?.bannedUserIds ?? []
   const hideAllAiMessages = userInfo?.hideAllAiMessages === true
+  const [forwardedAiMessageIds, setForwardedAiMessageIds] = useState<Set<string>>(() => new Set())
 
   const messageList = useMemo(() => {
     return _messageList
@@ -114,6 +115,19 @@ const Main: FC<{ enableAi?: boolean }> = ({ enableAi = true }) => {
     }
   }
 
+  const handleForwardAiMessage = (message: NormalMessage) => {
+    if (!userInfo || message.senderType !== 'ai' || forwardedAiMessageIds.has(message.id)) return
+
+    send(
+      chatRoomDomain.command.SendTextMessageCommand({
+        body: `↪ AI 回應\n\n${message.body}`,
+        atUsers: [],
+        pageContext: message.pageContext
+      })
+    )
+    setForwardedAiMessageIds((current) => new Set(current).add(message.id))
+  }
+
   const handleOpenMessagePage = (message: NormalMessage) => {
     const url = message.pageContext?.url
     if (!url) return
@@ -176,11 +190,13 @@ const Main: FC<{ enableAi?: boolean }> = ({ enableAi = true }) => {
                 : undefined
             }
             onCopy={handleCopyMessage}
+            onForwardAi={message.senderType === 'ai' ? handleForwardAiMessage : undefined}
             onOpenPage={handleOpenMessagePage}
             onAvatarClick={handleAvatarClick}
             currentUserId={userInfo?.id}
             copied={copiedMessageId === message.id}
             isAi={message.senderType === 'ai'}
+            isForwardedAi={forwardedAiMessageIds.has(message.id)}
             aiOwnerUsername={message.aiMeta?.ownerUsername}
             isBanned={bannedUserIds.includes(getBanTarget(message).userId)}
             locale={userInfo?.language}

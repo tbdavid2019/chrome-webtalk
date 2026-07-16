@@ -31,7 +31,7 @@ import { AvatarImage } from '@radix-ui/react-avatar'
 import ToastDomain from '@/domain/Toast'
 import ImageButton from '../../components/ImageButton'
 import { nanoid } from 'nanoid'
-import type { AtUser } from '@/domain/MessageList'
+import MessageListDomain, { MessageType, type AtUser } from '@/domain/MessageList'
 import { requestAiChatReply } from '@/utils'
 import { ToastImpl } from '@/domain/impls/Toast'
 import PanelModeSwitch from '@/app/content/components/PanelModeSwitch'
@@ -57,6 +57,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
   const send = useRemeshSend()
   const toastDomain = useRemeshDomain(ToastDomain())
   const chatRoomDomain = useRemeshDomain(ChatRoomDomain())
+  const messageListDomain = useRemeshDomain(MessageListDomain())
   const messageInputDomain = useRemeshDomain(MessageInputDomain())
   const message = useRemeshQuery(messageInputDomain.query.MessageQuery())
   const userInfoDomain = useRemeshDomain(UserInfoDomain())
@@ -300,13 +301,21 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
             language: userInfo.language
           })
 
+          const responseTime = Date.now()
           send(
-            chatRoomDomain.command.SendTextMessageCommand({
+            messageListDomain.command.CreateItemCommand({
+              id: nanoid(),
+              type: MessageType.Normal,
               body: result.content,
-              atUsers: [],
-              senderType: 'ai',
+              userId: userInfo.id,
               username: 'AI',
               userAvatar: userInfo.avatar,
+              sendTime: responseTime,
+              receiveTime: responseTime,
+              likeUsers: [],
+              hateUsers: [],
+              atUsers: [],
+              senderType: 'ai',
               pageContext,
               aiMeta: {
                 ownerUserId: userInfo.id,
