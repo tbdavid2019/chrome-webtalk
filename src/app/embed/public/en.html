@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="webtalk-page-id" content="webtalk-embed-guide-en" />
-    <title>WebTalk Embed Guide</title>
+    <title>WebTalk 333 | Website Installation Guide</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -64,7 +64,9 @@
         margin-top: 0;
       }
       pre {
+        position: relative;
         padding: 18px;
+        padding-top: 48px;
         overflow: auto;
         line-height: 1.5;
         background: #111827;
@@ -72,6 +74,24 @@
       }
       code {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      [data-copy-code] {
+        position: absolute;
+        top: 9px;
+        right: 9px;
+        border: 1px solid #4b5563;
+        border-radius: 7px;
+        padding: 4px 9px;
+        background: #1f2937;
+        color: #e5e7eb;
+        font: inherit;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      [data-copy-code]:hover,
+      [data-copy-code]:focus-visible {
+        background: #374151;
       }
       p code,
       li code,
@@ -224,58 +244,69 @@
     <span class="tag">WebTalk Embed</span>
     <h1>Add WebTalk 333 to any website</h1>
     <p class="lead">
-      Your integration has two independent choices: <strong>P2P only or P2P + AI</strong>, and <strong>one shared Room
-      or one Room per page</strong>. That creates four combinations; choose the matching example below.
+      Your integration has two independent choices: <strong>chat only or chat + AI</strong>, and <strong>one shared chat
+      room or one chat room per page</strong>. That creates four combinations; if you are unsure, use the first example.
     </p>
 
+    <h2>Where should the code go?</h2>
+    <div class="card">
+      <p>
+        In most cases, paste the complete <strong><code>&lt;script&gt;...&lt;/script&gt;</code></strong> from an example below
+        immediately before <strong><code>&lt;/body&gt;</code></strong> on every page where chat should appear. It uses
+        <code>async</code>, so it does not block page loading.
+      </p>
+      <p>
+        For “one chat room per page”, put <code>&lt;meta name="webtalk-page-id" ...&gt;</code> inside
+        <strong><code>&lt;head&gt;</code></strong>, while the <code>&lt;script&gt;</code> still goes immediately before
+        <strong><code>&lt;/body&gt;</code></strong>.
+      </p>
+      <p>If you are unsure, paste the first example immediately before <code>&lt;/body&gt;</code>.</p>
+    </div>
+
     <h2>Choose your integration</h2>
-    <p><code>webtalk-chat.js</code> is P2P only; <code>webtalk.js</code> is P2P + AI. <code>origin</code> creates one shared Room, while the default <code>meta</code> scope creates one Room per page.</p>
+    <p><code>webtalk-chat.js</code> is chat only; <code>webtalk.js</code> is chat + AI. <code>origin</code> creates one shared chat room, while the default <code>meta</code> scope creates one chat room per page.</p>
     <div class="integration-grid">
       <div class="card">
-        <h3>P2P only + one shared Room</h3>
-        <p>For a homepage, community, or one public chat room shared by the entire site.</p>
+        <h3>Chat only + one shared chat room (recommended)</h3>
+        <p>Use this if you are unsure. It suits a homepage, community, or one public chat room for the entire site.</p>
         <pre><code>&lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-scope="origin"
-  data-webtalk-site-id="your-site"
 &gt;&lt;/script&gt;</code></pre>
       </div>
       <div class="card">
-        <h3>P2P + AI + one shared Room</h3>
+        <h3>Chat + AI + one shared chat room</h3>
         <p>One site-wide chat room with AI summaries, page conversations, and <code>@ai</code>.</p>
         <pre><code>&lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk.js"
   data-webtalk-scope="origin"
-  data-webtalk-site-id="your-site"
   data-webtalk-ai-endpoint="__WEBTALK_DOMAIN__/api/webtalk/ai"
 &gt;&lt;/script&gt;</code></pre>
       </div>
       <div class="card">
-        <h3>P2P only + one Room per page</h3>
+        <h3>Chat only + one chat room per page</h3>
         <p>For articles, products, knowledge-base entries, and shared pages. Render a distinct page ID per page.</p>
         <pre><code>&lt;meta name="webtalk-page-id" content="{{A stable, unique ID for this page}}" /&gt;
 &lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk-chat.js"
-  data-webtalk-site-id="your-site"
 &gt;&lt;/script&gt;</code></pre>
       </div>
       <div class="card">
-        <h3>P2P + AI + one Room per page</h3>
+        <h3>Chat + AI + one chat room per page</h3>
         <p>One chat room per content page with AI summaries, page conversations, and <code>@ai</code>.</p>
         <pre><code>&lt;meta name="webtalk-page-id" content="{{A stable, unique ID for this page}}" /&gt;
 &lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk.js"
-  data-webtalk-site-id="your-site"
   data-webtalk-ai-endpoint="__WEBTALK_DOMAIN__/api/webtalk/ai"
 &gt;&lt;/script&gt;</code></pre>
       </div>
     </div>
     <div class="notice">
-      <strong>AI prerequisite:</strong> Both P2P + AI choices require a working <code>data-webtalk-ai-endpoint</code>. P2P-only choices make no AI requests.
+      <strong>AI prerequisite:</strong> Both chat + AI choices require a working <code>data-webtalk-ai-endpoint</code>. Chat-only choices make no AI requests.
     </div>
 
     <h2>Mobile layout</h2>
@@ -353,16 +384,9 @@
       </tbody>
     </table>
 
-    <h2>Other room strategies</h2>
-    <div class="card">
-      <h3>One chat room per content page (recommended)</h3>
-      <p>Use the default <code>meta</code> scope and render a unique <code>webtalk-page-id</code> for each page.</p>
-    </div>
-    <div class="card">
-      <h3>One room per URL path</h3>
-      <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
-  data-webtalk-scope="path"&gt;&lt;/script&gt;</code></pre>
-      <p><code>/share/a</code> and <code>/share/a/</code> are treated as the same room.</p>
+    <div class="notice">
+      <strong>Advanced option:</strong> To create chat rooms from URL paths, use any example above and add
+      <code>data-webtalk-scope="path"</code>. For example, <code>/share/a</code> and <code>/share/a/</code> use the same chat room.
     </div>
 
     <h2>Mount only after sign-in</h2>
@@ -375,7 +399,7 @@
 
     <h2>Privacy and data flow</h2>
     <div class="notice">
-      <strong>P2P chat:</strong> Chat content is transmitted between users' browsers over WebRTC DataChannel. Messages
+      <strong>Chat messages:</strong> Chat content is transmitted between users' browsers over WebRTC DataChannel. Messages
       and local history are not written to the AI endpoint. The chat-only bundle makes no AI requests.
     </div>
     <div class="notice warning">
@@ -421,6 +445,35 @@
     <footer>
       WebTalk 333 · <a href="https://david888.com" target="_blank" rel="noreferrer">david888.com</a>
     </footer>
+    <script>
+      document.querySelectorAll('pre > code').forEach((code) => {
+        const button = document.createElement('button')
+        const defaultLabel = 'Copy'
+        button.type = 'button'
+        button.dataset.copyCode = ''
+        button.textContent = defaultLabel
+        button.setAttribute('aria-label', 'Copy code')
+        button.addEventListener('click', async () => {
+          const text = code.textContent || ''
+          try {
+            await navigator.clipboard.writeText(text)
+          } catch {
+            const selection = window.getSelection()
+            const range = document.createRange()
+            range.selectNodeContents(code)
+            selection?.removeAllRanges()
+            selection?.addRange(range)
+            document.execCommand('copy')
+            selection?.removeAllRanges()
+          }
+          button.textContent = 'Copied'
+          window.setTimeout(() => {
+            button.textContent = defaultLabel
+          }, 1600)
+        })
+        code.parentElement?.append(button)
+      })
+    </script>
     <script async src="__WEBTALK_DOMAIN__/webtalk-chat.js" data-webtalk-site-id="webtalk-embed-guide"></script>
   </body>
 </html>

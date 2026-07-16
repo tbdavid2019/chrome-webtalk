@@ -16,17 +16,20 @@ test('embed build emits a bilingual integration guide', () => {
   assert.match(guide, /data-webtalk-site-id="webtalk-embed-guide"/)
   assert.equal(existsSync('output/webtalk/en.html'), true)
   const englishGuide = readFileSync('output/webtalk/en.html', 'utf8')
-  assert.match(englishGuide, /WebTalk Embed Guide/)
+  assert.match(englishGuide, /WebTalk 333 \| Website Installation Guide/)
   assert.match(englishGuide, /data-webtalk-site-id="webtalk-embed-guide"/)
 })
 
-test('embed guide presents all four bundle and room-strategy combinations', () => {
+test('embed guide presents all four chat and room-strategy combinations', () => {
   const guide = readFileSync('output/webtalk/index.html', 'utf8')
 
-  assert.match(guide, /純 P2P ＋ 全站共用 Room/)
-  assert.match(guide, /P2P ＋ AI ＋ 全站共用 Room/)
-  assert.match(guide, /純 P2P ＋ 一頁一個 Room/)
-  assert.match(guide, /P2P ＋ AI ＋ 一頁一個 Room/)
+  assert.match(guide, /只有聊天 ＋ 全站共用聊天室（建議）/)
+  assert.match(guide, /聊天＋AI ＋ 全站共用聊天室/)
+  assert.match(guide, /只有聊天 ＋ 每頁各自聊天室/)
+  assert.match(guide, /聊天＋AI ＋ 每頁各自聊天室/)
+  assert.match(guide, /data-webtalk-scope="path"/)
+  assert.doesNotMatch(guide, /P2P/)
+  assert.doesNotMatch(guide, /your-site/)
 })
 
 test('embed guide is written for site owners installing WebTalk 333', () => {
@@ -36,6 +39,9 @@ test('embed guide is written for site owners installing WebTalk 333', () => {
   assert.match(guide, /class="site-header"/)
   assert.match(guide, /\.site-header\s*\{\s*position: fixed/)
   assert.match(guide, /href="https:\/\/david888\.com"/)
+  assert.match(guide, /data-copy-code/)
+  assert.match(guide, /&lt;\/body&gt;<\/code> 前/)
+  assert.match(guide, /&lt;head&gt;<\/code> 內/)
   assert.doesNotMatch(guide, /Vercel/)
   assert.doesNotMatch(guide, /WEBTALK_DOMAIN=/)
 })

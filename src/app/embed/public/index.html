@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="webtalk-page-id" content="webtalk-embed-guide-zh-Hant" />
-    <title>WebTalk Embed｜網站接入指南</title>
+    <title>WebTalk 333｜網站安裝指南</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -64,7 +64,9 @@
         margin-top: 0;
       }
       pre {
+        position: relative;
         padding: 18px;
+        padding-top: 48px;
         overflow: auto;
         line-height: 1.5;
         background: #111827;
@@ -72,6 +74,24 @@
       }
       code {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      [data-copy-code] {
+        position: absolute;
+        top: 9px;
+        right: 9px;
+        border: 1px solid #4b5563;
+        border-radius: 7px;
+        padding: 4px 9px;
+        background: #1f2937;
+        color: #e5e7eb;
+        font: inherit;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      [data-copy-code]:hover,
+      [data-copy-code]:focus-visible {
+        background: #374151;
       }
       p code,
       li code,
@@ -224,58 +244,67 @@
     <span class="tag">WebTalk Embed</span>
     <h1>在任何網站加入 WebTalk 333</h1>
     <p class="lead">
-      WebTalk 的接入方式由兩個獨立選項組成：選擇<strong>純 P2P 或 P2P ＋ AI</strong>，再選擇<strong>全站共用 Room 或一頁一個
-      Room</strong>。因此共有四種組合，請直接選擇最符合你網站的範例。
+      WebTalk 333 有兩個獨立選項：選擇<strong>只有聊天或聊天＋AI</strong>，再選擇<strong>全站共用聊天室或每頁各自聊天室</strong>。
+      因此共有四種組合；不知道怎麼選時，直接使用第一個範例。
     </p>
 
+    <h2>程式碼要放在哪裡？</h2>
+    <div class="card">
+      <p>
+        一般情況：把下方範例中的<strong>完整 <code>&lt;script&gt;...&lt;/script&gt;</code></strong> 貼到每個要啟用聊天頁面的 HTML
+        <strong><code>&lt;/body&gt;</code> 前</strong>。它有 <code>async</code>，不會阻塞頁面載入。
+      </p>
+      <p>
+        若選「每頁各自聊天室」：<code>&lt;meta name="webtalk-page-id" ...&gt;</code> 要放在頁面的
+        <strong><code>&lt;head&gt;</code> 內</strong>；<code>&lt;script&gt;</code> 仍放在 <strong><code>&lt;/body&gt;</code> 前</strong>。
+      </p>
+      <p>不知道怎麼選時，直接將第一個範例完整貼到 <code>&lt;/body&gt;</code> 前即可。</p>
+    </div>
+
     <h2>選擇你的接入組合</h2>
-    <p><code>webtalk-chat.js</code> 是純 P2P；<code>webtalk.js</code> 是 P2P ＋ AI。<code>origin</code> 表示全站共用 Room；預設 <code>meta</code> 表示一頁一個 Room。</p>
+    <p><code>webtalk-chat.js</code> 是只有聊天；<code>webtalk.js</code> 是聊天＋AI。<code>origin</code> 表示全站共用聊天室；預設 <code>meta</code> 表示每頁各自聊天室。</p>
     <div class="integration-grid">
       <div class="card">
-        <h3>純 P2P ＋ 全站共用 Room</h3>
-        <p>適合首頁、社群或整個網站共用一個公開聊天室。</p>
+        <h3>只有聊天 ＋ 全站共用聊天室（建議）</h3>
+        <p>不知道怎麼選就用這個。適合首頁、社群或整個網站共用一個公開聊天室。</p>
         <pre><code>&lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk-chat.js"
   data-webtalk-scope="origin"
-  data-webtalk-site-id="your-site"
 &gt;&lt;/script&gt;</code></pre>
       </div>
       <div class="card">
-        <h3>P2P ＋ AI ＋ 全站共用 Room</h3>
+        <h3>聊天＋AI ＋ 全站共用聊天室</h3>
         <p>全站共用聊天室，並提供 AI 摘要、頁面對話與 <code>@ai</code>。</p>
         <pre><code>&lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk.js"
   data-webtalk-scope="origin"
-  data-webtalk-site-id="your-site"
   data-webtalk-ai-endpoint="__WEBTALK_DOMAIN__/api/webtalk/ai"
 &gt;&lt;/script&gt;</code></pre>
       </div>
       <div class="card">
-        <h3>純 P2P ＋ 一頁一個 Room</h3>
+        <h3>只有聊天 ＋ 每頁各自聊天室</h3>
         <p>適合文章、商品、知識庫與 Share 頁；每頁必須輸出不同的 page ID。</p>
         <pre><code>&lt;meta name="webtalk-page-id" content="{{此頁穩定且唯一的 ID}}" /&gt;
 &lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk-chat.js"
-  data-webtalk-site-id="your-site"
 &gt;&lt;/script&gt;</code></pre>
       </div>
       <div class="card">
-        <h3>P2P ＋ AI ＋ 一頁一個 Room</h3>
+        <h3>聊天＋AI ＋ 每頁各自聊天室</h3>
         <p>每個內容頁各有聊天室，並提供 AI 摘要、頁面對話與 <code>@ai</code>。</p>
         <pre><code>&lt;meta name="webtalk-page-id" content="{{此頁穩定且唯一的 ID}}" /&gt;
 &lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk.js"
-  data-webtalk-site-id="your-site"
   data-webtalk-ai-endpoint="__WEBTALK_DOMAIN__/api/webtalk/ai"
 &gt;&lt;/script&gt;</code></pre>
       </div>
     </div>
     <div class="notice">
-      <strong>AI 前置條件：</strong>兩個「P2P ＋ AI」組合都需要可用的 <code>data-webtalk-ai-endpoint</code>；純 P2P 組合不會發出 AI 請求。
+      <strong>AI 前置條件：</strong>兩個「聊天＋AI」組合都需要可用的 <code>data-webtalk-ai-endpoint</code>；只有聊天的組合不會發出 AI 請求。
     </div>
 
     <h2>手機與版面</h2>
@@ -352,16 +381,9 @@
       </tbody>
     </table>
 
-    <h2>其他房間策略</h2>
-    <div class="card">
-      <h3>每個內容頁各自聊天（建議）</h3>
-      <p>使用預設 <code>meta</code>，並讓伺服器針對每頁輸出不同的 <code>webtalk-page-id</code>。</p>
-    </div>
-    <div class="card">
-      <h3>按網址路徑分房</h3>
-      <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
-  data-webtalk-scope="path"&gt;&lt;/script&gt;</code></pre>
-      <p><code>/share/a</code> 與 <code>/share/a/</code> 會視為相同房間。</p>
+    <div class="notice">
+      <strong>進階選項：</strong>若要依網址路徑自動分成不同聊天室，使用上方任一範例，並加入
+      <code>data-webtalk-scope="path"</code>。例如 <code>/share/a</code> 與 <code>/share/a/</code> 會是同一間聊天室。
     </div>
 
     <h2>登入後才掛載</h2>
@@ -374,7 +396,7 @@
 
     <h2>隱私與資料流</h2>
     <div class="notice">
-      <strong>P2P 聊天：</strong>聊天內容透過 WebRTC DataChannel 在使用者瀏覽器間傳輸，訊息與本機歷史不會寫入 AI
+      <strong>聊天訊息：</strong>聊天內容透過 WebRTC DataChannel 在使用者瀏覽器間傳輸，訊息與本機歷史不會寫入 AI
       endpoint。純聊天室版不會發出 AI 請求。
     </div>
     <div class="notice warning">
@@ -418,6 +440,35 @@
     <footer>
       WebTalk 333 · <a href="https://david888.com" target="_blank" rel="noreferrer">david888.com</a>
     </footer>
+    <script>
+      document.querySelectorAll('pre > code').forEach((code) => {
+        const button = document.createElement('button')
+        const defaultLabel = '複製'
+        button.type = 'button'
+        button.dataset.copyCode = ''
+        button.textContent = defaultLabel
+        button.setAttribute('aria-label', '複製程式碼')
+        button.addEventListener('click', async () => {
+          const text = code.textContent || ''
+          try {
+            await navigator.clipboard.writeText(text)
+          } catch {
+            const selection = window.getSelection()
+            const range = document.createRange()
+            range.selectNodeContents(code)
+            selection?.removeAllRanges()
+            selection?.addRange(range)
+            document.execCommand('copy')
+            selection?.removeAllRanges()
+          }
+          button.textContent = '已複製'
+          window.setTimeout(() => {
+            button.textContent = defaultLabel
+          }, 1600)
+        })
+        code.parentElement?.append(button)
+      })
+    </script>
     <script async src="__WEBTALK_DOMAIN__/webtalk-chat.js" data-webtalk-site-id="webtalk-embed-guide"></script>
   </body>
 </html>
