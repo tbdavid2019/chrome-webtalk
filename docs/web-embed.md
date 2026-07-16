@@ -170,4 +170,4 @@ https://wiki.david888.com/
 https://wiki.david888.com/share/ffrk4e
 ```
 
-Website Embed 的公開訊息與 Extension 使用同一套 Artico signaling + WebRTC DataChannel P2P 核心；聊天訊息建立連線後直接走瀏覽器之間的 DataChannel，不需要 Vercel WebSocket relay 或 Redis。混合版使用摘要、AI 對話或 `@ai` 時，頁面文字與提問會送到 Vercel AI proxy 與設定的 LLM provider。
+Website Embed 的公開訊息與 Extension 使用同一套 `Peer`／`BaseRoom` 核心：`Peer` 繼承 `@rtco/client` 的 `Artico`，房間由 `peer.join()` 建立，文字與反應由 Artico 內建 `Room.send()`／`Room.on('message')` 走 WebRTC DataChannel。Embed 沒有另一套 deterministic room、relay 或訊息 queue。聊天訊息不需要 Vercel WebSocket relay 或 Redis；混合版使用摘要、AI 對話或 `@ai` 時，頁面文字與提問才會送到 Vercel AI proxy 與設定的 LLM provider。

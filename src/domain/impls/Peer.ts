@@ -1,7 +1,5 @@
 import { nanoid } from 'nanoid'
-import { Artico, SocketSignaling } from '@rtco/client'
-
-import { DeterministicRoom } from './DeterministicRoom'
+import { Artico } from '@rtco/client'
 
 export interface Config {
   peerId?: string
@@ -9,17 +7,10 @@ export interface Config {
 
 export default class Peer extends Artico {
   private static instance: Peer | null = null
-  private readonly roomSignaling: SocketSignaling
 
   private constructor(config: Config = {}) {
     const { peerId = nanoid() } = config
-    const signaling = new SocketSignaling({ id: peerId })
-    super({ id: peerId, signaling })
-    this.roomSignaling = signaling
-  }
-
-  public joinDeterministicRoom(roomId: string): DeterministicRoom {
-    return new DeterministicRoom({ peer: this, signaling: this.roomSignaling, roomId })
+    super({ id: peerId })
   }
 
   public static createInstance(config: Config = {}) {
