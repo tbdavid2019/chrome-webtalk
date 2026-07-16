@@ -15,7 +15,7 @@ import { nanoid } from 'nanoid'
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY, HISTORY_LIMIT } from '@/types/summaryHistory'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import AppStatusDomain from '@/domain/AppStatus'
-import { XIcon, CornerDownLeftIcon } from 'lucide-react'
+import { SettingsIcon, XIcon, CornerDownLeftIcon } from 'lucide-react'
 import UserInfoDomain from '@/domain/UserInfo'
 import {
   blobToBase64,
@@ -658,16 +658,17 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
             </div>
             <button
               onClick={handleOpenHistory}
-              className="hidden h-9 shrink-0 rounded-full border border-border bg-background px-4 text-sm font-extrabold text-foreground transition hover:bg-muted sm:inline-flex"
+              className="hidden h-9 shrink-0 items-center justify-center rounded-full border border-border bg-background px-4 text-sm font-extrabold leading-none text-foreground transition hover:bg-muted sm:inline-flex"
             >
               {text.history}
             </button>
             <button
               onClick={() => setShowApiSettings(!showApiSettings)}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-base text-foreground transition hover:bg-muted"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-foreground transition hover:bg-muted"
               title="API setting 設置"
+              aria-label="API setting 設置"
             >
-              ⚙️
+              <SettingsIcon size={17} strokeWidth={2} aria-hidden="true" />
             </button>
             <button
               onClick={onClose}
