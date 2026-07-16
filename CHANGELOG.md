@@ -16,6 +16,7 @@
 ### Fixed
 
 - **Embed 文字同步路徑**：修正 Embed 使用自訂 deterministic room／ready peer 清單造成的文字廣播遺失；改回 extension 已使用的 Artico Room，由同一個底層 DataChannel 收發文字與反應事件。
+- **收到文字後的 MessageList 錯誤**：文字事件在訊息建立前查詢不存在的 message ID，會拋出 `in not founded in MessageListModule` 並中斷 B 端更新；現在先安全檢查既有訊息，再建立列表項目，最後觸發文字／彈幕事件。
 
 ## [2.0.9] - 2026-07-16
 
