@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [2.1.0] - Unreleased
+## [2.1.1] - 2026-07-16
 
 ### Removed
 
