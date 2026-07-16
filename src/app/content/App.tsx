@@ -19,6 +19,7 @@ import { checkDarkMode, cn, generateRandomAvatar, getSiteInfo } from '@/utils'
 import VirtualRoomDomain from '@/domain/VirtualRoom'
 import { MAX_AVATAR_SIZE } from '@/constants/config'
 import type { MobilePlacement } from '@/app/embed/options'
+import { createRandomEmbedUserInfo, shouldAutoCreateEmbedUserInfo } from '@/app/embed/userInfo'
 
 const OVERLAY_BASE_Z_INDEX = 2147482000
 
@@ -63,6 +64,33 @@ export default function App({
   const [showSummary, setShowSummary] = useState(false)
   const [topPanel, setTopPanel] = useState<'main' | 'summary' | null>(null)
   const embedInitialStateHandledRef = useRef(false)
+  const embedUserInfoInitializedRef = useRef(false)
+
+  useEffect(() => {
+    if (
+      embedUserInfoInitializedRef.current ||
+      !shouldAutoCreateEmbedUserInfo({ isEmbed, userInfoLoadFinished, userInfo })
+    ) {
+      return
+    }
+
+    embedUserInfoInitializedRef.current = true
+    let active = true
+
+    void createRandomEmbedUserInfo()
+      .then((generatedUserInfo) => {
+        if (active) {
+          send(userInfoDomain.command.UpdateUserInfoCommand(generatedUserInfo))
+        }
+      })
+      .catch((error) => {
+        console.error('[WebTalk] Failed to create an anonymous embed user.', error)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [isEmbed, send, userInfo, userInfoDomain, userInfoLoadFinished])
 
   // Embed widgets must start collapsed even when another WebTalk surface saved an open state.
   // useLayoutEffect prevents the restored state from flashing a half-screen panel before it closes.
@@ -251,7 +279,7 @@ export default function App({
               <Main key="chat-main" enableAi={enableAi} />
             </div>
             <Footer enableAi={enableAi} isEmbed={isEmbed} />
-            {notUserInfo && <Setup />}
+            {notUserInfo && !isEmbed && <Setup />}
             <Toaster
               richColors
               theme={themeMode}
