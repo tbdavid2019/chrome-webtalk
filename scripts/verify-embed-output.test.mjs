@@ -20,6 +20,15 @@ test('embed build emits a bilingual integration guide', () => {
   assert.match(englishGuide, /data-webtalk-site-id="webtalk-embed-guide"/)
 })
 
+test('embed guide presents all four bundle and room-strategy combinations', () => {
+  const guide = readFileSync('output/webtalk/index.html', 'utf8')
+
+  assert.match(guide, /純 P2P ＋ 全站共用 Room/)
+  assert.match(guide, /P2P ＋ AI ＋ 全站共用 Room/)
+  assert.match(guide, /純 P2P ＋ 一頁一個 Room/)
+  assert.match(guide, /P2P ＋ AI ＋ 一頁一個 Room/)
+})
+
 test('embed guide uses the default deployed domain when WEBTALK_DOMAIN is unset', () => {
   const guide = readFileSync('output/webtalk/index.html', 'utf8')
   assert.match(guide, /https:\/\/webtalk-nine\.vercel\.app\/webtalk-chat\.js/)
