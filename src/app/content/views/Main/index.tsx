@@ -120,7 +120,7 @@ const Main: FC<{ enableAi?: boolean }> = ({ enableAi = true }) => {
 
     send(
       chatRoomDomain.command.SendTextMessageCommand({
-        body: `↪ AI 回應\n\n${message.body}`,
+        body: `${text.aiForwardPrefix}\n\n${message.body}`,
         atUsers: [],
         pageContext: message.pageContext
       })
