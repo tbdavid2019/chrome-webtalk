@@ -35,6 +35,9 @@ export class BaseRoom<M> extends EventHub {
   }
 
   private readonly handlePeerJoin = (peerId: string): void => {
+    this.pendingMessages.drainBroadcast().forEach((serializedMessage) => {
+      this.sendSerializedMessage(serializedMessage, peerId)
+    })
     this.pendingMessages.drain(peerId).forEach((serializedMessage) => {
       this.sendSerializedMessage(serializedMessage, peerId)
     })
@@ -46,17 +49,25 @@ export class BaseRoom<M> extends EventHub {
 
   private attachRoom(room: DeterministicRoom): void {
     this.room = room
+    room.on('discover', this.handlePeerDiscover)
     room.on('join', this.handlePeerJoin)
     room.on('leave', this.handlePeerLeave)
   }
 
   private detachRoom(): void {
     if (this.room) {
+      this.room.off('discover', this.handlePeerDiscover)
       this.room.off('join', this.handlePeerJoin)
       this.room.off('leave', this.handlePeerLeave)
     }
     this.pendingMessages.clear()
     this.room = undefined
+  }
+
+  private readonly handlePeerDiscover = (peerId: string): void => {
+    this.pendingMessages.drainBroadcast().forEach((serializedMessage) => {
+      this.sendSerializedMessage(serializedMessage, peerId)
+    })
   }
 
   private sendSerializedMessage(serializedMessage: string, id?: string | string[], retryCount = 0) {
@@ -65,8 +76,12 @@ export class BaseRoom<M> extends EventHub {
       return
     }
 
-    const recipientIds = resolveRoomSendTargets(id, this.room.peers)
-    if (recipientIds.length === 0) return
+    const recipientIds =
+      id === undefined ? this.room.members : resolveRoomSendTargets(id, this.room.peers)
+    if (recipientIds.length === 0) {
+      if (id === undefined) this.pendingMessages.enqueueBroadcast(serializedMessage)
+      return
+    }
 
     recipientIds.forEach((peerId) => {
       try {
