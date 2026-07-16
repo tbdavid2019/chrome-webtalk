@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { resolveEmbedPanelStyle } from './panelStyle.ts'
+import { resolveEmbedMobileOverlayStyle, resolveEmbedPanelStyle } from './panelStyle.ts'
+
+test('uses the same half-screen overlay geometry for every embed panel', () => {
+  assert.deepEqual(resolveEmbedMobileOverlayStyle('bottom'), {
+    top: '50dvh',
+    height: '50dvh',
+    width: '100vw'
+  })
+  assert.deepEqual(resolveEmbedMobileOverlayStyle('top'), { top: '0', height: '50dvh', width: '100vw' })
+})
 
 test('uses the lower viewport half for default embed mobile placement', () => {
   assert.deepEqual(resolveEmbedPanelStyle(true, 'bottom'), { top: '50dvh', height: '50dvh', width: '100vw' })

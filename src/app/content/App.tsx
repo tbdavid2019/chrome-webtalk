@@ -9,7 +9,7 @@ import ChatRoomDomain from '@/domain/ChatRoom'
 import UserInfoDomain from '@/domain/UserInfo'
 import Setup from '@/app/content/views/Setup'
 import MessageListDomain from '@/domain/MessageList'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { SummaryPanel } from '@/components/SummaryPanel'
 import { Toaster } from 'sonner'
 import DanmakuContainer from './components/DanmakuContainer'
@@ -62,6 +62,17 @@ export default function App({
 
   const [showSummary, setShowSummary] = useState(false)
   const [topPanel, setTopPanel] = useState<'main' | 'summary' | null>(null)
+  const embedInitialStateHandledRef = useRef(false)
+
+  // Embed widgets must start collapsed even when another WebTalk surface saved an open state.
+  // useLayoutEffect prevents the restored state from flashing a half-screen panel before it closes.
+  useLayoutEffect(() => {
+    if (!isEmbed || !appStatusLoadIsFinished || embedInitialStateHandledRef.current) return
+    embedInitialStateHandledRef.current = true
+    if (appOpenStatus) {
+      send(appStatusDomain.command.UpdateOpenCommand(false))
+    }
+  }, [appOpenStatus, appStatusDomain, appStatusLoadIsFinished, isEmbed, send])
 
   const joinRoom = () => {
     send(chatRoomDomain.command.JoinRoomCommand())
@@ -269,10 +280,15 @@ export default function App({
             pointerEvents: 'none'
           }}
         >
-          <SummaryPanel key="summary-panel" onClose={() => setShowSummary(false)} />
+          <SummaryPanel
+            key="summary-panel"
+            isEmbed={isEmbed}
+            mobilePlacement={mobilePlacement}
+            onClose={() => setShowSummary(false)}
+          />
         </div>
       )}
-      {!buttonsHidden && <AppButton enableAi={enableAi} isEmbed={isEmbed} />}
+      {!buttonsHidden && !appOpenStatus && !showSummary && <AppButton enableAi={enableAi} isEmbed={isEmbed} />}
       <DanmakuContainer ref={danmakuContainerRef} style={{ opacity: userInfo?.danmakuOpacity ?? 0.8 }} />
     </div>
   )
