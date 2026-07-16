@@ -21,6 +21,22 @@ const createEmbedGuide = (): Plugin => ({
         source: template.replaceAll('__WEBTALK_DOMAIN__', webtalkDomain)
       })
     }
+
+    for (const fileName of [
+      'apple-touch-icon.png',
+      'favicon-32x32.png',
+      'favicon.svg',
+      'icon-192.png',
+      'icon-512.png',
+      'og-image.png',
+      'site.webmanifest'
+    ]) {
+      this.emitFile({
+        type: 'asset',
+        fileName,
+        source: readFileSync(path.resolve(`src/app/embed/public/${fileName}`))
+      })
+    }
   }
 })
 
