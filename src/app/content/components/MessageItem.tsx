@@ -106,7 +106,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
               <div className="truncate text-sm font-semibold">{props.data.username}</div>
               {isOwnMessage && (
                 <span className="shrink-0 rounded-full bg-primary-foreground/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-primary-foreground/90">
-                  你
+                  {text.selfLabel}
                 </span>
               )}
               {props.isAi && (
@@ -248,10 +248,12 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   )}
                   onClick={() => props.onForwardAi?.(props.data)}
                   disabled={props.isForwardedAi}
-                  title={props.isForwardedAi ? '已轉發到聊天室' : '轉發 AI 回應到聊天室'}
+                  title={props.isForwardedAi ? text.aiForwardedToRoomTitle : text.aiForwardToRoomTitle}
                 >
                   <ForwardIcon size={13} />
-                  <span className="ml-1">{props.isForwardedAi ? '已轉發' : '轉發'}</span>
+                  <span className="ml-1">
+                    {props.isForwardedAi ? text.aiForwardedToRoom : text.aiForwardToRoom}
+                  </span>
                 </Button>
               )}
               {props.onToggleBanUser && (
