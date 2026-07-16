@@ -4,6 +4,7 @@ import {
   CheckIcon,
   CopyIcon,
   ExternalLinkIcon,
+  ForwardIcon,
   Link2Icon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -29,12 +30,14 @@ export interface MessageItemProps {
   onHateChange?: (checked: boolean) => void
   onRecall?: (message: NormalMessage) => void
   onCopy?: (message: NormalMessage) => void
+  onForwardAi?: (message: NormalMessage) => void
   onOpenPage?: (message: NormalMessage) => void
   onAvatarClick?: (data: NormalMessage) => void
   className?: string
   currentUserId?: string
   copied?: boolean
   isAi?: boolean
+  isForwardedAi?: boolean
   aiOwnerUsername?: string
   isBanned?: boolean
   onToggleBanUser?: () => void
@@ -231,6 +234,24 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   title={text.openPageTitle}
                 >
                   <ExternalLinkIcon size={13} />
+                </Button>
+              )}
+              {props.isAi && props.onForwardAi && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  className={cn(
+                    'h-7 rounded-full px-2.5 text-xs',
+                    actionClass,
+                    props.isForwardedAi && 'bg-primary/10 text-primary hover:bg-primary/10'
+                  )}
+                  onClick={() => props.onForwardAi?.(props.data)}
+                  disabled={props.isForwardedAi}
+                  title={props.isForwardedAi ? '已轉發到聊天室' : '轉發 AI 回應到聊天室'}
+                >
+                  <ForwardIcon size={13} />
+                  <span className="ml-1">{props.isForwardedAi ? '已轉發' : '轉發'}</span>
                 </Button>
               )}
               {props.onToggleBanUser && (
