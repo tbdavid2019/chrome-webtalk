@@ -170,4 +170,4 @@ https://wiki.david888.com/
 https://wiki.david888.com/share/ffrk4e
 ```
 
-聊天本身仍使用現有 Artico WebRTC 信令與 P2P DataChannel；聊天訊息不寫入這個 AI proxy。本機歷史保存在使用者瀏覽器。WebRTC 連線建立仍會由 Artico signaling service 交換 SDP／ICE 連線資訊，這不是聊天訊息儲存服務；因此不要宣稱所有資料完全不經過任何伺服器。混合版使用摘要、AI 對話或 `@ai` 時，頁面文字與提問會送到 Vercel AI proxy 與設定的 LLM provider。若日後要自建信令服務，應另設可維持 WebSocket／連線狀態的服務，不要把 AI proxy 當成聊天 relay。
+Website Embed 的公開訊息使用 script 同網域的 Vercel WebSocket endpoint `/api/webtalk/ws` 即時廣播，並以 `REDIS_URL` 在不同 Vercel Function instances 間同步與保存最近訊息；指定 peer 的使用者／歷史同步及私聊仍保留 Artico WebRTC DataChannel。混合版使用摘要、AI 對話或 `@ai` 時，頁面文字與提問會送到 Vercel AI proxy 與設定的 LLM provider。正式部署必須在 Vercel Project 設定 `REDIS_URL`，否則只能保證同一 Function instance 內的 WebSocket 廣播。

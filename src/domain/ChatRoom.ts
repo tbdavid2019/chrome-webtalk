@@ -906,6 +906,11 @@ const ChatRoomDomain = Remesh.domain({
               return EMPTY
             }
 
+            const isTextMessage = parsedMessage.type === SendType.Text || parsedMessage.type === 'text'
+            if (isTextMessage && get(messageListDomain.query.HasItemQuery(parsedMessage.id))) {
+              return EMPTY
+            }
+
             const messageEvent$ = of(OnMessageEvent(parsedMessage))
 
             const textMessageEvent$ = of(

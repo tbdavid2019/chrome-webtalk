@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [2.0.9] - 2026-07-16
+
+### Fixed
+
+- **Embed 多人即時彈幕**：Website Embed 的公開訊息改走同網域 Vercel WebSocket relay；Vercel Redis 在不同 Function instances 間轉送事件並保留最近訊息。B 收到 relay event 後立即沿用既有 `OnTextMessageEvent` 更新訊息列表與觸發彈幕，不再依賴 reload 後的 P2P history sync。
+- **Relay 重連與去重**：WebSocket 中斷後採指數退避自動重連，離線期間的待送訊息會排隊；歷史重播與重連收到已存在的訊息 ID 時不會重複顯示或重複彈幕。
+
 ## [2.0.8] - 2026-07-16
 
 ### Fixed
