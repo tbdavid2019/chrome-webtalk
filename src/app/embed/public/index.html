@@ -248,6 +248,21 @@
       因此共有四種組合；不知道怎麼選時，直接使用第一個範例。
     </p>
 
+    <h2>適合哪些站長使用？</h2>
+    <div class="card">
+      <p>
+        WebTalk 333 是讓同一個網站裡的人一起討論、一起看內容、一起把氣氛炒熱的即時交流工具，不是傳統一對一的客服聊天視窗。
+      </p>
+      <p class="notice warning">
+        <strong>目前版本不是客服工具：</strong>沒有客服專線、客服人員分流、工單系統或客服後台介面。請把它定位為多人即時交流與現場互動工具，而不是讓訪客聯繫客服的管道。
+      </p>
+      <ul>
+        <li><strong>企業後台與會員系統：</strong>讓已登入的同事、客戶或合作夥伴，針對同一個工作空間即時討論；可用「登入後才顯示聊天室」的 FAQ 做整合。</li>
+        <li><strong>直播、活動、比賽與內容網站：</strong>讓觀眾圍觀、觀戰、即時交換看法，讓頁面有現場感與社群氣氛。</li>
+        <li><strong>社群、產品與知識內容：</strong>可選全站共用一間聊天室，或讓每篇文章、商品、知識頁都有自己的討論空間。</li>
+      </ul>
+    </div>
+
     <h2>程式碼要放在哪裡？</h2>
     <div class="card">
       <p>
@@ -265,22 +280,22 @@
     <p><code>webtalk-chat.js</code> 是只有聊天；<code>webtalk.js</code> 是聊天＋AI。<code>origin</code> 表示全站共用聊天室；預設 <code>meta</code> 表示每頁各自聊天室。</p>
     <div class="integration-grid">
       <div class="card">
-        <h3>只有聊天 ＋ 全站共用聊天室（建議）</h3>
-        <p>不知道怎麼選就用這個。適合首頁、社群或整個網站共用一個公開聊天室。</p>
-        <pre><code>&lt;script
-  async
-  src="__WEBTALK_DOMAIN__/webtalk-chat.js"
-  data-webtalk-scope="origin"
-&gt;&lt;/script&gt;</code></pre>
-      </div>
-      <div class="card">
-        <h3>聊天＋AI ＋ 全站共用聊天室</h3>
-        <p>全站共用聊天室，並提供 AI 摘要、頁面對話與 <code>@ai</code>。</p>
+        <h3>聊天＋AI ＋ 全站共用聊天室（建議）</h3>
+        <p>不知道怎麼選就用這個。全站共用聊天室，並提供 AI 摘要、頁面對話與 <code>@ai</code>。</p>
         <pre><code>&lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk.js"
   data-webtalk-scope="origin"
   data-webtalk-ai-endpoint="__WEBTALK_DOMAIN__/api/webtalk/ai"
+&gt;&lt;/script&gt;</code></pre>
+      </div>
+      <div class="card">
+        <h3>只有聊天 ＋ 全站共用聊天室</h3>
+        <p>適合首頁、社群或整個網站共用一個公開聊天室，不會發出 AI 請求。</p>
+        <pre><code>&lt;script
+  async
+  src="__WEBTALK_DOMAIN__/webtalk-chat.js"
+  data-webtalk-scope="origin"
 &gt;&lt;/script&gt;</code></pre>
       </div>
       <div class="card">
@@ -346,7 +361,7 @@
         <tr>
           <td><code>data-webtalk-site-id</code></td>
           <td>穩定字串</td>
-          <td>網站 namespace；網址遷移後仍可維持房間識別。</td>
+          <td>選填；未填時自動使用目前網站網域。多網域要共用聊天室時，才在各網域填相同的固定字串。</td>
         </tr>
         <tr>
           <td><code>data-webtalk-room-id</code></td>
@@ -385,14 +400,6 @@
       <strong>進階選項：</strong>若要依網址路徑自動分成不同聊天室，使用上方任一範例，並加入
       <code>data-webtalk-scope="path"</code>。例如 <code>/share/a</code> 與 <code>/share/a/</code> 會是同一間聊天室。
     </div>
-
-    <h2>登入後才掛載</h2>
-    <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
-  data-webtalk-auto-mount="false"&gt;&lt;/script&gt;
-&lt;script&gt;
-  // 在你的登入流程完成後執行
-  window.WebTalk.mount({ scope: 'origin', mobilePlacement: 'bottom' })
-&lt;/script&gt;</code></pre>
 
     <h2>隱私與資料流</h2>
     <div class="notice">
@@ -436,6 +443,33 @@
     <div class="card">
       <strong>AI 不能用？</strong><br />確認使用混合版 <code>webtalk.js</code>，並檢查
       <code>data-webtalk-ai-endpoint</code> 是否可從你的網站連線。
+    </div>
+    <div class="card">
+      <strong>多個網域想共用同一個聊天室？</strong><br />一般情況不必填 <code>data-webtalk-site-id</code>，WebTalk 會自動使用目前網站網域。
+      只有同一品牌的多個正式網域要共用聊天室時，才在每個網域使用相同、固定的 site ID：
+      <pre><code>&lt;script
+  async
+  src="__WEBTALK_DOMAIN__/webtalk-chat.js"
+  data-webtalk-site-id="my-brand-2026"
+  data-webtalk-scope="origin"
+&gt;&lt;/script&gt;</code></pre>
+      <span>例如 <code>brand.com</code> 和 <code>brand.tw</code> 都填 <code>my-brand-2026</code>。請使用固定名稱，不要每次產生不同的隨機數。</span>
+    </div>
+    <div class="card">
+      <strong>登入後才顯示聊天室？</strong><br />此進階整合仍有效：先載入程式但不掛載，登入成功後呼叫 <code>mount()</code>，登出時呼叫 <code>unmount()</code>。
+      <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
+  data-webtalk-auto-mount="false"&gt;&lt;/script&gt;
+&lt;script&gt;
+  // 在你的登入流程完成後執行
+  window.WebTalk.mount({
+    scope: 'origin',
+    mobilePlacement: 'bottom'
+  })
+
+  // 在你的登出流程執行
+  window.WebTalk.unmount()
+&lt;/script&gt;</code></pre>
+      <span>若使用聊天＋AI，請改載入 <code>webtalk.js</code>，並在 <code>mount()</code> 內加入 <code>aiEndpoint</code>；關閉自動掛載時，script 標籤上的 AI endpoint 不會自動帶入。</span>
     </div>
     <footer>
       WebTalk 333 · <a href="https://david888.com" target="_blank" rel="noreferrer">david888.com</a>

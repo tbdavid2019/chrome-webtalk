@@ -23,10 +23,13 @@ test('embed build emits a bilingual integration guide', () => {
 test('embed guide presents all four chat and room-strategy combinations', () => {
   const guide = readFileSync('output/webtalk/index.html', 'utf8')
 
-  assert.match(guide, /只有聊天 ＋ 全站共用聊天室（建議）/)
-  assert.match(guide, /聊天＋AI ＋ 全站共用聊天室/)
+  assert.match(guide, /只有聊天 ＋ 全站共用聊天室/)
+  assert.match(guide, /聊天＋AI ＋ 全站共用聊天室（建議）/)
   assert.match(guide, /只有聊天 ＋ 每頁各自聊天室/)
   assert.match(guide, /聊天＋AI ＋ 每頁各自聊天室/)
+  assert.match(guide, /適合哪些站長使用？/)
+  assert.match(guide, /企業後台與會員系統/)
+  assert.match(guide, /目前版本不是客服工具/)
   assert.match(guide, /data-webtalk-scope="path"/)
   assert.doesNotMatch(guide, /P2P/)
   assert.doesNotMatch(guide, /your-site/)

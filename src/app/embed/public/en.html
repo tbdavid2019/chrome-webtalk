@@ -248,6 +248,21 @@
       room or one chat room per page</strong>. That creates four combinations; if you are unsure, use the first example.
     </p>
 
+    <h2>Who is WebTalk 333 for?</h2>
+    <div class="card">
+      <p>
+        WebTalk 333 is a real-time conversation layer for people to discuss, watch, and build momentum together on the same website. It is not a conventional one-to-one customer-support chat window.
+      </p>
+      <p class="notice warning">
+        <strong>This version is not a customer-support tool:</strong> it has no support hotline, agent routing, ticketing system, or customer-service back-office interface. Position it as a many-to-many real-time conversation and shared-engagement tool, not a way for visitors to contact support.
+      </p>
+      <ul>
+        <li><strong>Enterprise back offices and member systems:</strong> give signed-in colleagues, customers, or partners a shared place to discuss the same workspace; use the “show chat only after sign-in” FAQ when needed.</li>
+        <li><strong>Live streams, events, competitions, and content sites:</strong> let visitors watch together, react in real time, and create an active shared atmosphere.</li>
+        <li><strong>Communities, product sites, and knowledge content:</strong> use one shared room across the site, or a separate discussion space for every article, product, or knowledge page.</li>
+      </ul>
+    </div>
+
     <h2>Where should the code go?</h2>
     <div class="card">
       <p>
@@ -267,22 +282,22 @@
     <p><code>webtalk-chat.js</code> is chat only; <code>webtalk.js</code> is chat + AI. <code>origin</code> creates one shared chat room, while the default <code>meta</code> scope creates one chat room per page.</p>
     <div class="integration-grid">
       <div class="card">
-        <h3>Chat only + one shared chat room (recommended)</h3>
-        <p>Use this if you are unsure. It suits a homepage, community, or one public chat room for the entire site.</p>
-        <pre><code>&lt;script
-  async
-  src="__WEBTALK_DOMAIN__/webtalk-chat.js"
-  data-webtalk-scope="origin"
-&gt;&lt;/script&gt;</code></pre>
-      </div>
-      <div class="card">
-        <h3>Chat + AI + one shared chat room</h3>
-        <p>One site-wide chat room with AI summaries, page conversations, and <code>@ai</code>.</p>
+        <h3>Chat + AI + one shared chat room (recommended)</h3>
+        <p>Use this if you are unsure. It provides one site-wide chat room with AI summaries, page conversations, and <code>@ai</code>.</p>
         <pre><code>&lt;script
   async
   src="__WEBTALK_DOMAIN__/webtalk.js"
   data-webtalk-scope="origin"
   data-webtalk-ai-endpoint="__WEBTALK_DOMAIN__/api/webtalk/ai"
+&gt;&lt;/script&gt;</code></pre>
+      </div>
+      <div class="card">
+        <h3>Chat only + one shared chat room</h3>
+        <p>One public chat room for the entire site, without AI requests.</p>
+        <pre><code>&lt;script
+  async
+  src="__WEBTALK_DOMAIN__/webtalk-chat.js"
+  data-webtalk-scope="origin"
 &gt;&lt;/script&gt;</code></pre>
       </div>
       <div class="card">
@@ -349,7 +364,7 @@
         <tr>
           <td><code>data-webtalk-site-id</code></td>
           <td>Stable string</td>
-          <td>Site namespace; preserves room identification after a URL migration.</td>
+          <td>Optional; the current site origin is used when omitted. Set the same stable value on multiple domains only when they should share a room.</td>
         </tr>
         <tr>
           <td><code>data-webtalk-room-id</code></td>
@@ -388,14 +403,6 @@
       <strong>Advanced option:</strong> To create chat rooms from URL paths, use any example above and add
       <code>data-webtalk-scope="path"</code>. For example, <code>/share/a</code> and <code>/share/a/</code> use the same chat room.
     </div>
-
-    <h2>Mount only after sign-in</h2>
-    <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
-  data-webtalk-auto-mount="false"&gt;&lt;/script&gt;
-&lt;script&gt;
-  // Run this after your sign-in flow is complete.
-  window.WebTalk.mount({ scope: 'origin', mobilePlacement: 'bottom' })
-&lt;/script&gt;</code></pre>
 
     <h2>Privacy and data flow</h2>
     <div class="notice">
@@ -441,6 +448,33 @@
     <div class="card">
       <strong>AI does not work?</strong><br />Make sure you use the hybrid <code>webtalk.js</code> bundle and that
       <code>data-webtalk-ai-endpoint</code> is reachable from your site.
+    </div>
+    <div class="card">
+      <strong>Do multiple domains need to share one chat room?</strong><br />Most sites do not need <code>data-webtalk-site-id</code>;
+      WebTalk automatically uses the current site origin. Only use the same stable site ID on each production domain when one brand needs them to share a room:
+      <pre><code>&lt;script
+  async
+  src="__WEBTALK_DOMAIN__/webtalk-chat.js"
+  data-webtalk-site-id="my-brand-2026"
+  data-webtalk-scope="origin"
+&gt;&lt;/script&gt;</code></pre>
+      <span>For example, use <code>my-brand-2026</code> on both <code>brand.com</code> and <code>brand.tw</code>. Keep it stable; do not generate a different random value each time.</span>
+    </div>
+    <div class="card">
+      <strong>Show chat only after sign-in?</strong><br />This advanced integration remains supported: load the script without mounting it, call <code>mount()</code> after sign-in, and call <code>unmount()</code> at sign-out.
+      <pre><code>&lt;script src="__WEBTALK_DOMAIN__/webtalk-chat.js"
+  data-webtalk-auto-mount="false"&gt;&lt;/script&gt;
+&lt;script&gt;
+  // Run after your sign-in flow succeeds.
+  window.WebTalk.mount({
+    scope: 'origin',
+    mobilePlacement: 'bottom'
+  })
+
+  // Run from your sign-out flow.
+  window.WebTalk.unmount()
+&lt;/script&gt;</code></pre>
+      <span>For chat + AI, load <code>webtalk.js</code> and pass <code>aiEndpoint</code> into <code>mount()</code>; an AI endpoint on the script tag is not carried into a manual mount.</span>
     </div>
     <footer>
       WebTalk 333 · <a href="https://david888.com" target="_blank" rel="noreferrer">david888.com</a>
