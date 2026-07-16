@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### Fixed
+
+- **Website Embed message delivery**：修正公開聊天室只依賴應用層 `UserList` 判定收件 peer 的問題。新使用者可能已完成 WebRTC 連線，但使用者同步訊息尚未更新清單；此時 A 傳送公開訊息時，目標清單可能為空，B 會收不到訊息。
+- **Connected peer broadcast**：公開文字、收回、讚與倒讚現在直接廣播到 WebRTC room 實際已連線的 peers。私聊、使用者同步與歷史同步仍維持指定 peer 傳送。
+
 ## [2.0.6] - 2026-07-15
 
 ### Added
