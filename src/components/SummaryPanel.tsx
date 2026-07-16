@@ -3,6 +3,8 @@ import { useSummarize } from '@/hooks/useSummarize'
 import { marked } from 'marked'
 import html2canvas from 'html2canvas'
 import { getPlatform } from '@/platform'
+import type { MobilePlacement } from '@/app/embed/options'
+import { resolveEmbedPanelStyle } from '@/app/content/views/AppMain/panelStyle'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
@@ -29,6 +31,8 @@ import MessageInput from '@/app/content/components/MessageInput'
 
 type SummaryPanelProps = {
   onClose: () => void
+  isEmbed?: boolean
+  mobilePlacement?: MobilePlacement
 }
 
 type Lang = 'zh_TW' | 'zh_CN' | 'en'
@@ -176,7 +180,7 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
   }
 }
 
-export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
+export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = false, mobilePlacement = 'bottom' }) => {
   const aiConfig = getPlatform().ai
   const defaultApiKey = aiConfig.apiKey || ''
   const defaultApiBaseURL = aiConfig.endpoint
@@ -198,6 +202,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const [chatImages, setChatImages] = useState<ChatImageAttachment[]>([])
   const [suggestedQuestions, setSuggestedQuestions] = useState<PageSuggestion[]>([])
   const [suggestionsLoading, setSuggestionsLoading] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 639px)').matches)
   const chatListRef = useRef<HTMLDivElement | null>(null)
   const chatInputIsComposingRef = useRef(false)
   const pageMetaRef = useRef({
@@ -209,6 +214,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
   const aiProxyEnabled = aiConfig.mode === 'proxy'
   const hasApiKey = aiProxyEnabled || Boolean(apiKey.trim())
   const aiTopicSuggestionsEnabled = userInfo?.aiTopicSuggestionsEnabled !== false
+  const embedPanelStyle = isEmbed ? resolveEmbedPanelStyle(isMobile, mobilePlacement) : undefined
   const pageHost = useMemo(() => {
     try {
       return pageMetaRef.current.url ? new URL(pageMetaRef.current.url).hostname : ''
@@ -221,6 +227,14 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
     const locale = resolveAppLocale(userInfo?.language)
     setLanguage(locale)
   }, [userInfo?.language])
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 639px)')
+    const handleChange = () => setIsMobile(mediaQuery.matches)
+    handleChange()
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
 
   const ensureHistoryEntry = (forceNew = false) => {
     if (!historyEntryRef.current || forceNew) {
@@ -611,14 +625,17 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
         animate={{ opacity: 1, x: '0%' }}
         exit={{ opacity: 0, x: '100%' }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="pointer-events-auto fixed right-0 top-0 z-infinity grid h-full w-[440px] min-w-[380px] max-w-[860px] grid-rows-[auto_1fr] border-l border-border bg-background shadow-2xl"
+        style={embedPanelStyle}
+        className={`pointer-events-auto fixed right-0 top-0 z-infinity grid h-full w-[440px] min-w-[380px] max-w-[860px] grid-rows-[auto_1fr] border-l border-border bg-background shadow-2xl ${
+          isEmbed && isMobile ? 'min-w-0 max-w-none border-l-0' : ''
+        }`}
       >
-        <div className="flex h-14 items-center justify-between border-b border-border bg-background px-4">
+        <div className="flex h-14 items-center justify-between border-b border-border bg-background px-4 max-sm:h-12 max-sm:px-3">
           <div className="flex items-center gap-1.5 py-1">
-            <span className="text-lg font-extrabold tracking-wider text-foreground">✨ {text.title}</span>
+            <span className="truncate text-lg font-extrabold tracking-wider text-foreground max-sm:text-base">✨ {text.title}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 shrink-0 items-center rounded-full border border-border/80 bg-muted p-0.5">
+          <div className="flex shrink-0 items-center gap-2 max-sm:gap-1">
+            <div className="flex h-9 shrink-0 items-center rounded-full border border-border/80 bg-muted p-0.5 max-sm:h-8">
               {(
                 [
                   { code: 'zh_TW', label: '繁' },
@@ -629,7 +646,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
                 <button
                   key={lang.code}
                   onClick={() => setLanguage(lang.code)}
-                  className={`h-full rounded-full px-3 text-sm font-extrabold transition-all ${
+                  className={`h-full rounded-full px-3 text-sm font-extrabold transition-all max-sm:px-2 max-sm:text-xs ${
                     language === lang.code
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -641,7 +658,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
             </div>
             <button
               onClick={handleOpenHistory}
-              className="h-9 shrink-0 rounded-full border border-border bg-background px-4 text-sm font-extrabold text-foreground transition hover:bg-muted"
+              className="hidden h-9 shrink-0 rounded-full border border-border bg-background px-4 text-sm font-extrabold text-foreground transition hover:bg-muted sm:inline-flex"
             >
               {text.history}
             </button>
@@ -662,7 +679,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose }) => {
           </div>
         </div>
 
-        <div className="flex flex-col min-h-0 flex-1 bg-background p-4 justify-between space-y-3">
+        <div className="flex min-h-0 flex-1 flex-col justify-between space-y-3 bg-background p-4 max-sm:space-y-2 max-sm:p-2">
           {showApiSettings && (
             <div className="space-y-3 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shrink-0">
               <h3 className="text-base font-semibold text-slate-700">API setting</h3>
