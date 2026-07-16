@@ -29,6 +29,17 @@ test('embed guide presents all four bundle and room-strategy combinations', () =
   assert.match(guide, /P2P ＋ AI ＋ 一頁一個 Room/)
 })
 
+test('embed guide is written for site owners installing WebTalk 333', () => {
+  const guide = readFileSync('output/webtalk/index.html', 'utf8')
+
+  assert.match(guide, /<h1>在任何網站加入 WebTalk 333<\/h1>/)
+  assert.match(guide, /class="site-header"/)
+  assert.match(guide, /\.site-header\s*\{\s*position: fixed/)
+  assert.match(guide, /href="https:\/\/david888\.com"/)
+  assert.doesNotMatch(guide, /Vercel/)
+  assert.doesNotMatch(guide, /WEBTALK_DOMAIN=/)
+})
+
 test('embed guide uses the default deployed domain when WEBTALK_DOMAIN is unset', () => {
   const guide = readFileSync('output/webtalk/index.html', 'utf8')
   assert.match(guide, /https:\/\/webtalk-nine\.vercel\.app\/webtalk-chat\.js/)
