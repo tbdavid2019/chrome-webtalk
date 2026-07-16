@@ -74,29 +74,21 @@ LLM_VISION_BASE_URL=https://api.groq.com/openai/v1
 LLM_VISION_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
 # WEBTALK_ALLOWED_ORIGINS=
 WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/
-REDIS_URL=Vercel Redis integration 自動提供的連線字串
 ```
 
 ### 變數說明
 
-| 變數                      | 預設值                                      | 未設定時行為                           |
-| ------------------------- | ------------------------------------------- | -------------------------------------- |
-| `LLM_API_KEY`             | 無                                          | 回傳 `AI_NOT_CONFIGURED`               |
-| `LLM_BASE_URL`            | `https://api.groq.com/openai/v1`            | 使用 Groq OpenAI-compatible API        |
-| `LLM_MODEL`               | `openai/gpt-oss-120b`                       | 使用預設文字模型                       |
-| `LLM_VISION_BASE_URL`     | `LLM_BASE_URL`                              | Vision 沿用一般模型 Base URL           |
-| `LLM_VISION_MODEL`        | `meta-llama/llama-4-scout-17b-16e-instruct` | 使用預設 Vision 模型                   |
+| 變數                      | 預設值                                      | 未設定時行為                                     |
+| ------------------------- | ------------------------------------------- | ------------------------------------------------ |
+| `LLM_API_KEY`             | 無                                          | 回傳 `AI_NOT_CONFIGURED`                         |
+| `LLM_BASE_URL`            | `https://api.groq.com/openai/v1`            | 使用 Groq OpenAI-compatible API                  |
+| `LLM_MODEL`               | `openai/gpt-oss-120b`                       | 使用預設文字模型                                 |
+| `LLM_VISION_BASE_URL`     | `LLM_BASE_URL`                              | Vision 沿用一般模型 Base URL                     |
+| `LLM_VISION_MODEL`        | `meta-llama/llama-4-scout-17b-16e-instruct` | 使用預設 Vision 模型                             |
 | `WEBTALK_ALLOWED_ORIGINS` | 空值（等同允許所有來源）                    | 未設定時全開；填入逗號分隔 origin 後改為限制清單 |
-| `WEBTALK_DOMAIN`          | `https://webtalk-nine.vercel.app/`          | 站長教學首頁中產生的 Embed script 網域 |
-| `REDIS_URL`               | 無                                          | 缺少時無法保證跨 Function instance 的多人即時訊息與彈幕 |
+| `WEBTALK_DOMAIN`          | `https://webtalk-nine.vercel.app/`          | 站長教學首頁中產生的 Embed script 網域           |
 
 Base URL 不要包含 `/chat/completions`，程式會自動補上。
-
-### `REDIS_URL`：多人即時訊息與彈幕
-
-Website Embed 的公開訊息透過 `/api/webtalk/ws` 建立 Vercel WebSocket。每條連線會固定在一個 Function instance，因此必須在 Vercel Project 安裝 Redis integration，讓不同 instances 透過 Redis Pub/Sub 即時轉送訊息，並保存最近 500 則房間事件。
-
-設定完成後，確認 Production Environment 已有 `REDIS_URL`，並重新部署。沒有此變數時，同一 instance 內仍可互傳，但多人連線被分配到不同 instances 時不會即時收到訊息。
 
 ### `WEBTALK_DOMAIN`：Embed 對外公開網域
 

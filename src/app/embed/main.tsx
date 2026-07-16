@@ -26,8 +26,6 @@ export interface WebTalkEmbedOptions extends RoomIdentityOptions {
   enableVirtualRoom?: boolean
   /** Same-origin or absolute URL of the server-side AI proxy. */
   aiEndpoint?: string
-  /** Vercel WebSocket relay endpoint. Defaults to /api/webtalk/ws on the script origin. */
-  relayEndpoint?: string
   /** Which half of a mobile viewport the overlay occupies. Defaults to bottom. */
   mobilePlacement?: MobilePlacement
 }
@@ -69,8 +67,6 @@ const readScriptOptions = (script: HTMLScriptElement | null): WebTalkEmbedOption
     metaName: dataset.webtalkMetaName,
     enableVirtualRoom: dataset.webtalkVirtualRoom === 'true',
     aiEndpoint: dataset.webtalkAiEndpoint,
-    relayEndpoint:
-      dataset.webtalkRelayEndpoint || (script?.src ? new URL('/api/webtalk/ws', script.src).toString() : undefined),
     mobilePlacement: readEmbedOptions(dataset).mobilePlacement
   }
 }

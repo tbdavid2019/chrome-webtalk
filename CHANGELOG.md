@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Removed
+
+- **撤回 Vercel WebSocket relay**：移除 `/api/webtalk/ws` endpoint、`WebSocketRelay` 類別與所有 relay 相關代碼。Embed 與 Extension 現在共用同一套 Artico signaling + WebRTC DataChannel P2P 核心。
+- **移除 Redis 依賴**：`REDIS_URL` 不再是聊天必要環境變數。Vercel 部署僅提供靜態 Embed bundle 與 AI proxy；聊天訊息完全走瀏覽器之間的 WebRTC DataChannel。
+- **清理 relay 相關依賴**：從 `package.json` 移除 `express`、`ioredis`、`ws`、`@vercel/functions`、`@types/express`、`@types/ws`。
+
+### Changed
+
+- **Embed 傳輸層回歸 P2P**：公開訊息現在走 `DeterministicRoom.send()`，與 Extension 使用完全相同的 DataChannel 路徑。不再有兩條公開廣播路徑。
+
 ## [2.0.9] - 2026-07-16
 
 ### Fixed

@@ -131,18 +131,18 @@ pnpm build
 
 ## ⚙️ 即時通訊架構速記
 
-- **Website Embed 公開訊息**：使用 script 同網域的 Vercel WebSocket Function `/api/webtalk/ws`。`REDIS_URL` 負責跨 Function instance 廣播與最近訊息歷史；B 收到 WebSocket frame 後立即更新列表並觸發彈幕。
-- **Extension／指定 peer 通訊**：`Peer` 使用 `@rtco/client` 的 Artico signaling `https://0.artico.dev:443` 交換 SDP 與 ICE candidate；私聊、使用者同步與 P2P 歷史同步仍使用 DataChannel。
+- **Website Embed 公開訊息**：使用 Artico signaling `https://0.artico.dev:443` 交換 SDP 與 ICE candidate；聊天訊息建立連線後直接走瀏覽器之間的 WebRTC DataChannel，不需要 Vercel WebSocket relay 或 Redis。
+- **Extension／指定 peer 通訊**：`Peer` 使用 `@rtco/client` 的 Artico signaling 交換 SDP 與 ICE candidate；私聊、使用者同步與 P2P 歷史同步也使用 DataChannel。
 - **STUN / TURN**：`@rtco/client` 內建的 `RTCConfiguration` 只列出 Google 的公開 STUN（`stun:stun.l.google.com:19302`、`stun:stun1.l.google.com:19302`），僅協助取得公網位址並不會中繼資料；目前未設定 TURN，所以遇到嚴格 NAT 可能需要自備 coturn。
 - **RTCConfiguration**：所有 `RTCPeerConnection` 都沿用 `Artico` 的預設 `rtcConfig`；若要指定自家 STUN/TURN 或自架 signaling，可在 `Peer.createInstance` 之外新增參數並傳給 `Artico`。
-- **Vercel 必要設定**：正式多人即時 Embed 必須啟用 Fluid Compute 並設定 Redis integration 產生的 `REDIS_URL`；沒有 Redis 時只能廣播到同一個 Function instance，不能保證多人都即時收到。
+- **Vercel 部署**：Vercel 只提供 Embed 静態 bundle 與 AI proxy；聊天訊息完全走 WebRTC P2P，不需要 Redis 或 WebSocket relay。
 
 ---
 
 ## 🧱 聊天運作流程
 
 - **房間如何形成**：內容腳本會把 `location.host` 轉十六進位作為房號（`src/domain/impls/ChatRoom.ts`），同一個網域的使用者都連到同一房間。
-- **即時傳輸**：Website Embed 的公開訊息走 Vercel WebSocket＋Redis；extension 與指定 peer 訊息走 WebRTC DataChannel。
+- **即時傳輸**：Website 與 Extension 的公開訊息都走 WebRTC DataChannel；不再使用 Vercel WebSocket relay。
 - **歷史同步**：每個節點本地保留完整訊息；新 peer 加入時，舊 peer 依最後訊息時間批次推送近 `SYNC_HISTORY_MAX_DAYS`（預設 3 天）的紀錄，避免漏掉談話（`src/domain/ChatRoom.ts:332-470`）。
 - **本地儲存**：使用 `unstorage` 驅動的 IndexedDB/LocalStorage 保存訊息與設定（`src/domain/impls/Storage.ts`），即使離線或重新載入也能保留記錄，再由其他節點補齊差異。
 
