@@ -170,4 +170,4 @@ https://wiki.david888.com/
 https://wiki.david888.com/share/ffrk4e
 ```
 
-Website Embed 的公開訊息使用 script 同網域的 Vercel WebSocket endpoint `/api/webtalk/ws` 即時廣播，並以 `REDIS_URL` 在不同 Vercel Function instances 間同步與保存最近訊息；指定 peer 的使用者／歷史同步及私聊仍保留 Artico WebRTC DataChannel。混合版使用摘要、AI 對話或 `@ai` 時，頁面文字與提問會送到 Vercel AI proxy 與設定的 LLM provider。正式部署必須在 Vercel Project 設定 `REDIS_URL`，否則只能保證同一 Function instance 內的 WebSocket 廣播。
+Website Embed 的公開訊息與 Extension 使用同一套 Artico signaling + WebRTC DataChannel P2P 核心；聊天訊息建立連線後直接走瀏覽器之間的 DataChannel，不需要 Vercel WebSocket relay 或 Redis。混合版使用摘要、AI 對話或 `@ai` 時，頁面文字與提問會送到 Vercel AI proxy 與設定的 LLM provider。
