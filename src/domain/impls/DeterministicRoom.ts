@@ -34,7 +34,6 @@ export class DeterministicRoom extends EventHub {
   private readonly peer: Peer
   private readonly signaling: SocketSignaling
   private readonly calls = new Map<string, RoomCall>()
-  private readonly memberPeerIds = new Set<string>()
   private readonly readyPeerIds = new Set<string>()
   private closed = false
 
@@ -52,10 +51,6 @@ export class DeterministicRoom extends EventHub {
 
   get peers(): string[] {
     return [...this.readyPeerIds]
-  }
-
-  get members(): string[] {
-    return [...this.memberPeerIds]
   }
 
   send(message: string, target?: string | string[]): void {
@@ -79,20 +74,19 @@ export class DeterministicRoom extends EventHub {
     this.signaling.off('disconnect', this.handleDisconnect)
     this.calls.forEach((call) => call.hangup())
     this.calls.clear()
-    this.memberPeerIds.clear()
     this.readyPeerIds.clear()
     this.emit('close')
   }
 
   private readonly handleRoomMember = (roomId: string, remotePeerId: string): void => {
-    if (this.closed || roomId !== this.id || this.peer.id === remotePeerId) {
+    if (
+      this.closed ||
+      roomId !== this.id ||
+      !shouldInitiateRoomCall(this.peer.id, remotePeerId) ||
+      this.calls.has(remotePeerId)
+    ) {
       return
     }
-
-    this.memberPeerIds.add(remotePeerId)
-    this.emit('discover', remotePeerId)
-
-    if (!shouldInitiateRoomCall(this.peer.id, remotePeerId) || this.calls.has(remotePeerId)) return
 
     const call = this.peer.call(remotePeerId, createRoomCallMetadata(this.id))
     this.attachCall(call)
@@ -136,7 +130,6 @@ export class DeterministicRoom extends EventHub {
     if (this.calls.get(remotePeerId) !== call) return
 
     this.calls.delete(remotePeerId)
-    this.memberPeerIds.delete(remotePeerId)
     if (this.readyPeerIds.delete(remotePeerId)) {
       this.emit('leave', remotePeerId)
     }
