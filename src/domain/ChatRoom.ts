@@ -1,5 +1,5 @@
 import { Remesh } from 'remesh'
-import { map, merge, of, EMPTY, mergeMap, fromEventPattern, filter } from 'rxjs'
+import { concat, map, merge, of, EMPTY, mergeMap, fromEventPattern, filter } from 'rxjs'
 import { AiMessageMeta, AtUser, NormalMessage, type Message, type MessageUser } from './MessageList'
 import { ChatRoomExtern } from '@/domain/externs/ChatRoom'
 import MessageListDomain, { MessageType } from '@/domain/MessageList'
@@ -1004,11 +1004,11 @@ const ChatRoomDomain = Remesh.domain({
                   )
                 }
 
-                case SendType.Text:
-                  if (
-                    isRecalledMessage(get(messageListDomain.query.ItemQuery(parsedMessage.id))) &&
-                    !parsedMessage.recalledAt
-                  ) {
+                case SendType.Text: {
+                  const existingMessage = get(messageListDomain.query.HasItemQuery(parsedMessage.id))
+                    ? get(messageListDomain.query.ItemQuery(parsedMessage.id))
+                    : undefined
+                  if (isRecalledMessage(existingMessage) && !parsedMessage.recalledAt) {
                     return EMPTY
                   }
                   return of(
@@ -1026,11 +1026,12 @@ const ChatRoomDomain = Remesh.domain({
                       return pendingRecall ? ApplyRecallCommand(pendingRecall) : null
                     })()
                   ).pipe(filter(Boolean))
-                case 'text':
-                  if (
-                    isRecalledMessage(get(messageListDomain.query.ItemQuery(parsedMessage.id))) &&
-                    !parsedMessage.recalledAt
-                  ) {
+                }
+                case 'text': {
+                  const existingMessage = get(messageListDomain.query.HasItemQuery(parsedMessage.id))
+                    ? get(messageListDomain.query.ItemQuery(parsedMessage.id))
+                    : undefined
+                  if (isRecalledMessage(existingMessage) && !parsedMessage.recalledAt) {
                     return EMPTY
                   }
                   return of(
@@ -1043,6 +1044,7 @@ const ChatRoomDomain = Remesh.domain({
                       return pendingRecall ? ApplyRecallCommand(pendingRecall) : null
                     })()
                   ).pipe(filter(Boolean))
+                }
                 case SendType.Like:
                 case SendType.Hate: {
                   if (!get(messageListDomain.query.HasItemQuery(parsedMessage.id))) {
@@ -1118,7 +1120,8 @@ const ChatRoomDomain = Remesh.domain({
               }
             })()
 
-            return merge(messageEvent$, textMessageEvent$, messageCommand$)
+            const messageEvents$ = merge(messageEvent$, textMessageEvent$)
+            return isTextMessage ? concat(messageCommand$, messageEvents$) : merge(messageEvents$, messageCommand$)
           })
         )
         return onMessage$
