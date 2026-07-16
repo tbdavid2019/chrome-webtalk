@@ -57,6 +57,7 @@ test('embed guide uses the default deployed domain when WEBTALK_DOMAIN is unset'
 
 test('embed guide publishes complete social and install metadata', () => {
   const guide = readFileSync('output/webtalk/index.html', 'utf8')
+  const favicon = readFileSync('output/webtalk/favicon.svg', 'utf8')
 
   assert.match(guide, /name="description"/)
   assert.match(guide, /property="og:description"/)
@@ -68,6 +69,7 @@ test('embed guide publishes complete social and install metadata', () => {
   assert.match(guide, /rel="apple-touch-icon"/)
   assert.match(guide, /rel="manifest" href="\/site\.webmanifest"/)
   assert.match(guide, /application\/ld\+json/)
+  assert.match(favicon, /💬/)
   assert.equal(existsSync('output/webtalk/og-image.png'), true)
   assert.equal(existsSync('output/webtalk/favicon-32x32.png'), true)
   assert.equal(existsSync('output/webtalk/site.webmanifest'), true)
