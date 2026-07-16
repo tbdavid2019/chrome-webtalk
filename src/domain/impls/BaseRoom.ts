@@ -2,6 +2,7 @@ import { Room } from '@rtco/client'
 import EventHub from '@resreq/event-hub'
 import { JSONR } from '@/utils'
 import Peer from './Peer'
+import { resolveRoomSendTargets } from './roomTargets'
 
 export interface RoomConfig {
   peer: Peer
@@ -36,12 +37,8 @@ export class BaseRoom<M> extends EventHub {
       return
     }
 
-    const recipientIds = id ? (Array.isArray(id) ? id : [id]) : []
-
-    if (recipientIds.length === 0) {
-      this.room.send(serializedMessage)
-      return
-    }
+    const recipientIds = resolveRoomSendTargets(id, this.room.peers)
+    if (recipientIds.length === 0) return
 
     recipientIds.forEach((peerId) => {
       try {

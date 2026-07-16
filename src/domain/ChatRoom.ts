@@ -395,11 +395,9 @@ const ChatRoomDomain = Remesh.domain({
               return [OnErrorEvent(new Error('Target user is no longer online.'))]
             }
           } else if (protocolMessage) {
-            const peerIds = get(PeerListQuery())
-            peerIds.length && chatRoomExtern.sendMessage(protocolMessage, peerIds)
+            chatRoomExtern.sendMessage(protocolMessage)
           } else {
-            const peerIds = get(PeerListQuery())
-            peerIds.length && chatRoomExtern.sendMessage(textMessage, peerIds)
+            chatRoomExtern.sendMessage(textMessage)
           }
           return [
             upstreamHLC ? UpdateHLCCommand(upstreamHLC) : null,
@@ -461,8 +459,7 @@ const ChatRoomDomain = Remesh.domain({
               chatRoomExtern.sendMessage(protocolMessage ?? recallMessagePayload, targetUser.peerIds)
             }
           } else {
-            const peerIds = get(PeerListQuery())
-            peerIds.length && chatRoomExtern.sendMessage(protocolMessage ?? recallMessagePayload, peerIds)
+            chatRoomExtern.sendMessage(protocolMessage ?? recallMessagePayload)
           }
 
           return [
@@ -508,8 +505,7 @@ const ChatRoomDomain = Remesh.domain({
             targetId: messageId,
             reaction: 'like'
           })
-          const peerIds = get(PeerListQuery())
-          peerIds.length && chatRoomExtern.sendMessage(protocolMessage, peerIds)
+          chatRoomExtern.sendMessage(protocolMessage)
           return [
             UpdateHLCCommand(newHLC),
             messageListDomain.command.UpdateItemCommand(listMessage),
@@ -525,8 +521,7 @@ const ChatRoomDomain = Remesh.domain({
             chatRoomExtern.sendMessage(likeMessage, otherUser.peerIds)
           }
         } else {
-          const peerIds = get(PeerListQuery())
-          peerIds.length && chatRoomExtern.sendMessage(likeMessage, peerIds)
+          chatRoomExtern.sendMessage(likeMessage)
         }
 
         return [messageListDomain.command.UpdateItemCommand(listMessage), SendLikeMessageEvent(likeMessage)]
@@ -565,8 +560,7 @@ const ChatRoomDomain = Remesh.domain({
             targetId: messageId,
             reaction: 'hate'
           })
-          const peerIds = get(PeerListQuery())
-          peerIds.length && chatRoomExtern.sendMessage(protocolMessage, peerIds)
+          chatRoomExtern.sendMessage(protocolMessage)
           return [
             UpdateHLCCommand(newHLC),
             messageListDomain.command.UpdateItemCommand(listMessage),
@@ -582,8 +576,7 @@ const ChatRoomDomain = Remesh.domain({
             chatRoomExtern.sendMessage(hateMessage, otherUser.peerIds)
           }
         } else {
-          const peerIds = get(PeerListQuery())
-          peerIds.length && chatRoomExtern.sendMessage(hateMessage, peerIds)
+          chatRoomExtern.sendMessage(hateMessage)
         }
 
         return [messageListDomain.command.UpdateItemCommand(listMessage), SendHateMessageEvent(hateMessage)]
