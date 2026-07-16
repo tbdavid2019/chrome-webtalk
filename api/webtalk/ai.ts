@@ -17,6 +17,12 @@ interface VercelResponseLike {
   end: (body?: string) => void
 }
 
+const DEFAULT_ALLOWED_ORIGINS = new Set([
+  'https://david888.com',
+  'https://blog.david888.com',
+  'https://wiki.david888.com'
+])
+
 const setHeaders = (response: VercelResponseLike, headers: Record<string, string>): void => {
   Object.entries(headers).forEach(([name, value]) => response.setHeader(name, value))
 }
@@ -48,7 +54,8 @@ const getAllowedOrigin = (request: VercelRequestLike): string => {
     .filter(Boolean)
 
   if (configuredOrigins.includes('*')) return '*'
-  if (requestOrigin && configuredOrigins.includes(requestOrigin)) return requestOrigin
+  const allowedOrigins = new Set([...DEFAULT_ALLOWED_ORIGINS, ...configuredOrigins])
+  if (requestOrigin && allowedOrigins.has(requestOrigin)) return requestOrigin
   return configuredOrigins.length === 0 ? '*' : ''
 }
 

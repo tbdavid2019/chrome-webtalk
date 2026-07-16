@@ -140,7 +140,7 @@ LLM_BASE_URL=https://api.groq.com/openai/v1
 LLM_MODEL=openai/gpt-oss-120b
 LLM_VISION_BASE_URL=https://api.groq.com/openai/v1
 LLM_VISION_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
-WEBTALK_ALLOWED_ORIGINS=https://wiki.david888.com
+WEBTALK_ALLOWED_ORIGINS=https://david888.com,https://blog.david888.com,https://wiki.david888.com
 ```
 
 `LLM_API_KEY` 只在 Vercel server-side 使用，不會進入 Embed bundle。`LLM_BASE_URL` 預設為 Groq；`LLM_VISION_BASE_URL` 若未設定，會退回使用 `LLM_BASE_URL`。兩個 Base URL 都必須提供 OpenAI-compatible `/chat/completions` API。正式環境應設定 `WEBTALK_ALLOWED_ORIGINS`，並在 Vercel 或前置服務加上 rate limit；未設定 allowlist 時，Function 會允許所有來源，適合本機測試，不適合公開正式環境。
@@ -156,7 +156,7 @@ WEBTALK_ALLOWED_ORIGINS=https://wiki.david888.com
 | `LLM_VISION_MODEL`        | `meta-llama/llama-4-scout-17b-16e-instruct` | 使用預設 Vision 模型         |
 | `WEBTALK_ALLOWED_ORIGINS` | 空值                                        | 允許所有來源，僅適合測試     |
 
-`WEBTALK_ALLOWED_ORIGINS` 必須包含 `https://`，但不能包含最後的 `/` 或頁面路徑。
+`WEBTALK_ALLOWED_ORIGINS` 必須包含 `https://`，但不能包含最後的 `/` 或頁面路徑。正式 WebTalk 站點 `david888.com`、`blog.david888.com` 與 `wiki.david888.com` 已內建允許；若部署到其他合作網站，請在這個變數以逗號追加 origin。
 
 ```text
 # 正確：單一網站
