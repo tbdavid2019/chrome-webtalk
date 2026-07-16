@@ -54,3 +54,20 @@ test('embed guide uses the default deployed domain when WEBTALK_DOMAIN is unset'
   assert.match(guide, /https:\/\/webtalk-nine\.vercel\.app\/webtalk-chat\.js/)
   assert.doesNotMatch(guide, /__WEBTALK_DOMAIN__/)
 })
+
+test('embed guide publishes complete social and install metadata', () => {
+  const guide = readFileSync('output/webtalk/index.html', 'utf8')
+
+  assert.match(guide, /name="description"/)
+  assert.match(guide, /property="og:description"/)
+  assert.match(guide, /property="og:image" content="https:\/\/webtalk-nine\.vercel\.app\/og-image\.png"/)
+  assert.match(guide, /property="og:url" content="https:\/\/webtalk-nine\.vercel\.app\/"/)
+  assert.match(guide, /name="twitter:card" content="summary_large_image"/)
+  assert.match(guide, /rel="canonical" href="https:\/\/webtalk-nine\.vercel\.app\/"/)
+  assert.match(guide, /rel="apple-touch-icon"/)
+  assert.match(guide, /rel="manifest" href="\/site\.webmanifest"/)
+  assert.match(guide, /application\/ld\+json/)
+  assert.equal(existsSync('output/webtalk/og-image.png'), true)
+  assert.equal(existsSync('output/webtalk/favicon-32x32.png'), true)
+  assert.equal(existsSync('output/webtalk/site.webmanifest'), true)
+})
