@@ -19,7 +19,7 @@
       body {
         max-width: 960px;
         margin: 0 auto;
-        padding: 48px 24px 80px;
+        padding: 104px 24px 80px;
         line-height: 1.65;
         color: #1f2937;
         background: #fafafa;
@@ -117,9 +117,7 @@
       }
       .language-switch {
         display: flex;
-        justify-content: flex-end;
         gap: 10px;
-        margin-bottom: 20px;
         font-size: 0.9rem;
       }
       .language-switch a,
@@ -134,7 +132,43 @@
         color: #1d4ed8;
         font-weight: 700;
       }
+      .site-header {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 24px;
+        border-bottom: 1px solid #e5e7eb;
+        background: rgb(250 250 250 / 88%);
+        backdrop-filter: blur(12px);
+      }
+      .site-brand {
+        color: inherit;
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+      footer {
+        margin-top: 64px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+        color: #6b7280;
+        font-size: 0.9rem;
+      }
+      footer a {
+        color: inherit;
+        font-weight: 700;
+      }
       @media (max-width: 640px) {
+        body {
+          padding: 88px 16px 56px;
+        }
+        .site-header {
+          padding: 10px 16px;
+        }
         .integration-grid {
           grid-template-columns: 1fr;
         }
@@ -151,6 +185,14 @@
         .card {
           background: #1f2937;
           border-color: #374151;
+        }
+        .site-header {
+          border-color: #374151;
+          background: rgb(17 24 39 / 88%);
+        }
+        footer {
+          border-color: #374151;
+          color: #cbd5e1;
         }
         p code,
         li code,
@@ -172,12 +214,15 @@
     </style>
   </head>
   <body>
-    <nav class="language-switch" aria-label="Language">
-      <span lang="zh-Hant" aria-current="page">繁體中文</span>
-      <a href="./en.html" lang="en" data-language-switch="en">English</a>
-    </nav>
+    <header class="site-header">
+      <a class="site-brand" href="https://david888.com" target="_blank" rel="noreferrer">WebTalk 333</a>
+      <nav class="language-switch" aria-label="Language">
+        <span lang="zh-Hant" aria-current="page">繁體中文</span>
+        <a href="./en.html" lang="en" data-language-switch="en">English</a>
+      </nav>
+    </header>
     <span class="tag">WebTalk Embed</span>
-    <h1>在任何網站加入 WebTalk</h1>
+    <h1>在任何網站加入 WebTalk 333</h1>
     <p class="lead">
       WebTalk 的接入方式由兩個獨立選項組成：選擇<strong>純 P2P 或 P2P ＋ AI</strong>，再選擇<strong>全站共用 Room 或一頁一個
       Room</strong>。因此共有四種組合，請直接選擇最符合你網站的範例。
@@ -230,26 +275,7 @@
       </div>
     </div>
     <div class="notice">
-      <strong>AI 前置條件：</strong>兩個「P2P ＋ AI」組合都必須先設定 Vercel AI proxy 的環境變數與來源 allowlist；純 P2P 組合不會發出 AI 請求。
-    </div>
-
-    <h2>部署到 Vercel：設定正式網域</h2>
-    <div class="card">
-      <p>
-        在 Vercel 的 <strong>Settings → Environment Variables</strong> 新增 <code>WEBTALK_DOMAIN</code>，填入<strong
-          >這個 WebTalk Project 對外提供 Embed 檔案的完整正式網址</strong
-        >：
-      </p>
-      <pre><code>WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/</code></pre>
-      <p>
-        每次 build 時，教學頁中的 <code>webtalk-chat.js</code>、<code>webtalk.js</code> 與 AI endpoint
-        範例都會自動替換成此網域。 它<strong>不是</strong>要嵌入 WebTalk 的合作網站網域；請填 WebTalk
-        自己部署後的公開網域。尾端的 <code>/</code> 可填可不填，系統會自動正規化。
-      </p>
-      <p>
-        未設定時預設使用
-        <code>https://webtalk-nine.vercel.app/</code>。變更環境變數後請重新部署，才會更新教學頁的程式碼範例。
-      </p>
+      <strong>AI 前置條件：</strong>兩個「P2P ＋ AI」組合都需要可用的 <code>data-webtalk-ai-endpoint</code>；純 P2P 組合不會發出 AI 請求。
     </div>
 
     <h2>手機與版面</h2>
@@ -348,16 +374,16 @@
 
     <h2>隱私與資料流</h2>
     <div class="notice">
-      <strong>P2P 聊天：</strong>聊天內容透過 WebRTC DataChannel 在使用者瀏覽器間傳輸，訊息與本機歷史不會寫入 Vercel AI
-      proxy。純聊天室版不會發出 AI 請求。
+      <strong>P2P 聊天：</strong>聊天內容透過 WebRTC DataChannel 在使用者瀏覽器間傳輸，訊息與本機歷史不會寫入 AI
+      endpoint。純聊天室版不會發出 AI 請求。
     </div>
     <div class="notice warning">
       <strong>連線建立：</strong>WebRTC 仍需要 Artico signaling service 交換 SDP／ICE
       連線資訊；它不是聊天室訊息儲存服務。請勿將產品描述為「所有資料完全不經過任何伺服器」。
     </div>
     <div class="notice warning">
-      <strong>混合版 AI：</strong>當使用者使用摘要、AI 對話或 <code>@ai</code> 時，頁面文字與提問會送往你設定的 Vercel
-      AI proxy，並由該 proxy 呼叫你的 LLM provider。請在隱私政策中揭露此流程。
+      <strong>混合版 AI：</strong>當使用者使用摘要、AI 對話或 <code>@ai</code> 時，頁面文字與提問會送往你設定的 AI
+      endpoint，並由該服務呼叫 LLM provider。請在隱私政策中揭露此流程。
     </div>
 
     <h2>與 Chrome extension 共存</h2>
@@ -382,13 +408,16 @@
       <code>webtalk-page-id</code>。若你要全站共用，明確改為 <code>data-webtalk-scope="origin"</code>。
     </div>
     <div class="card">
-      <strong>網頁有 CSP？</strong><br />在你的 <code>script-src</code> allowlist 加入 Vercel 網域；混合版也需要在
+      <strong>網頁有 CSP？</strong><br />在你的 <code>script-src</code> allowlist 加入 WebTalk 網域；混合版也需要在
       <code>connect-src</code> 放行 AI endpoint。
     </div>
     <div class="card">
-      <strong>AI 不能用？</strong><br />確認 endpoint、<code>LLM_*</code> 環境變數與
-      <code>WEBTALK_ALLOWED_ORIGINS</code> 已設定，並使用混合版 <code>webtalk.js</code>。
+      <strong>AI 不能用？</strong><br />確認使用混合版 <code>webtalk.js</code>，並檢查
+      <code>data-webtalk-ai-endpoint</code> 是否可從你的網站連線。
     </div>
+    <footer>
+      WebTalk 333 · <a href="https://david888.com" target="_blank" rel="noreferrer">david888.com</a>
+    </footer>
     <script async src="__WEBTALK_DOMAIN__/webtalk-chat.js" data-webtalk-site-id="webtalk-embed-guide"></script>
   </body>
 </html>

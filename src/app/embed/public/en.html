@@ -19,7 +19,7 @@
       body {
         max-width: 960px;
         margin: 0 auto;
-        padding: 48px 24px 80px;
+        padding: 104px 24px 80px;
         line-height: 1.65;
         color: #1f2937;
         background: #fafafa;
@@ -117,9 +117,7 @@
       }
       .language-switch {
         display: flex;
-        justify-content: flex-end;
         gap: 10px;
-        margin-bottom: 20px;
         font-size: 0.9rem;
       }
       .language-switch a,
@@ -134,7 +132,43 @@
         color: #1d4ed8;
         font-weight: 700;
       }
+      .site-header {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 24px;
+        border-bottom: 1px solid #e5e7eb;
+        background: rgb(250 250 250 / 88%);
+        backdrop-filter: blur(12px);
+      }
+      .site-brand {
+        color: inherit;
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+      footer {
+        margin-top: 64px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+        color: #6b7280;
+        font-size: 0.9rem;
+      }
+      footer a {
+        color: inherit;
+        font-weight: 700;
+      }
       @media (max-width: 640px) {
+        body {
+          padding: 88px 16px 56px;
+        }
+        .site-header {
+          padding: 10px 16px;
+        }
         .integration-grid {
           grid-template-columns: 1fr;
         }
@@ -151,6 +185,14 @@
         .card {
           background: #1f2937;
           border-color: #374151;
+        }
+        .site-header {
+          border-color: #374151;
+          background: rgb(17 24 39 / 88%);
+        }
+        footer {
+          border-color: #374151;
+          color: #cbd5e1;
         }
         p code,
         li code,
@@ -172,12 +214,15 @@
     </style>
   </head>
   <body>
-    <nav class="language-switch" aria-label="Language">
-      <a href="./index.html" lang="zh-Hant" data-language-switch="zh-Hant">繁體中文</a>
-      <span lang="en" aria-current="page">English</span>
-    </nav>
+    <header class="site-header">
+      <a class="site-brand" href="https://david888.com" target="_blank" rel="noreferrer">WebTalk 333</a>
+      <nav class="language-switch" aria-label="Language">
+        <a href="./index.html" lang="zh-Hant" data-language-switch="zh-Hant">繁體中文</a>
+        <span lang="en" aria-current="page">English</span>
+      </nav>
+    </header>
     <span class="tag">WebTalk Embed</span>
-    <h1>Add WebTalk to any website</h1>
+    <h1>Add WebTalk 333 to any website</h1>
     <p class="lead">
       Your integration has two independent choices: <strong>P2P only or P2P + AI</strong>, and <strong>one shared Room
       or one Room per page</strong>. That creates four combinations; choose the matching example below.
@@ -230,26 +275,7 @@
       </div>
     </div>
     <div class="notice">
-      <strong>AI prerequisite:</strong> Both P2P + AI choices require Vercel AI proxy environment variables and an origin allowlist. P2P-only choices make no AI requests.
-    </div>
-
-    <h2>Deploy on Vercel: set the public domain</h2>
-    <div class="card">
-      <p>
-        In Vercel <strong>Settings → Environment Variables</strong>, add <code>WEBTALK_DOMAIN</code> with the
-        <strong>complete public URL where this WebTalk Project serves its Embed files</strong>:
-      </p>
-      <pre><code>WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/</code></pre>
-      <p>
-        At build time, the guide replaces the example URLs for <code>webtalk-chat.js</code>, <code>webtalk.js</code>,
-        and the AI endpoint with this domain. It is <strong>not</strong> the domain of the partner site embedding
-        WebTalk; use WebTalk's own deployed public domain. A trailing <code>/</code> is optional and is normalized
-        automatically.
-      </p>
-      <p>
-        If unset, the default is <code>https://webtalk-nine.vercel.app/</code>. Redeploy after changing the environment
-        variable so the code snippets are regenerated.
-      </p>
+      <strong>AI prerequisite:</strong> Both P2P + AI choices require a working <code>data-webtalk-ai-endpoint</code>. P2P-only choices make no AI requests.
     </div>
 
     <h2>Mobile layout</h2>
@@ -350,7 +376,7 @@
     <h2>Privacy and data flow</h2>
     <div class="notice">
       <strong>P2P chat:</strong> Chat content is transmitted between users' browsers over WebRTC DataChannel. Messages
-      and local history are not written to the Vercel AI proxy. The chat-only bundle makes no AI requests.
+      and local history are not written to the AI endpoint. The chat-only bundle makes no AI requests.
     </div>
     <div class="notice warning">
       <strong>Connection establishment:</strong> WebRTC still needs the Artico signaling service to exchange SDP/ICE
@@ -359,7 +385,7 @@
     </div>
     <div class="notice warning">
       <strong>Hybrid AI:</strong> When a user requests a summary, uses page AI, or types <code>@ai</code>, page text and
-      questions are sent to your configured Vercel AI proxy, which calls your LLM provider. Disclose this in your
+      questions are sent to your configured AI endpoint, which calls an LLM provider. Disclose this in your
       privacy policy.
     </div>
 
@@ -385,13 +411,16 @@
       <code>webtalk-page-id</code>. For one site-wide room, explicitly set <code>data-webtalk-scope="origin"</code>.
     </div>
     <div class="card">
-      <strong>Does the site use CSP?</strong><br />Add the Vercel domain to your <code>script-src</code> allowlist; the
+      <strong>Does the site use CSP?</strong><br />Add the WebTalk domain to your <code>script-src</code> allowlist; the
       hybrid bundle also needs its AI endpoint in <code>connect-src</code>.
     </div>
     <div class="card">
-      <strong>AI does not work?</strong><br />Check the endpoint, <code>LLM_*</code> environment variables, and
-      <code>WEBTALK_ALLOWED_ORIGINS</code>; make sure you use the hybrid <code>webtalk.js</code> bundle.
+      <strong>AI does not work?</strong><br />Make sure you use the hybrid <code>webtalk.js</code> bundle and that
+      <code>data-webtalk-ai-endpoint</code> is reachable from your site.
     </div>
+    <footer>
+      WebTalk 333 · <a href="https://david888.com" target="_blank" rel="noreferrer">david888.com</a>
+    </footer>
     <script async src="__WEBTALK_DOMAIN__/webtalk-chat.js" data-webtalk-site-id="webtalk-embed-guide"></script>
   </body>
 </html>
