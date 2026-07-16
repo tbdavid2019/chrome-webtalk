@@ -63,6 +63,7 @@ test('embed guide publishes complete social and install metadata', () => {
   assert.match(guide, /property="og:image" content="https:\/\/webtalk-nine\.vercel\.app\/og-image\.png"/)
   assert.match(guide, /property="og:url" content="https:\/\/webtalk-nine\.vercel\.app\/"/)
   assert.match(guide, /name="twitter:card" content="summary_large_image"/)
+  assert.match(guide, /name="twitter:site" content="@David888111888"/)
   assert.match(guide, /rel="canonical" href="https:\/\/webtalk-nine\.vercel\.app\/"/)
   assert.match(guide, /rel="apple-touch-icon"/)
   assert.match(guide, /rel="manifest" href="\/site\.webmanifest"/)

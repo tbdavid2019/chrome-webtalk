@@ -13,20 +13,22 @@
 
 ### 🌐 Website Embed
 
-除了 Chrome Extension，本專案也提供可嵌入一般網站的兩個版本：主推的純 P2P 聊天版 `webtalk-chat.js`，以及含 AI 摘要／對話的混合版 `webtalk.js`。合作網站可由每個 Share 頁動態提供房間 ID：
+除了 Chrome Extension，本專案也提供可嵌入一般網站的 WebTalk Embed。正式站長安裝指南與線上體驗在 **[https://webtalk-nine.vercel.app/](https://webtalk-nine.vercel.app/)**；這是提供網站站長直接複製程式碼、選擇房間策略與測試 WebTalk 的正式網站。
+
+WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webtalk.js`。若不知道怎麼選，建議直接使用「聊天＋AI＋全站共用聊天室」：
 
 ```html
-<meta name="webtalk-page-id" content="{{dynamic-page-id}}" />
 <script
-  src="https://your-webtalk-host.example/webtalk-chat.js"
-  data-webtalk-scope="meta"
-  data-webtalk-site-id="your-site"
+  async
+  src="https://webtalk-nine.vercel.app/webtalk.js"
+  data-webtalk-scope="origin"
+  data-webtalk-ai-endpoint="https://webtalk-nine.vercel.app/api/webtalk/ai"
 ></script>
 ```
 
-手機預設是下半螢幕聊天覆蓋層，可用 `data-webtalk-mobile-placement="top"` 改為上半部。沒有 page meta 的頁面不應載入 Embed script，例如 Wiki edit 頁；CRM 則可以使用 `data-webtalk-auto-mount="false"`，在登入成功後呼叫 `window.WebTalk.mount()`。完整參數與 P2P／AI 資料流請參考部署後的 [站長教學首頁](https://your-webtalk-host.example/) 或 [Website Embed 說明](docs/web-embed.md)，Vercel 部署步驟請參考 [Vercel 部署指南](docs/deploy-vercel.md)。
+手機預設是下半螢幕聊天覆蓋層，可用 `data-webtalk-mobile-placement="top"` 改為上半部。沒有 page meta 的頁面不應載入 Embed script，例如 Wiki edit 頁；CRM 則可以使用 `data-webtalk-auto-mount="false"`，在登入成功後呼叫 `window.WebTalk.mount()`。完整參數、聊天室策略與 AI 資料流請直接閱讀 [WebTalk Embed 接入指南（繁中）](https://webtalk-nine.vercel.app/) 或 [English guide](https://webtalk-nine.vercel.app/en.html)；部署細節請參考 [Vercel 部署指南](docs/deploy-vercel.md)。
 
-Vercel 建置時可設定 `WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/`，讓站長教學首頁自動帶入正確的 script 與 AI endpoint 網域；未設定時會使用這個網址作為預設值。站長可直接閱讀並體驗純 P2P 聊天的 [WebTalk Embed 接入指南（繁中）](https://webtalk-nine.vercel.app/) 或 [English guide](https://webtalk-nine.vercel.app/en.html)；一般使用者可從 [Chrome Web Store 安裝 WebTalk 333](https://chromewebstore.google.com/detail/webtalk-333-chat-and-summ/hhhdloelamldfadfobnhdhpfmbbdppdb)。
+這個正式站點是給一般網站站長使用的安裝與體驗入口；目前版本定位為多人即時交流與現場互動工具，不是客服工具，未提供客服分流、工單或客服後台。Vercel 建置時可設定 `WEBTALK_DOMAIN=https://webtalk-nine.vercel.app/`，讓教學頁自動帶入正確的 script 與 AI endpoint 網域；未設定時也會使用這個網址作為預設值。一般使用者可從 [Chrome Web Store 安裝 WebTalk 333](https://chromewebstore.google.com/detail/webtalk-333-chat-and-summ/hhhdloelamldfadfobnhdhpfmbbdppdb)。
 
 安裝後，你將能在任何網站上開啟聊天室，再也不怕一個人上網啦！還能使用 AI 摘要功能快速了解網頁內容！
 
