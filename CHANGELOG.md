@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [2.1.2] - 2026-07-17
+
+### Changed
+
+- **Extension UI refresh**：更新聊天室人數 badge、訊息卡片配色與 AI Workspace 導覽列，Chrome Extension 與 Embed 共用同一套 UI 調整。
+
+### Fixed
+
+- **Background danmaku**：聊天室面板關閉時仍持續接收公開訊息並顯示彈幕；彈幕容器生命週期不再依賴 Chat 面板狀態。
+
 ## [2.1.1] - 2026-07-16
 
 ### Removed
