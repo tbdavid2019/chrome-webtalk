@@ -14,21 +14,35 @@ import Link from '@/components/Link'
 import NumberFlow from '@number-flow/react'
 import AppStatusDomain from '@/domain/AppStatus'
 import UserInfoDomain from '@/domain/UserInfo'
+import { getUiText } from '@/utils'
 
-const PresenceCount: FC<{ count: number; capped?: boolean }> = ({ count, capped }) => {
+const MaterialGroupIcon: FC<{ className?: string }> = ({ className }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
+    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-2.99 1.34-2.99 3S14.34 11 16 11zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5.01 6.34 5.01 8 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+  </svg>
+)
+
+const PresenceCount: FC<{ count: number; capped?: boolean; label?: string }> = ({ count, capped, label }) => {
   const tone =
-    count > 1 ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-orange-200 bg-orange-50 text-orange-700'
+    count > 1
+      ? 'border-emerald-200/80 bg-emerald-50/80 text-emerald-700'
+      : 'border-orange-200/80 bg-orange-50/80 text-orange-700'
+  const displayCount = capped ? `${count}+` : String(count)
 
   return (
     <span
+      role="status"
+      aria-label={`${label ? `${label}: ` : ''}${displayCount}`}
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium leading-none tabular-nums dark:border-white/10 dark:bg-white/5 dark:text-slate-100',
+        'relative inline-flex size-8 items-center justify-center rounded-full border text-xs font-semibold leading-none tabular-nums shadow-sm transition-transform hover:scale-[1.03] dark:border-white/10 dark:bg-white/5 dark:text-slate-100',
         tone
       )}
     >
-      <span aria-hidden>👥</span>
-      {import.meta.env.FIREFOX ? count : <NumberFlow className="tabular-nums" willChange value={count} />}
-      {capped && <span>+</span>}
+      <MaterialGroupIcon className="size-[17px]" />
+      <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full border border-background bg-primary px-1 py-0.5 text-[10px] font-bold leading-none text-primary-foreground shadow-sm">
+        {import.meta.env.FIREFOX ? displayCount : <NumberFlow className="tabular-nums" willChange value={count} />}
+        {capped && import.meta.env.FIREFOX === false && <span>+</span>}
+      </span>
     </span>
   )
 }
@@ -43,6 +57,7 @@ const Header: FC = () => {
   const chatUserList = useRemeshQuery(chatRoomDomain.query.UserListQuery())
   const virtualUserList = useRemeshQuery(virtualRoomDomain.query.UserListQuery())
   const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
+  const text = getUiText(userInfo?.language)
   const privateChatTarget = useRemeshQuery(chatRoomDomain.query.PrivateChatTargetQuery())
   const chatOnlineCount = chatUserList.length
   const developerMode = userInfo?.developerMode === true
@@ -126,7 +141,7 @@ const Header: FC = () => {
                           <h4 className="flex-1 truncate text-sm font-semibold text-foreground">
                             {site.hostname.replace(/^www\./i, '')}
                           </h4>
-                          <PresenceCount count={site.users.length} />
+                <PresenceCount count={site.users.length} label={text.peopleOnline} />
                         </div>
                         <AvatarCircles max={9} size="xs" avatarUrls={site.users.map((user) => user.userAvatar)} />
                       </div>
@@ -142,7 +157,7 @@ const Header: FC = () => {
         <HoverCard>
           <HoverCardTrigger asChild>
             <Button className="rounded-full p-0 hover:no-underline animate-in fade-in" variant="link">
-              <PresenceCount count={cappedChatOnlineCount} capped={chatOnlineCount > 99} />
+              <PresenceCount count={cappedChatOnlineCount} capped={chatOnlineCount > 99} label={text.peopleOnline} />
             </Button>
           </HoverCardTrigger>
           <HoverCardContent className="w-40 rounded-2xl p-0">

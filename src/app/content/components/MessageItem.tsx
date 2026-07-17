@@ -49,10 +49,10 @@ const MessageItem: FC<MessageItemProps> = (props) => {
   const isRecalled = isRecalledMessage(props.data)
   const isOwnMessage = !props.isAi && Boolean(props.currentUserId) && props.currentUserId === props.data.userId
   const actionClass = isOwnMessage
-    ? 'text-primary-foreground/75 hover:bg-primary-foreground/15 hover:text-primary-foreground'
+    ? 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
   const activeActionClass = isOwnMessage
-    ? 'bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/25'
+    ? 'bg-primary/10 text-primary hover:bg-primary/15'
     : 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
   let content = props.data.body
 
@@ -95,7 +95,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
           className={cn(
             'min-w-0 max-w-[calc(100%_-_2.5rem)] flex-1 overflow-hidden rounded-2xl border px-3.5 py-2.5 shadow-sm',
             isOwnMessage
-              ? 'rounded-br-md border-primary/80 bg-primary text-primary-foreground'
+              ? 'rounded-br-md border-primary/25 bg-primary/10 text-foreground dark:border-primary/40 dark:bg-primary/20 dark:text-slate-50'
               : props.isAi
                 ? 'rounded-bl-md border-amber-200/70 bg-amber-50/70 text-foreground dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-slate-50'
                 : 'rounded-bl-md border-border/80 bg-card/80 text-foreground'
@@ -105,7 +105,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
             <div className={cn('flex min-w-0 items-center gap-1.5', isOwnMessage && 'flex-row-reverse')}>
               <div className="truncate text-sm font-semibold">{props.data.username}</div>
               {isOwnMessage && (
-                <span className="shrink-0 rounded-full bg-primary-foreground/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-primary-foreground/90">
+                <span className="shrink-0 rounded-full border border-primary/15 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-primary">
                   {text.selfLabel}
                 </span>
               )}
@@ -132,7 +132,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
             <FormatDate
               className={cn(
                 'shrink-0 text-[11px]',
-                isOwnMessage ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                'text-muted-foreground'
               )}
               date={props.data.sendTime}
             />
@@ -142,7 +142,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
             <div
               className={cn(
                 'mt-1.5 flex min-w-0 items-center gap-1.5 text-xs',
-                isOwnMessage ? 'text-primary-foreground/75' : 'text-muted-foreground'
+                'text-muted-foreground'
               )}
             >
               <Link2Icon size={13} className="shrink-0" />
@@ -151,7 +151,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
             </div>
           )}
 
-          <div className={cn('pt-1.5 text-[15px] leading-6', isOwnMessage ? 'text-primary-foreground' : 'text-foreground')}>
+          <div className="pt-1.5 text-[15px] leading-6 text-foreground">
             {isRecalled ? (
               <div
                 role="status"
@@ -160,7 +160,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 className={cn(
                   'inline-flex items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-sm',
                   isOwnMessage
-                    ? 'border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground/80'
+                    ? 'border-primary/30 bg-primary/5 text-muted-foreground'
                     : 'border-muted-foreground/40 bg-muted/30 text-muted-foreground'
                 )}
               >
@@ -168,7 +168,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 <span className="font-medium italic">{text.messageRecalled}</span>
               </div>
             ) : (
-              <Markdown className={cn('prose-sm max-w-none', isOwnMessage && 'prose-invert')}>{content}</Markdown>
+              <Markdown className="prose-sm max-w-none">{content}</Markdown>
             )}
           </div>
 

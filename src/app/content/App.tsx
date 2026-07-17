@@ -49,7 +49,6 @@ export default function App({
   const danmakuDomain = useRemeshDomain(DanmakuDomain())
   const appStatusDomain = useRemeshDomain(AppStatusDomain())
 
-  const danmakuIsEnabled = useRemeshQuery(danmakuDomain.query.IsEnabledQuery())
   const userInfoSetFinished = useRemeshQuery(userInfoDomain.query.UserInfoSetIsFinishedQuery())
   const messageListLoadFinished = useRemeshQuery(messageListDomain.query.LoadIsFinishedQuery())
   const userInfoLoadFinished = useRemeshQuery(userInfoDomain.query.UserInfoLoadIsFinishedQuery())
@@ -238,15 +237,15 @@ export default function App({
   const danmakuContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (danmakuIsEnabled) {
-      send(danmakuDomain.command.MountCommand(danmakuContainerRef.current!))
-    }
+    const container = danmakuContainerRef.current
+    if (!container) return
+
+    send(danmakuDomain.command.MountCommand(container))
+
     return () => {
-      if (danmakuIsEnabled) {
-        send(danmakuDomain.command.UnmountCommand())
-      }
+      send(danmakuDomain.command.UnmountCommand())
     }
-  }, [danmakuIsEnabled])
+  }, [danmakuDomain, send])
 
   useEffect(() => {
     window.addEventListener('beforeunload', leaveRoom)
