@@ -48,7 +48,8 @@ const DanmakuDomain = Remesh.domain({
 
     const PushCommand = domain.command({
       name: 'Danmaku.PushCommand',
-      impl: (_, message: TextMessage) => {
+      impl: ({ get }, message: TextMessage) => {
+        if (!get(MountState())) return null
         danmakuExtern.push(message)
         return [PushEvent(message)]
       }
@@ -56,7 +57,8 @@ const DanmakuDomain = Remesh.domain({
 
     const UnshiftCommand = domain.command({
       name: 'Danmaku.UnshiftCommand',
-      impl: (_, message: TextMessage) => {
+      impl: ({ get }, message: TextMessage) => {
+        if (!get(MountState())) return null
         danmakuExtern.unshift(message)
         return [UnshiftEvent(message)]
       }
@@ -64,25 +66,27 @@ const DanmakuDomain = Remesh.domain({
 
     const ClearCommand = domain.command({
       name: 'Danmaku.ClearCommand',
-      impl: () => {
+      impl: ({ get }) => {
+        if (!get(MountState())) return null
         danmakuExtern.clear()
         return [ClearEvent()]
       }
     })
 
     const MountCommand = domain.command({
-      name: 'Danmaku.ClearCommand',
+      name: 'Danmaku.MountCommand',
       impl: (_, container: HTMLElement) => {
         danmakuExtern.mount(container)
-        return [MountEvent(container)]
+        return [MountState().new(true), MountEvent(container)]
       }
     })
 
     const UnmountCommand = domain.command({
       name: 'Danmaku.UnmountCommand',
-      impl: () => {
+      impl: ({ get }) => {
+        if (!get(MountState())) return null
         danmakuExtern.unmount()
-        return [UnmountEvent()]
+        return [MountState().new(false), UnmountEvent()]
       }
     })
 
@@ -130,7 +134,8 @@ const DanmakuDomain = Remesh.domain({
         const onMessage$ = merge(sendTextMessage$, onTextMessage$).pipe(
           map((message) => {
             const danmakuEnabled = get(IsEnabledQuery())
-            return danmakuEnabled && message.senderType !== 'ai' ? PushCommand(message) : null
+            const isMounted = get(IsMountedQuery())
+            return danmakuEnabled && isMounted && message.senderType !== 'ai' ? PushCommand(message) : null
           })
         )
         return onMessage$

@@ -15,7 +15,7 @@ import { nanoid } from 'nanoid'
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY, HISTORY_LIMIT } from '@/types/summaryHistory'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import AppStatusDomain from '@/domain/AppStatus'
-import { SettingsIcon, XIcon, CornerDownLeftIcon } from 'lucide-react'
+import { SettingsIcon, XIcon, CornerDownLeftIcon, SparklesIcon } from 'lucide-react'
 import UserInfoDomain from '@/domain/UserInfo'
 import {
   blobToBase64,
@@ -630,12 +630,15 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
           isEmbed && isMobile ? 'min-w-0 max-w-none border-l-0' : ''
         }`}
       >
-        <div className="flex h-14 items-center justify-between border-b border-border bg-background px-4 max-sm:h-12 max-sm:px-3">
-          <div className="flex items-center gap-1.5 py-1">
-            <span className="truncate text-lg font-extrabold tracking-wider text-foreground max-sm:text-base">✨ {text.title}</span>
+        <div className="flex h-12 items-center justify-between border-b border-border bg-background px-4 max-sm:px-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <SparklesIcon size={16} aria-hidden="true" />
+            </span>
+            <span className="truncate text-base font-extrabold tracking-wide text-foreground">{text.title}</span>
           </div>
-          <div className="flex shrink-0 items-center gap-2 max-sm:gap-1">
-            <div className="flex h-9 shrink-0 items-center rounded-full border border-border/80 bg-muted p-0.5 max-sm:h-8">
+          <div className="flex shrink-0 items-center gap-1.5 max-sm:gap-1">
+            <div className="flex h-8 shrink-0 items-center rounded-full border border-border/80 bg-muted/40 p-0.5">
               {(
                 [
                   { code: 'zh_TW', label: '繁' },
@@ -646,7 +649,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
                 <button
                   key={lang.code}
                   onClick={() => setLanguage(lang.code)}
-                  className={`h-full rounded-full px-3 text-sm font-extrabold transition-all max-sm:px-2 max-sm:text-xs ${
+                  className={`h-full rounded-full px-2.5 text-xs font-semibold transition-all max-sm:px-2 ${
                     language === lang.code
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -658,13 +661,13 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
             </div>
             <button
               onClick={handleOpenHistory}
-              className="hidden h-9 shrink-0 items-center justify-center rounded-full border border-border bg-background px-4 text-sm font-extrabold leading-none text-foreground transition hover:bg-muted sm:inline-flex"
+              className="hidden h-8 shrink-0 items-center justify-center rounded-full border border-border bg-background px-3 text-xs font-semibold leading-none text-foreground transition hover:bg-muted sm:inline-flex"
             >
               {text.history}
             </button>
             <button
               onClick={() => setShowApiSettings(!showApiSettings)}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-foreground transition hover:bg-muted"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-background text-foreground transition hover:bg-muted"
               title="API setting 設置"
               aria-label="API setting 設置"
             >
@@ -672,7 +675,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
             </button>
             <button
               onClick={onClose}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground"
               title="關閉 AI 空間"
             >
               <XIcon size={16} />
