@@ -34,7 +34,7 @@ const PresenceCount: FC<{ count: number; capped?: boolean; label?: string }> = (
       role="status"
       aria-label={`${label ? `${label}: ` : ''}${displayCount}`}
       className={cn(
-        'relative inline-flex size-8 items-center justify-center rounded-full border text-xs font-semibold leading-none tabular-nums shadow-sm transition-transform hover:scale-[1.03] dark:border-white/10 dark:bg-white/5 dark:text-slate-100',
+        'relative inline-flex size-8 items-center justify-center rounded-lg border text-xs font-semibold leading-none tabular-nums shadow-sm transition-transform hover:scale-[1.03] dark:border-white/10 dark:bg-white/5 dark:text-slate-100',
         tone
       )}
     >
@@ -107,7 +107,7 @@ const Header: FC = () => {
           <HoverCard>
             <HoverCardTrigger asChild>
               <Button
-                className="h-8 gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:no-underline hover:text-foreground"
+                className="h-8 gap-1 rounded-md px-2 text-xs font-medium text-muted-foreground hover:no-underline hover:text-foreground"
                 variant="ghost"
               >
                 <BugIcon size={14} />
@@ -156,7 +156,7 @@ const Header: FC = () => {
       <div className="flex items-center gap-2">
         <HoverCard>
           <HoverCardTrigger asChild>
-            <Button className="rounded-full p-0 hover:no-underline animate-in fade-in" variant="link">
+            <Button className="rounded-md p-0 hover:no-underline animate-in fade-in" variant="link">
               <PresenceCount count={cappedChatOnlineCount} capped={chatOnlineCount > 99} label={text.peopleOnline} />
             </Button>
           </HoverCardTrigger>
@@ -213,7 +213,7 @@ const Header: FC = () => {
         </HoverCard>
         <button
           onClick={handleClose}
-          className="flex size-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground shrink-0"
+          className="flex size-7 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground shrink-0"
           title="關閉聊天"
           aria-label="關閉聊天"
         >

@@ -1,5 +1,5 @@
 import { ChangeEvent, useMemo, useRef, useState, KeyboardEvent, type FC, ClipboardEvent, useEffect } from 'react'
-import { CornerDownLeftIcon, LinkIcon, BotIcon } from 'lucide-react'
+import { CornerDownLeftIcon, LinkIcon, BotIcon, ChevronDown } from 'lucide-react'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import MessageInput from '../../components/MessageInput'
 import EmojiButton from '../../components/EmojiButton'
@@ -80,6 +80,9 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
   const [isSending, setIsSending] = useState(false)
   const [pageSuggestions, setPageSuggestions] = useState<PageSuggestion[]>([])
   const [pageSuggestionsLoading, setPageSuggestionsLoading] = useState(false)
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(
+    () => !window.matchMedia('(max-width: 639px)').matches
+  )
   const maxLengthWarnedRef = useRef(false)
   const aiRequestInFlightRef = useRef(false)
   const aiLastTriggeredAtRef = useRef(0)
@@ -673,32 +676,49 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
       {aiTopicSuggestionsEnabled && !privateChatTarget && (
         <div
           className={cn(
-            'rounded-3xl border border-border bg-muted/30 px-3 py-3 shadow-sm',
-            isEmbed && 'max-sm:max-h-28 max-sm:overflow-y-auto max-sm:overscroll-contain'
+            'rounded-3xl border border-border bg-muted/30 shadow-sm',
+            suggestionsExpanded ? 'px-3 py-3' : 'px-3 py-2',
+            suggestionsExpanded && 'max-sm:max-h-28 max-sm:overflow-y-auto max-sm:overscroll-contain'
           )}
         >
-          <div className="mb-1 flex items-center justify-between gap-2">
-            <div className="text-sm font-semibold text-foreground">{text.chatSuggestionsTitle}</div>
-            {pageSuggestionsLoading && (
-              <div className="text-xs text-muted-foreground">{text.chatSuggestionsLoading}</div>
-            )}
-          </div>
-          <div className="mb-3 text-xs text-muted-foreground">{text.chatSuggestionsDescription}</div>
-          <div className="flex flex-wrap gap-2">
-            {pageSuggestions.map((item, index) => (
-              <Button
-                key={`${item.label}-${index}`}
-                type="button"
-                variant="outline"
-                size="xs"
-                className="h-auto rounded-full bg-background px-3 py-1.5 text-left text-sm whitespace-normal hover:bg-muted"
-                onClick={() => handleInsertSuggestedPrompt(item.prompt)}
-                title={item.prompt}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </div>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-2 text-left"
+            onClick={() => setSuggestionsExpanded((expanded) => !expanded)}
+            aria-expanded={suggestionsExpanded}
+            aria-controls="webtalk-chat-suggestions"
+          >
+            <span className="text-sm font-semibold text-foreground">{text.chatSuggestionsTitle}</span>
+            <span className="flex items-center gap-2">
+              {pageSuggestionsLoading && (
+                <span className="text-xs font-normal text-muted-foreground">{text.chatSuggestionsLoading}</span>
+              )}
+              <ChevronDown
+                aria-hidden="true"
+                className={cn('size-4 shrink-0 text-muted-foreground transition-transform', suggestionsExpanded && 'rotate-180')}
+              />
+            </span>
+          </button>
+          {suggestionsExpanded && (
+            <div id="webtalk-chat-suggestions">
+              <div className="mb-3 mt-1 text-xs text-muted-foreground">{text.chatSuggestionsDescription}</div>
+              <div className="flex flex-wrap gap-2">
+                {pageSuggestions.map((item, index) => (
+                  <Button
+                    key={`${item.label}-${index}`}
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    className="h-auto rounded-full bg-background px-3 py-1.5 text-left text-sm whitespace-normal hover:bg-muted"
+                    onClick={() => handleInsertSuggestedPrompt(item.prompt)}
+                    title={item.prompt}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
       <div className="rounded-3xl border border-border bg-muted/20 p-3 shadow-sm">
