@@ -2,6 +2,7 @@ import { useState, type FC } from 'react'
 import { BugIcon, Globe2Icon, XIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/HoverCard'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
 import { Button } from '@/components/ui/Button'
 import { cn, getSiteInfo } from '@/utils'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
@@ -34,7 +35,7 @@ const PresenceCount: FC<{ count: number; capped?: boolean; label?: string }> = (
       role="status"
       aria-label={`${label ? `${label}: ` : ''}${displayCount}`}
       className={cn(
-        'relative inline-flex size-8 items-center justify-center rounded-lg border text-xs font-semibold leading-none tabular-nums shadow-sm transition-transform hover:scale-[1.03] dark:border-white/10 dark:bg-white/5 dark:text-slate-100',
+        'relative inline-flex size-8 items-center justify-center rounded-[4px] border text-xs font-semibold leading-none tabular-nums shadow-sm transition-transform hover:scale-[1.03] dark:border-white/10 dark:bg-white/5 dark:text-slate-100',
         tone
       )}
     >
@@ -78,6 +79,7 @@ const Header: FC = () => {
     .sort((a, b) => b.users.length - a.users.length)
 
   const [chatUserListScrollParentRef, setChatUserListScrollParentRef] = useState<HTMLDivElement | null>(null)
+  const [chatUserListOpen, setChatUserListOpen] = useState(false)
   const [virtualOnlineGroupScrollParentRef, setVirtualOnlineGroupScrollParentRef] = useState<HTMLDivElement | null>(
     null
   )
@@ -154,13 +156,17 @@ const Header: FC = () => {
         )}
       </div>
       <div className="flex items-center gap-2">
-        <HoverCard>
-          <HoverCardTrigger asChild>
-            <Button className="rounded-md p-0 hover:no-underline animate-in fade-in" variant="link">
+        <Popover open={chatUserListOpen} onOpenChange={setChatUserListOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              className="rounded-[4px] p-0 hover:no-underline animate-in fade-in"
+              variant="link"
+              aria-label={text.peopleOnline}
+            >
               <PresenceCount count={cappedChatOnlineCount} capped={chatOnlineCount > 99} label={text.peopleOnline} />
             </Button>
-          </HoverCardTrigger>
-          <HoverCardContent className="w-40 rounded-2xl p-0">
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-40 rounded-md p-0">
             <ScrollArea type="scroll" className="max-h-[204px] min-h-9 p-1" ref={setChatUserListScrollParentRef}>
               <Virtuoso
                 data={chatUserList}
@@ -178,6 +184,7 @@ const Header: FC = () => {
                         } else {
                           send(chatRoomDomain.command.SelectPrivateChatTargetCommand(user))
                         }
+                        setChatUserListOpen(false)
                       }}
                       className={cn(
                         'my-0.5 flex items-center gap-x-2 rounded-xl px-2 py-1.5 outline-none select-none',
@@ -209,11 +216,11 @@ const Header: FC = () => {
                 }}
               ></Virtuoso>
             </ScrollArea>
-          </HoverCardContent>
-        </HoverCard>
+          </PopoverContent>
+        </Popover>
         <button
           onClick={handleClose}
-          className="flex size-7 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground shrink-0"
+          className="flex size-7 items-center justify-center rounded-[4px] border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground shrink-0"
           title="關閉聊天"
           aria-label="關閉聊天"
         >
