@@ -13,3 +13,15 @@ export const resolveEmbedPanelStyle = (isMobile: boolean, placement: MobilePlace
 
   return resolveEmbedMobileOverlayStyle(placement)
 }
+
+export const resolvePanelSizeStyle = (
+  size: number,
+  isEmbed: boolean,
+  isMobile: boolean,
+  placement: MobilePlacement
+) => ({
+  width: `${size}px`,
+  maxWidth: '100vw',
+  pointerEvents: 'auto' as const,
+  ...(isEmbed ? resolveEmbedPanelStyle(isMobile, placement) : undefined)
+})

@@ -5,7 +5,7 @@ import AppStatusDomain from '@/domain/AppStatus'
 import { useRemeshDomain, useRemeshQuery } from 'remesh-react'
 import { cn } from '@/utils'
 import type { MobilePlacement } from '@/app/embed/options'
-import { resolveEmbedPanelStyle } from './panelStyle'
+import { resolvePanelSizeStyle } from './panelStyle'
 
 export interface AppMainProps {
   children?: ReactNode
@@ -44,7 +44,7 @@ const AppMain: FC<AppMainProps> = ({
     return () => mediaQuery.removeEventListener('change', handleChange)
   }, [])
 
-  const embedPanelStyle = isEmbed ? resolveEmbedPanelStyle(isMobile, mobilePlacement) : undefined
+  const panelSizeStyle = resolvePanelSizeStyle(size, isEmbed, isMobile, mobilePlacement)
 
   return (
     <AnimatePresence>
@@ -55,9 +55,8 @@ const AppMain: FC<AppMainProps> = ({
           exit={{ opacity: 0, x: '100%' }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           style={{
-            width: `${size}px`,
             zIndex: zIndex,
-            ...embedPanelStyle
+            ...panelSizeStyle
           }}
           className={cn(
             'fixed top-0 right-0 z-infinity h-full grid grid-rows-[auto_1fr_auto] border-l border-border bg-background font-sans text-foreground shadow-2xl',
