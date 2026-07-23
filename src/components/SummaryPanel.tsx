@@ -15,10 +15,11 @@ import { nanoid } from 'nanoid'
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY, HISTORY_LIMIT } from '@/types/summaryHistory'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import AppStatusDomain from '@/domain/AppStatus'
-import { SettingsIcon, XIcon, CornerDownLeftIcon, SparklesIcon } from 'lucide-react'
+import { SettingsIcon, XIcon, CornerDownLeftIcon, SparklesIcon, ChevronDown } from 'lucide-react'
 import UserInfoDomain from '@/domain/UserInfo'
 import {
   blobToBase64,
+  cn,
   compressImage,
   requestAiChatReply,
   requestPageSuggestions,
@@ -210,6 +211,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
   const [chatImages, setChatImages] = useState<ChatImageAttachment[]>([])
   const [suggestedQuestions, setSuggestedQuestions] = useState<PageSuggestion[]>([])
   const [suggestionsLoading, setSuggestionsLoading] = useState(false)
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(
+    () => !window.matchMedia('(max-width: 639px)').matches
+  )
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 639px)').matches)
   const chatListRef = useRef<HTMLDivElement | null>(null)
   const chatInputIsComposingRef = useRef(false)
@@ -804,27 +808,49 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
 
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {aiTopicSuggestionsEnabled && (
-              <div className="mb-3 rounded-2xl border border-border bg-muted/30 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-sm font-semibold text-foreground">{text.suggestedQuestions}</div>
-                  {suggestionsLoading && <div className="text-xs text-muted-foreground">{text.suggestionsLoading}</div>}
-                </div>
-                {!!text.suggestionsDescription && (
-                  <div className="mt-1 text-xs text-muted-foreground">{text.suggestionsDescription}</div>
+              <div
+                className={cn(
+                  'mb-3 rounded-2xl bg-muted/40 p-3 shadow-xs',
+                  suggestionsExpanded ? 'px-3 py-3' : 'px-3 py-2'
                 )}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {suggestedQuestions.map((item, index) => (
-                    <button
-                      key={`${item.label}-${index}`}
-                      type="button"
-                      onClick={() => handleInsertSuggestion(item.prompt)}
-                      className="rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted"
-                      title={item.prompt}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
+              >
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between gap-2 text-left"
+                  onClick={() => setSuggestionsExpanded((expanded) => !expanded)}
+                  aria-expanded={suggestionsExpanded}
+                >
+                  <span className="text-sm font-semibold text-foreground">{text.suggestedQuestions}</span>
+                  <span className="flex items-center gap-2">
+                    {suggestionsLoading && (
+                      <span className="text-xs font-normal text-muted-foreground">{text.suggestionsLoading}</span>
+                    )}
+                    <ChevronDown
+                      aria-hidden="true"
+                      className={cn('size-4 shrink-0 text-muted-foreground transition-transform', suggestionsExpanded && 'rotate-180')}
+                    />
+                  </span>
+                </button>
+                {suggestionsExpanded && (
+                  <div className="mt-2">
+                    {!!text.suggestionsDescription && (
+                      <div className="mb-2 text-xs text-muted-foreground">{text.suggestionsDescription}</div>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {suggestedQuestions.map((item, index) => (
+                        <button
+                          key={`${item.label}-${index}`}
+                          type="button"
+                          onClick={() => handleInsertSuggestion(item.prompt)}
+                          className="rounded-full border-0 bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted shadow-xs"
+                          title={item.prompt}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {!hasStartedChat ? (

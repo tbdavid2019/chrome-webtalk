@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [2.1.9] - 2026-07-23
+
+### Added
+
+- **AI 模式推薦問題摺疊功能 (Collapsible Suggested Questions in AI Mode)**：
+  - 在 AI 空間 ([SummaryPanel.tsx](file:///Users/david/Documents/git/tbdavid2019/chrome-webtalk/src/components/SummaryPanel.tsx)) 中將「推薦問題」標題區域改為可點擊摺疊/展開，並加入 Lucide `ChevronDown` 圖示，手機與窄版下保持極致簡潔的視覺介面。
+
 ## [2.1.8] - 2026-07-23
 
 ### Fixed
