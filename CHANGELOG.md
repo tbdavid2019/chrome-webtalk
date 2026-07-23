@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [Unreleased] - 2026-07-23
+
+### Changed
+
+- **Chat 訊息資訊層級重整**：作者與時間移到訊息泡泡外，自己的訊息不再重複顯示姓名與「你」標籤；頁面來源縮成單行圖示與標題，操作列改為低干擾的 icon toolbar，降低資訊堆疊。
+- **Chat / Summary 字體與泡泡統一**：兩個介面的正文統一為 15px／24px 行高，摘要、AI 回覆、聊天室訊息與輸入框共用相同密度、圓角及背景層級。
+- **控制元件統一**：左下角 Chat / AI 切換改成與「繁／簡／En」語言切換相同的 segmented control；輸入工具與送出按鈕同步採用一致的方形圓角。
+- **在線人數簡化**：右上角移除群組頭像圖示與浮動 badge，改為只顯示可點擊的在線人數數字。
+- **Summary 操作列精簡**：重新摘要、複製、Markdown 與清除動作改用一致的 Lucide icon buttons，移除 emoji 與分隔線造成的視覺噪音。
+
+### Build
+
+- 已產生 Chrome Extension `output/chrome-mv3`，以及 Vercel Embed 使用的 `output/webtalk/webtalk.js` 與 `output/webtalk/webtalk-chat.js`。
+
 ## [2.1.9] - 2026-07-23
 
 ### Added
