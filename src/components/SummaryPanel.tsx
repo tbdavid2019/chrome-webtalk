@@ -33,6 +33,8 @@ type SummaryPanelProps = {
   onClose: () => void
   isEmbed?: boolean
   mobilePlacement?: MobilePlacement
+  zIndex?: number
+  onMouseDown?: React.MouseEventHandler<HTMLDivElement>
 }
 
 type Lang = 'zh_TW' | 'zh_CN' | 'en'
@@ -180,7 +182,13 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
   }
 }
 
-export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = false, mobilePlacement = 'bottom' }) => {
+export const SummaryPanel: React.FC<SummaryPanelProps> = ({
+  onClose,
+  isEmbed = false,
+  mobilePlacement = 'bottom',
+  zIndex,
+  onMouseDown
+}) => {
   const aiConfig = getPlatform().ai
   const defaultApiKey = aiConfig.apiKey || ''
   const defaultApiBaseURL = aiConfig.endpoint
@@ -205,6 +213,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 639px)').matches)
   const chatListRef = useRef<HTMLDivElement | null>(null)
   const chatInputIsComposingRef = useRef(false)
+  const prevMessagesCountRef = useRef(0)
   const pageMetaRef = useRef({
     url: typeof window === 'undefined' ? '' : window.location.href,
     title: typeof document === 'undefined' ? '' : document.title
@@ -429,10 +438,13 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
 
   useEffect(() => {
     if (!chatListRef.current) return
-    chatListRef.current.scrollTo({
-      top: chatListRef.current.scrollHeight,
-      behavior: 'smooth'
-    })
+    if (chatMessages.length > prevMessagesCountRef.current || chatLoading) {
+      chatListRef.current.scrollTo({
+        top: chatListRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+    prevMessagesCountRef.current = chatMessages.length
   }, [chatMessages, chatLoading])
 
   useEffect(() => {
@@ -499,16 +511,15 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
         pageUrl: pageMetaRef.current.url
       })
       updateHistoryEntry({ summary: newSummary ?? text.noContent, chatMessages: [] })
-      setTimeout(() => {
-        if (chatListRef.current) {
-          chatListRef.current.scrollTop = 0
-        }
-      }, 50)
+      if (chatListRef.current) {
+        chatListRef.current.scrollTop = 0
+      }
     } catch (error: any) {
       console.error('[WebTalk] ❌ 摘要失敗', error)
       alert(error.message || '摘要失敗，請稍後再試 / Condensation failed, please try again')
     }
   }
+
   const speak = () => {
     if (!summary) return
     const utterance = new SpeechSynthesisUtterance(summary)
@@ -658,7 +669,11 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
         animate={{ opacity: 1, x: '0%' }}
         exit={{ opacity: 0, x: '100%' }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        style={embedPanelStyle}
+        onMouseDown={onMouseDown}
+        style={{
+          zIndex,
+          ...embedPanelStyle
+        }}
         className={`pointer-events-auto fixed right-0 top-0 z-infinity grid h-full w-[440px] min-w-[380px] max-w-[860px] grid-rows-[auto_1fr] border-l border-border bg-background shadow-2xl ${
           isEmbed && isMobile ? 'min-w-0 max-w-none border-l-0' : ''
         }`}
@@ -831,6 +846,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
               /* 2. 已產生摘要或已對話時的對話流介面 (滾動區域) */
               <div
                 ref={chatListRef}
+                onWheel={(e) => e.stopPropagation()}
                 className="flex-1 space-y-4 overflow-y-auto rounded-2xl border border-border bg-muted/20 p-4"
               >
                 {/* 網頁摘要氣泡 (置頂呈現) */}
