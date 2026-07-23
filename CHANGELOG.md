@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [2.1.6] - 2026-07-23
+
+### Changed
+
+- **Chat 模式字體與行高統一 (Font Size & Typography Alignment)**：
+  - 將 Chat 模式對話訊息的字體大小由較小緊湊的 `text-[15px]` / `prose-sm` (14px) 提升統一為 `text-base` (16px) 與 `prose-base` (16px)，配合 `leading-relaxed` 行高，讓 Chat 模式擁有與 Summary 模式一樣舒適大方的閱讀體驗。
+
 ## [2.1.5] - 2026-07-23
 
 ### Fixed

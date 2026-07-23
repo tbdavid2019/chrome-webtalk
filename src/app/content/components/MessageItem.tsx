@@ -151,7 +151,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
             </div>
           )}
 
-          <div className="pt-1.5 text-[15px] leading-6 text-foreground">
+          <div className="pt-1.5 text-base leading-relaxed text-foreground">
             {isRecalled ? (
               <div
                 role="status"
@@ -168,7 +168,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 <span className="font-medium italic">{text.messageRecalled}</span>
               </div>
             ) : (
-              <Markdown className="prose-sm max-w-none">{content}</Markdown>
+              <Markdown className="prose-base max-w-none text-base leading-relaxed">{content}</Markdown>
             )}
           </div>
 
