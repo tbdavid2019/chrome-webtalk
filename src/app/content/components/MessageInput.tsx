@@ -57,7 +57,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           autoFocus={autoFocus}
           maxLength={maxLength}
           className={cn(
-            'w-full min-h-[42px] max-h-28 resize-none rounded-xl border border-border/40 bg-muted/60 px-3 py-2.5 text-base leading-relaxed focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-foreground pb-7',
+            'w-full min-h-[42px] max-h-28 resize-none rounded-lg border border-border/50 bg-muted/60 px-3 py-2.5 pb-6 text-[15px] leading-6 text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0',
             {
               'border-amber-400/80 focus-visible:ring-amber-500': nearLimit,
               'border-red-400/90 focus-visible:ring-red-500': atLimit,
@@ -74,7 +74,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           disabled={disabled || loading}
         />
         <div
-          className={cn('absolute bottom-1.5 right-3 rounded-lg text-sm font-medium tabular-nums', {
+          className={cn('absolute bottom-1.5 right-3 text-[11px] font-medium leading-none tabular-nums', {
             'text-muted-foreground': !nearLimit,
             'text-amber-600 dark:text-amber-400': nearLimit && !atLimit,
             'text-red-600 dark:text-red-400': atLimit,

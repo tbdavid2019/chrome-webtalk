@@ -76,14 +76,16 @@ const MessageItem: FC<MessageItemProps> = (props) => {
       data-index={props.index}
       data-message-owner={isOwnMessage ? 'self' : 'other'}
       className={cn(
-        'group box-border flex w-full px-2 py-1.5 transition-colors duration-200 sm:px-3',
+        'group box-border flex w-full px-3 py-2 transition-colors duration-200',
         isOwnMessage ? 'justify-end' : 'justify-start',
         props.className
       )}
     >
-      <div className={cn('flex w-full max-w-[92%] items-end gap-2 sm:max-w-[84%]', isOwnMessage && 'flex-row-reverse')}>
+      <div
+        className={cn('flex w-full max-w-[92%] items-start gap-2 sm:max-w-[86%]', isOwnMessage && 'flex-row-reverse')}
+      >
         <Avatar
-          className={cn('size-8', props.isAi ? 'cursor-default opacity-90' : 'cursor-pointer')}
+          className={cn('mt-5 size-7 shrink-0', props.isAi ? 'cursor-default opacity-90' : 'cursor-pointer')}
           onClick={() => !props.isAi && props.onAvatarClick?.(props.data)}
           title={props.isAi ? text.aiMessageTitle : text.privateChatTitle}
         >
@@ -91,38 +93,28 @@ const MessageItem: FC<MessageItemProps> = (props) => {
           <AvatarFallback>{props.data.username.at(0)}</AvatarFallback>
         </Avatar>
 
-        <div
-          className={cn(
-            'min-w-0 max-w-[calc(100%_-_2.5rem)] flex-1 overflow-hidden rounded-2xl px-4 py-3 shadow-xs',
-            isOwnMessage
-              ? 'rounded-tr-sm bg-primary/10 text-foreground dark:bg-primary/20'
-              : props.isAi
-                ? 'rounded-tl-sm bg-amber-500/10 text-foreground dark:bg-amber-500/15'
-                : 'rounded-tl-sm bg-muted/60 text-foreground'
-          )}
-        >
-          <div className={cn('flex min-w-0 items-baseline gap-2 leading-tight', isOwnMessage && 'justify-end')}>
-            <div className={cn('flex min-w-0 items-center gap-1.5', isOwnMessage && 'flex-row-reverse')}>
-              <div className="truncate text-sm font-semibold">{props.data.username}</div>
-              {isOwnMessage && (
-                <span className="shrink-0 rounded-full border border-primary/15 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-primary">
-                  {text.selfLabel}
-                </span>
-              )}
+        <div className="min-w-0 max-w-[calc(100%_-_2.25rem)] flex-1">
+          <div
+            className={cn(
+              'mb-1 flex min-w-0 items-center gap-1.5 px-0.5 text-xs leading-4 text-muted-foreground',
+              isOwnMessage && 'justify-end'
+            )}
+          >
+            {!isOwnMessage && <span className="truncate font-semibold text-foreground">{props.data.username}</span>}
+            <div className="flex min-w-0 items-center gap-1.5">
               {props.isAi && (
-                <span className="inline-flex items-center gap-x-1 rounded-full border border-amber-300/70 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300">
-                  <BotIcon size={11} />
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-[4px] bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-amber-700 dark:text-amber-300">
+                  <BotIcon size={10} aria-hidden="true" />
                   AI
                   {props.aiOwnerUsername && (
-                    <span className="text-[10px] text-amber-700/80 dark:text-amber-300/80">
-                      by @{props.aiOwnerUsername}
+                    <span className="max-w-24 truncate text-amber-700/80 dark:text-amber-300/80">
+                      @{props.aiOwnerUsername}
                     </span>
                   )}
                 </span>
               )}
               {props.data.isPrivate && (
-                <span className="inline-flex shrink-0 items-center gap-x-0.5 rounded border border-indigo-200/50 bg-indigo-100/80 px-1 py-0.5 text-[9px] font-bold text-indigo-600 dark:border-indigo-900/50 dark:bg-indigo-950/60 dark:text-indigo-400">
-                  🔒{' '}
+                <span className="inline-flex max-w-40 shrink-0 truncate rounded-[4px] bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-indigo-600 dark:text-indigo-300">
                   {props.data.userId === props.currentUserId
                     ? text.privateMessageTo.replace('{username}', props.data.toUser?.username ?? '')
                     : text.privateMessageIncoming}
@@ -130,58 +122,51 @@ const MessageItem: FC<MessageItemProps> = (props) => {
               )}
             </div>
             <FormatDate
-              className={cn(
-                'shrink-0 text-[11px]',
-                'text-muted-foreground'
-              )}
+              className="shrink-0 text-[11px] tabular-nums text-muted-foreground"
               date={props.data.sendTime}
+              format="MM/dd HH:mm"
             />
           </div>
 
-          {!isRecalled && props.data.pageContext?.url && (
-            <div
-              className={cn(
-                'mt-1.5 flex min-w-0 items-center gap-1.5 text-xs',
-                'text-muted-foreground'
-              )}
-            >
-              <Link2Icon size={13} className="shrink-0" />
-              <span className="shrink-0 font-medium">{text.pageLabel}</span>
-              <span className="truncate">{props.data.pageContext.title || props.data.pageContext.url}</span>
-            </div>
-          )}
-
-          <div className="pt-1.5 text-base leading-relaxed text-foreground">
+          <div
+            className={cn(
+              'overflow-hidden rounded-xl px-3 py-2.5 text-foreground',
+              isOwnMessage
+                ? 'rounded-tr-sm bg-primary/10 dark:bg-primary/20'
+                : props.isAi
+                  ? 'rounded-tl-sm bg-amber-500/10 dark:bg-amber-500/15'
+                  : 'rounded-tl-sm bg-muted/70'
+            )}
+          >
+            {!isRecalled && props.data.pageContext?.url && (
+              <div className="mb-1.5 flex min-w-0 items-center gap-1.5 text-xs leading-4 text-muted-foreground">
+                <Link2Icon size={12} className="shrink-0" aria-hidden="true" />
+                <span className="truncate">{props.data.pageContext.title || props.data.pageContext.url}</span>
+              </div>
+            )}
             {isRecalled ? (
               <div
                 role="status"
                 data-message-state="recalled"
                 aria-label={text.messageRecalled}
-                className={cn(
-                  'inline-flex items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-sm',
-                  isOwnMessage
-                    ? 'border-primary/30 bg-primary/5 text-muted-foreground'
-                    : 'border-muted-foreground/40 bg-muted/30 text-muted-foreground'
-                )}
+                className="inline-flex items-center gap-2 py-0.5 text-sm text-muted-foreground"
               >
-                <Undo2Icon size={15} aria-hidden="true" />
+                <Undo2Icon size={14} aria-hidden="true" />
                 <span className="font-medium italic">{text.messageRecalled}</span>
               </div>
             ) : (
-              <Markdown className="prose-base max-w-none text-base leading-relaxed">{content}</Markdown>
+              <Markdown className="prose-sm max-w-none text-[15px] leading-6 [&_p]:my-0">{content}</Markdown>
+            )}
+
+            {!isRecalled && props.isAi && props.onForwardAi && (
+              <p className="mt-2 text-xs leading-5 text-amber-800 dark:text-amber-300">{text.aiLocalOnlyPrompt}</p>
             )}
           </div>
-
-          {!isRecalled && props.isAi && props.onForwardAi && (
-            <div className="mt-2.5 rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
-              {text.aiLocalOnlyPrompt}
-            </div>
-          )}
 
           {!isRecalled && (
             <div
               className={cn(
-                'mt-1 flex flex-wrap items-center gap-0.5 opacity-80 transition-opacity group-hover:opacity-100',
+                'mt-0.5 flex flex-wrap items-center gap-0.5 px-0.5 opacity-60 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100',
                 isOwnMessage ? 'justify-end' : 'justify-start'
               )}
             >
@@ -189,9 +174,10 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 type="button"
                 variant="ghost"
                 size="xs"
-                className={cn('h-7 rounded-full px-2 text-xs', actionClass, props.like && activeActionClass)}
+                className={cn('h-7 rounded-[4px] px-1.5 text-xs', actionClass, props.like && activeActionClass)}
                 onClick={() => props.onLikeChange?.(!props.like)}
                 title={text.likeTitle}
+                aria-label={text.likeTitle}
               >
                 <ThumbsUpIcon size={13} />
                 <span className="ml-1 tabular-nums">{props.data.likeUsers.length}</span>
@@ -200,9 +186,10 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 type="button"
                 variant="ghost"
                 size="xs"
-                className={cn('h-7 rounded-full px-2 text-xs', actionClass, props.hate && activeActionClass)}
+                className={cn('h-7 rounded-[4px] px-1.5 text-xs', actionClass, props.hate && activeActionClass)}
                 onClick={() => props.onHateChange?.(!props.hate)}
                 title={text.dislikeTitle}
+                aria-label={text.dislikeTitle}
               >
                 <ThumbsDownIcon size={13} />
                 <span className="ml-1 tabular-nums">{props.data.hateUsers.length}</span>
@@ -211,9 +198,10 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 type="button"
                 variant="ghost"
                 size="xs"
-                className={cn('h-7 rounded-full px-2 text-xs', actionClass)}
+                className={cn('size-7 rounded-[4px] p-0 text-xs', actionClass)}
                 onClick={() => props.onCopy?.(props.data)}
                 title={props.copied ? text.copiedTitle : text.copyWithUrlTitle}
+                aria-label={props.copied ? text.copiedTitle : text.copyWithUrlTitle}
               >
                 {props.copied ? <CheckIcon size={13} /> : <CopyIcon size={13} />}
               </Button>
@@ -222,12 +210,12 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   type="button"
                   variant="ghost"
                   size="xs"
-                  className={cn('h-7 rounded-full px-2.5 text-xs', actionClass)}
+                  className={cn('size-7 rounded-[4px] p-0 text-xs', actionClass)}
                   onClick={() => props.onRecall?.(props.data)}
                   title={text.recallTitle}
+                  aria-label={text.recallTitle}
                 >
                   <Undo2Icon size={13} />
-                  <span className="ml-1">{text.recall}</span>
                 </Button>
               )}
               {props.data.pageContext?.url && (
@@ -235,9 +223,10 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   type="button"
                   variant="ghost"
                   size="xs"
-                  className={cn('h-7 rounded-full px-2 text-xs', actionClass)}
+                  className={cn('size-7 rounded-[4px] p-0 text-xs', actionClass)}
                   onClick={() => props.onOpenPage?.(props.data)}
                   title={text.openPageTitle}
+                  aria-label={text.openPageTitle}
                 >
                   <ExternalLinkIcon size={13} />
                 </Button>
@@ -248,18 +237,16 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   variant="ghost"
                   size="xs"
                   className={cn(
-                    'h-7 rounded-full px-2.5 text-xs',
+                    'size-7 rounded-[4px] p-0 text-xs',
                     actionClass,
                     props.isForwardedAi && 'bg-primary/10 text-primary hover:bg-primary/10'
                   )}
                   onClick={() => props.onForwardAi?.(props.data)}
                   disabled={props.isForwardedAi}
                   title={props.isForwardedAi ? text.aiForwardedToRoomTitle : text.aiForwardToRoomTitle}
+                  aria-label={props.isForwardedAi ? text.aiForwardedToRoomTitle : text.aiForwardToRoomTitle}
                 >
                   <ForwardIcon size={13} />
-                  <span className="ml-1">
-                    {props.isForwardedAi ? text.aiForwardedToRoom : text.aiForwardToRoom}
-                  </span>
                 </Button>
               )}
               {props.onToggleBanUser && (
@@ -268,16 +255,16 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   variant="ghost"
                   size="xs"
                   className={cn(
-                    'h-7 rounded-full px-2.5 text-xs',
+                    'size-7 rounded-[4px] p-0 text-xs',
                     actionClass,
                     props.isBanned &&
                       'bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive'
                   )}
                   onClick={props.onToggleBanUser}
                   title={props.isBanned ? text.unbanTitle : text.banTitle}
+                  aria-label={props.isBanned ? text.unbanTitle : text.banTitle}
                 >
                   <UserXIcon size={13} />
-                  <span className="ml-1">{props.isBanned ? text.unban : text.ban}</span>
                 </Button>
               )}
             </div>

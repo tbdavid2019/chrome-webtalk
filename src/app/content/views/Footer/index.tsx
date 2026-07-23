@@ -80,9 +80,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
   const [isSending, setIsSending] = useState(false)
   const [pageSuggestions, setPageSuggestions] = useState<PageSuggestion[]>([])
   const [pageSuggestionsLoading, setPageSuggestionsLoading] = useState(false)
-  const [suggestionsExpanded, setSuggestionsExpanded] = useState(
-    () => !window.matchMedia('(max-width: 639px)').matches
-  )
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(() => !window.matchMedia('(max-width: 639px)').matches)
   const maxLengthWarnedRef = useRef(false)
   const aiRequestInFlightRef = useRef(false)
   const aiLastTriggeredAtRef = useRef(0)
@@ -676,7 +674,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
       {aiTopicSuggestionsEnabled && !privateChatTarget && (
         <div
           className={cn(
-            'rounded-2xl bg-muted/40 p-3 shadow-xs',
+            'rounded-xl bg-muted/50 p-3',
             suggestionsExpanded ? 'px-3 py-3' : 'px-3 py-2',
             suggestionsExpanded && 'max-sm:max-h-28 max-sm:overflow-y-auto max-sm:overscroll-contain'
           )}
@@ -695,7 +693,10 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
               )}
               <ChevronDown
                 aria-hidden="true"
-                className={cn('size-4 shrink-0 text-muted-foreground transition-transform', suggestionsExpanded && 'rotate-180')}
+                className={cn(
+                  'size-4 shrink-0 text-muted-foreground transition-transform',
+                  suggestionsExpanded && 'rotate-180'
+                )}
               />
             </span>
           </button>
@@ -709,7 +710,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
                     type="button"
                     variant="outline"
                     size="xs"
-                    className="h-auto rounded-full border-0 bg-background px-3 py-1.5 text-left text-sm whitespace-normal hover:bg-muted shadow-xs"
+                    className="h-auto rounded-md border-0 bg-background px-3 py-1.5 text-left text-sm whitespace-normal hover:bg-muted"
                     onClick={() => handleInsertSuggestedPrompt(item.prompt)}
                     title={item.prompt}
                   >
@@ -721,7 +722,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
           )}
         </div>
       )}
-      <div className="rounded-3xl border border-border/40 bg-muted/20 p-3 shadow-xs">
+      <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
         <MessageInput
           ref={shareRef}
           value={message}
@@ -752,7 +753,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="rounded-full text-muted-foreground hover:text-foreground shrink-0"
+                className="shrink-0 rounded-md text-muted-foreground hover:text-foreground"
                 onClick={handleInsertPageUrl}
                 title={text.insertPageLink}
               >
@@ -763,7 +764,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="rounded-full text-muted-foreground hover:text-foreground shrink-0"
+                  className="shrink-0 rounded-md text-muted-foreground hover:text-foreground"
                   onClick={handleInjectAiPrompt}
                   title={text.aiInsertTitle}
                 >
@@ -773,7 +774,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
             </div>
           </div>
           <Button
-            className="shrink-0 rounded-full bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/95 flex items-center justify-center min-w-max"
+            className="flex min-w-max shrink-0 items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
             size="sm"
             disabled={isSending || inputLoading}
             onClick={handleSend}
