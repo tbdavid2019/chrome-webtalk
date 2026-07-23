@@ -28,7 +28,7 @@ const MessageList: FC<MessageListProps> = ({ children }) => {
 
   return (
     <div className="min-h-0 flex-1 bg-background px-2 py-2 sm:px-3 sm:py-3">
-      <ScrollArea ref={setScrollParentRef} className="size-full rounded-[1.5rem] border border-border/80 bg-muted/20">
+      <ScrollArea ref={setScrollParentRef} className="size-full rounded-2xl bg-muted/20">
         <Virtuoso
           defaultItemHeight={112}
           followOutput={(isAtBottom: boolean) => (isAtBottom ? 'smooth' : 'auto')}
