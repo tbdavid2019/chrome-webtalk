@@ -1,5 +1,5 @@
 import { useState, type FC } from 'react'
-import { BugIcon, Globe2Icon, UsersIcon, XIcon } from 'lucide-react'
+import { BugIcon, Globe2Icon, XIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/HoverCard'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
@@ -18,23 +18,15 @@ import UserInfoDomain from '@/domain/UserInfo'
 import { getUiText } from '@/utils'
 
 const PresenceCount: FC<{ count: number; capped?: boolean; label?: string }> = ({ count, capped, label }) => {
-  const tone =
-    count > 1
-      ? 'border-emerald-200/80 bg-emerald-50/80 text-emerald-700'
-      : 'border-orange-200/80 bg-orange-50/80 text-orange-700'
   const displayCount = capped ? `${count}+` : String(count)
 
   return (
     <span
       role="status"
       aria-label={`${label ? `${label}: ` : ''}${displayCount}`}
-      className={cn(
-        'relative inline-flex size-8 items-center justify-center rounded-[4px] border text-xs font-semibold leading-none tabular-nums shadow-sm transition-transform hover:scale-[1.03] dark:border-white/10 dark:bg-white/5 dark:text-slate-100',
-        tone
-      )}
+      className="inline-flex h-8 min-w-8 items-center justify-center rounded-[4px] border border-border/80 bg-muted/40 px-2 text-xs font-semibold leading-none tabular-nums text-foreground transition-colors"
     >
-      <UsersIcon className="size-[15px]" />
-      <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full border border-background bg-primary px-1 py-0.5 text-[10px] font-bold leading-none text-primary-foreground shadow-sm">
+      <span className="inline-flex items-center">
         {import.meta.env.FIREFOX ? displayCount : <NumberFlow className="tabular-nums" willChange value={count} />}
         {capped && import.meta.env.FIREFOX === false && <span>+</span>}
       </span>
@@ -92,10 +84,10 @@ const Header: FC = () => {
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          <span className="block truncate text-base font-extrabold tracking-wide text-foreground">
+          <span className="block truncate text-[15px] font-semibold tracking-[-0.01em] text-foreground">
             {siteInfo.hostname.replace(/^www\./i, '')}
           </span>
-          <span className="block truncate text-[11px] text-muted-foreground">
+          <span className="block truncate text-xs leading-4 text-muted-foreground">
             {privateChatTarget ? `Private with @${privateChatTarget.username}` : siteInfo.title}
           </span>
         </div>

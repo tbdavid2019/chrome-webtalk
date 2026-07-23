@@ -1,4 +1,3 @@
-import { MessageCircleMoreIcon, SparklesIcon } from 'lucide-react'
 import { cn } from '@/utils'
 
 export interface PanelModeSwitchProps {
@@ -11,34 +10,40 @@ export interface PanelModeSwitchProps {
 
 const PanelModeSwitch = ({ active, onChat, onAi, chatLabel, aiLabel }: PanelModeSwitchProps) => {
   return (
-    <div className="shrink-0 rounded-full border border-border bg-muted/40 p-0.5 shadow-xs flex items-center gap-0.5">
+    <div
+      className="flex h-8 shrink-0 items-center rounded-[4px] border border-border/80 bg-muted/40 p-0.5"
+      role="group"
+      aria-label={`${chatLabel} / ${aiLabel}`}
+    >
       <button
         type="button"
         onClick={active === 'chat' ? undefined : onChat}
         disabled={active === 'chat'}
+        aria-pressed={active === 'chat'}
         className={cn(
-          'flex size-8 items-center justify-center rounded-full transition-all shrink-0',
+          'h-full rounded-[3px] px-2.5 text-xs font-semibold leading-none transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
           active === 'chat'
-            ? 'cursor-default bg-primary text-primary-foreground shadow-sm'
+            ? 'cursor-default bg-background text-foreground shadow-sm disabled:opacity-100'
             : 'text-muted-foreground hover:text-foreground'
         )}
         title={chatLabel}
       >
-        <MessageCircleMoreIcon size={15} />
+        {chatLabel}
       </button>
       <button
         type="button"
         onClick={active === 'ai' ? undefined : onAi}
         disabled={active === 'ai'}
+        aria-pressed={active === 'ai'}
         className={cn(
-          'flex size-8 items-center justify-center rounded-full transition-all shrink-0',
+          'h-full rounded-[3px] px-2.5 text-xs font-semibold leading-none transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
           active === 'ai'
-            ? 'cursor-default bg-primary text-primary-foreground shadow-sm'
+            ? 'cursor-default bg-background text-foreground shadow-sm disabled:opacity-100'
             : 'text-muted-foreground hover:text-foreground'
         )}
         title={aiLabel}
       >
-        <SparklesIcon size={15} />
+        {aiLabel}
       </button>
     </div>
   )
