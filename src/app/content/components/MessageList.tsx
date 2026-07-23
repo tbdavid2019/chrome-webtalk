@@ -14,9 +14,11 @@ const MessageList: FC<MessageListProps> = ({ children }) => {
   if (!children || children.length === 0) {
     return (
       <div className="flex size-full items-center justify-center bg-background px-4 py-6">
-        <div className="my-auto flex w-full max-w-[320px] flex-col items-center justify-center gap-y-3 rounded-3xl border border-dashed border-border/80 bg-muted/40 px-6 py-8 text-center shadow-sm">
-          <span className="text-3xl">✨</span>
-          <p className="text-sm font-medium leading-6 text-muted-foreground">
+        <div className="my-auto flex w-full max-w-[320px] flex-col items-center justify-center gap-y-3 rounded-xl bg-muted/50 px-6 py-8 text-center">
+          <span className="text-2xl" aria-hidden="true">
+            ✨
+          </span>
+          <p className="text-sm leading-6 text-muted-foreground">
             目前聊天室沒有人發言。
             <br />
             輸入訊息並按下 Enter 開始聊天。
@@ -27,8 +29,8 @@ const MessageList: FC<MessageListProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-0 flex-1 bg-background px-2 py-2 sm:px-3 sm:py-3">
-      <ScrollArea ref={setScrollParentRef} className="size-full rounded-2xl bg-muted/20">
+    <div className="min-h-0 flex-1 bg-background py-2">
+      <ScrollArea ref={setScrollParentRef} className="size-full">
         <Virtuoso
           defaultItemHeight={112}
           followOutput={(isAtBottom: boolean) => (isAtBottom ? 'smooth' : 'auto')}

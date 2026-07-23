@@ -15,7 +15,17 @@ import { nanoid } from 'nanoid'
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY, HISTORY_LIMIT } from '@/types/summaryHistory'
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import AppStatusDomain from '@/domain/AppStatus'
-import { SettingsIcon, XIcon, CornerDownLeftIcon, SparklesIcon, ChevronDown } from 'lucide-react'
+import {
+  SettingsIcon,
+  XIcon,
+  CornerDownLeftIcon,
+  SparklesIcon,
+  ChevronDown,
+  CopyIcon,
+  FileTextIcon,
+  RefreshCwIcon,
+  Trash2Icon
+} from 'lucide-react'
 import UserInfoDomain from '@/domain/UserInfo'
 import {
   blobToBase64,
@@ -81,6 +91,7 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     chatTitle: '繼續追問',
     chatPlaceholder: '就這個頁面提問...',
     chatSend: '送出',
+    you: '你',
     chatEmpty: '目前沒有對話紀錄',
     chatNeedSummary: '請先產生網頁摘要',
     chatThinking: 'AI 思考中...',
@@ -123,6 +134,7 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     chatTitle: '继续追问',
     chatPlaceholder: '就这个页面发问...',
     chatSend: '发送',
+    you: '你',
     chatEmpty: '目前没有对话记录',
     chatNeedSummary: '请先生成网页摘要',
     chatThinking: 'AI 思考中...',
@@ -165,6 +177,7 @@ const LANG_MAP: Record<Lang, Record<string, string>> = {
     chatTitle: 'Follow-up Chat',
     chatPlaceholder: 'Ask something about this page...',
     chatSend: 'Send',
+    you: 'You',
     chatEmpty: 'No conversations yet',
     chatNeedSummary: 'Generate a summary first',
     chatThinking: 'AI is typing...',
@@ -211,9 +224,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
   const [chatImages, setChatImages] = useState<ChatImageAttachment[]>([])
   const [suggestedQuestions, setSuggestedQuestions] = useState<PageSuggestion[]>([])
   const [suggestionsLoading, setSuggestionsLoading] = useState(false)
-  const [suggestionsExpanded, setSuggestionsExpanded] = useState(
-    () => !window.matchMedia('(max-width: 639px)').matches
-  )
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(() => !window.matchMedia('(max-width: 639px)').matches)
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 639px)').matches)
   const chatListRef = useRef<HTMLDivElement | null>(null)
   const chatInputIsComposingRef = useRef(false)
@@ -687,7 +698,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <SparklesIcon size={16} aria-hidden="true" />
             </span>
-            <span className="truncate text-base font-extrabold tracking-wide text-foreground">{text.title}</span>
+            <span className="truncate text-[15px] font-semibold tracking-[-0.01em] text-foreground">{text.title}</span>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 max-sm:gap-1">
             <div className="flex h-8 shrink-0 items-center rounded-[4px] border border-border/80 bg-muted/40 p-0.5">
@@ -735,10 +746,10 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col justify-between space-y-3 bg-background p-4 max-sm:space-y-2 max-sm:p-2">
+        <div className="flex min-h-0 flex-1 flex-col justify-between space-y-3 bg-background p-4 max-sm:space-y-2 max-sm:p-3">
           {showApiSettings && (
-            <div className="space-y-3 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm shrink-0">
-              <h3 className="text-base font-semibold text-slate-700">API setting</h3>
+            <div className="shrink-0 space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+              <h3 className="text-sm font-semibold text-foreground">API setting</h3>
               <div className="space-y-2">
                 <Label htmlFor="api-key" className="text-sm text-slate-500 flex items-center justify-between">
                   <span>
@@ -792,13 +803,13 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setShowApiSettings(false)}
-                  className="rounded-full border border-slate-200 px-4 py-1 text-sm text-slate-600 hover:bg-slate-50"
+                  className="rounded-md border border-border bg-background px-4 py-1.5 text-sm text-foreground hover:bg-muted"
                 >
                   取消
                 </button>
                 <button
                   onClick={saveApiSettings}
-                  className="rounded-full bg-slate-900 px-4 py-1 text-sm font-medium text-white shadow-sm"
+                  className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
                   保存
                 </button>
@@ -808,12 +819,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
 
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {aiTopicSuggestionsEnabled && (
-              <div
-                className={cn(
-                  'mb-3 rounded-2xl bg-muted/40 p-3 shadow-xs',
-                  suggestionsExpanded ? 'px-3 py-3' : 'px-3 py-2'
-                )}
-              >
+              <div className={cn('mb-3 rounded-xl bg-muted/50 p-3', suggestionsExpanded ? 'px-3 py-3' : 'px-3 py-2')}>
                 <button
                   type="button"
                   className="flex w-full items-center justify-between gap-2 text-left"
@@ -827,7 +833,10 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                     )}
                     <ChevronDown
                       aria-hidden="true"
-                      className={cn('size-4 shrink-0 text-muted-foreground transition-transform', suggestionsExpanded && 'rotate-180')}
+                      className={cn(
+                        'size-4 shrink-0 text-muted-foreground transition-transform',
+                        suggestionsExpanded && 'rotate-180'
+                      )}
                     />
                   </span>
                 </button>
@@ -842,7 +851,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                           key={`${item.label}-${index}`}
                           type="button"
                           onClick={() => handleInsertSuggestion(item.prompt)}
-                          className="rounded-full border-0 bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted shadow-xs"
+                          className="rounded-md bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted"
                           title={item.prompt}
                         >
                           {item.label}
@@ -855,17 +864,17 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
             )}
             {!hasStartedChat ? (
               /* 1. 未產生摘要且未對話時的引導介面 */
-              <div className="flex flex-col flex-1 items-center justify-center p-6 text-center gap-y-4 bg-muted/40 rounded-2xl border border-dashed border-border/80 my-auto">
-                <span className="text-3xl">✨</span>
-                <p className="text-lg text-muted-foreground font-medium leading-relaxed max-w-[300px]">
-                  點擊下方按鈕以濃縮並分析此網頁重點。
-                </p>
+              <div className="my-auto flex flex-1 flex-col items-center justify-center gap-y-4 rounded-xl bg-muted/50 p-6 text-center">
+                <span className="text-2xl" aria-hidden="true">
+                  ✨
+                </span>
+                <p className="max-w-[300px] text-sm leading-6 text-muted-foreground">{text.noContent}</p>
                 <button
                   onClick={onClickSummarize}
                   disabled={loading}
-                  className="rounded-full bg-primary px-6 py-2.5 text-lg font-bold text-primary-foreground shadow shadow-primary/20 hover:bg-primary/95 transition-all disabled:opacity-50"
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {loading ? text.loading : '✨ 濃縮此網頁'}
+                  {loading ? text.loading : text.summarize}
                 </button>
               </div>
             ) : (
@@ -873,52 +882,54 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
               <div
                 ref={chatListRef}
                 onWheel={(e) => e.stopPropagation()}
-                className="flex-1 space-y-4 overflow-y-auto rounded-2xl border border-border bg-muted/20 p-4"
+                className="flex-1 space-y-4 overflow-y-auto px-1 py-2"
               >
                 {/* 網頁摘要氣泡 (置頂呈現) */}
                 {!!summary && (
                   <div className="flex flex-col items-start gap-y-1">
-                    <div className="flex items-center justify-between w-full text-xs text-muted-foreground font-semibold px-1">
-                      <span className="flex items-center gap-1 text-sm">📄 網頁摘要 {pageHost && `(${pageHost})`}</span>
-                      {/* 精簡快捷動作組 */}
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <div className="flex w-full items-center justify-between gap-2 px-0.5 text-xs text-muted-foreground">
+                      <span className="min-w-0 truncate font-semibold text-foreground">
+                        {text.summarySectionTitle} {pageHost && `· ${pageHost}`}
+                      </span>
+                      <div className="flex shrink-0 items-center gap-0.5 text-muted-foreground">
                         <button
                           onClick={onClickSummarize}
                           disabled={loading}
-                          className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
+                          className="flex size-7 items-center justify-center rounded-[4px] transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
                           title={text.retry}
+                          aria-label={text.retry}
                         >
-                          🔄 {loading ? '...' : text.retry}
+                          <RefreshCwIcon className={cn('size-3.5', loading && 'animate-spin')} aria-hidden="true" />
                         </button>
-                        <span className="text-border">|</span>
                         <button
                           onClick={copy}
-                          className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
+                          className="flex size-7 items-center justify-center rounded-[4px] transition-colors hover:bg-muted hover:text-foreground"
                           title={text.copy}
+                          aria-label={text.copy}
                         >
-                          📋 複製
+                          <CopyIcon className="size-3.5" aria-hidden="true" />
                         </button>
-                        <span className="text-border">|</span>
                         <button
                           onClick={exportMarkdown}
-                          className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
+                          className="flex size-7 items-center justify-center rounded-[4px] transition-colors hover:bg-muted hover:text-foreground"
                           title={text.markdown}
+                          aria-label={text.markdown}
                         >
-                          📄 MD
+                          <FileTextIcon className="size-3.5" aria-hidden="true" />
                         </button>
-                        <span className="text-border">|</span>
                         <button
                           onClick={handleClear}
-                          className="hover:text-destructive transition flex items-center gap-0.5 text-xs font-semibold"
+                          className="flex size-7 items-center justify-center rounded-[4px] transition-colors hover:bg-destructive/10 hover:text-destructive"
                           title={text.clear}
+                          aria-label={text.clear}
                         >
-                          🗑️ {text.clear}
+                          <Trash2Icon className="size-3.5" aria-hidden="true" />
                         </button>
                       </div>
                     </div>
-                    <div className="w-full rounded-2xl bg-background border border-border px-4 py-3 text-lg leading-relaxed text-foreground/90 shadow-sm">
+                    <div className="w-full rounded-xl bg-muted/70 px-3 py-2.5 text-[15px] leading-6 text-foreground">
                       <div
-                        className="prose prose-sm prose-slate dark:prose-invert max-w-none text-base"
+                        className="prose prose-sm prose-slate dark:prose-invert max-w-none text-[15px] leading-6 [&_p]:my-0"
                         dangerouslySetInnerHTML={{ __html: markedHtml }}
                       />
                     </div>
@@ -930,12 +941,14 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                   const isUser = message.role === 'user'
                   return (
                     <div key={message.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} gap-y-1`}>
-                      <span className="text-xs text-muted-foreground px-1">{isUser ? '👤 你' : '🤖 AI'}</span>
+                      <span className="px-0.5 text-xs font-semibold text-muted-foreground">
+                        {isUser ? text.you : 'AI'}
+                      </span>
                       <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-lg shadow-sm ${
+                        className={`max-w-[88%] rounded-xl px-3 py-2.5 text-[15px] leading-6 ${
                           isUser
-                            ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                            : 'border border-border bg-background text-foreground rounded-tl-sm'
+                            ? 'rounded-tr-sm bg-primary/10 text-foreground dark:bg-primary/20'
+                            : 'rounded-tl-sm bg-muted/70 text-foreground'
                         }`}
                       >
                         {isUser ? (
@@ -943,7 +956,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                         ) : (
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
-                            className="prose prose-base prose-slate dark:prose-invert prose-a:underline text-lg"
+                            className="prose prose-sm prose-slate dark:prose-invert prose-a:underline max-w-none text-[15px] leading-6 [&_p]:my-0"
                           >
                             {message.content}
                           </ReactMarkdown>
@@ -956,8 +969,8 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                 {/* AI 思考中 */}
                 {chatLoading && (
                   <div className="flex flex-col items-start gap-y-1">
-                    <span className="text-xs text-muted-foreground px-1">🤖 AI</span>
-                    <div className="rounded-2xl border border-border bg-background rounded-tl-sm px-4 py-2.5 text-lg text-primary font-medium animate-pulse">
+                    <span className="px-0.5 text-xs font-semibold text-muted-foreground">AI</span>
+                    <div className="animate-pulse rounded-xl rounded-tl-sm bg-muted/70 px-3 py-2.5 text-[15px] font-medium leading-6 text-primary">
                       {text.chatThinking}
                     </div>
                   </div>
@@ -968,7 +981,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
 
           {/* 底部功能與輸入框控制欄 */}
           <div className="flex flex-col gap-2 pt-1 shrink-0">
-            <div className="rounded-3xl border border-border bg-muted/20 p-3 shadow-sm">
+            <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
               <MessageInput
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
@@ -1003,7 +1016,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => setChatImages([])}
-                      className="shrink-0 rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground transition hover:bg-muted"
+                      className="shrink-0 rounded-md border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground transition hover:bg-muted"
                     >
                       {text.removeAllImages}
                     </button>
@@ -1019,7 +1032,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                         <button
                           type="button"
                           onClick={() => setChatImages((prev) => prev.filter((image) => image.id !== item.id))}
-                          className="mt-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-semibold text-foreground transition hover:bg-muted"
+                          className="mt-1 rounded-md border border-border bg-background px-2 py-0.5 text-[11px] font-semibold text-foreground transition hover:bg-muted"
                         >
                           {text.removeImage}
                         </button>
@@ -1052,7 +1065,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                 <button
                   onClick={sendFollowUpQuestion}
                   disabled={chatLoading || !chatInput.trim() || !canChat}
-                  className="shrink-0 rounded-full bg-primary px-3 py-2 text-sm font-bold text-primary-foreground shadow hover:bg-primary/95 transition disabled:opacity-50 flex items-center justify-center min-w-max"
+                  className="flex min-w-max shrink-0 items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                 >
                   <span className="mr-1">{text.chatSend}</span>
                   <CornerDownLeftIcon className="text-primary-foreground/75" size={10}></CornerDownLeftIcon>
