@@ -476,14 +476,34 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
     setChatMessages([])
     setChatInput('')
 
-    if (!pageText) {
+    let currentText = pageText.trim()
+    if (!currentText) {
+      try {
+        currentText = (getPlatform().getPageContent() || document.body?.innerText || '').trim()
+        if (currentText) {
+          setPageText(currentText)
+        }
+      } catch (e) {
+        console.error('[WebTalk] 獲取頁面內容失敗', e)
+      }
+    }
+
+    if (!currentText) {
       alert(text.noText)
       return
     }
 
     try {
-      const newSummary = await summarize(pageText, language)
+      const newSummary = await summarize(currentText, language, {
+        pageTitle: pageMetaRef.current.title,
+        pageUrl: pageMetaRef.current.url
+      })
       updateHistoryEntry({ summary: newSummary ?? text.noContent, chatMessages: [] })
+      setTimeout(() => {
+        if (chatListRef.current) {
+          chatListRef.current.scrollTop = 0
+        }
+      }, 50)
     } catch (error: any) {
       console.error('[WebTalk] ❌ 摘要失敗', error)
       alert(error.message || '摘要失敗，請稍後再試 / Condensation failed, please try again')
@@ -538,6 +558,18 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
       return
     }
 
+    let currentText = pageText.trim()
+    if (!currentText) {
+      try {
+        currentText = (getPlatform().getPageContent() || document.body?.innerText || '').trim()
+        if (currentText) {
+          setPageText(currentText)
+        }
+      } catch (e) {
+        console.error('[WebTalk] 獲取頁面內容失敗', e)
+      }
+    }
+
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -553,7 +585,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
         prompt: question,
         pageTitle: pageMetaRef.current.title,
         pageUrl: pageMetaRef.current.url,
-        pageText,
+        pageText: currentText,
         pageSummary: summary,
         conversationHistory: chatMessages.map((msg) => ({
           role: msg.role,
@@ -617,6 +649,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
 
   const markedHtml = marked.parse(summary || text.noContent)
   const canChat = !loading
+  const hasStartedChat = Boolean(summary || chatMessages.length > 0 || chatLoading)
 
   return (
     <AnimatePresence>
@@ -779,8 +812,8 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
                 </div>
               </div>
             )}
-            {!summary ? (
-              /* 1. 未產生摘要時的引導介面 */
+            {!hasStartedChat ? (
+              /* 1. 未產生摘要且未對話時的引導介面 */
               <div className="flex flex-col flex-1 items-center justify-center p-6 text-center gap-y-4 bg-muted/40 rounded-2xl border border-dashed border-border/80 my-auto">
                 <span className="text-3xl">✨</span>
                 <p className="text-lg text-muted-foreground font-medium leading-relaxed max-w-[300px]">
@@ -795,58 +828,60 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
                 </button>
               </div>
             ) : (
-              /* 2. 已產生摘要時的對話流介面 (滾動區域) */
+              /* 2. 已產生摘要或已對話時的對話流介面 (滾動區域) */
               <div
                 ref={chatListRef}
-                className="flex-1 space-y-4 overflow-y-auto overscroll-y-contain rounded-2xl border border-border bg-muted/20 p-4"
+                className="flex-1 space-y-4 overflow-y-auto rounded-2xl border border-border bg-muted/20 p-4"
               >
                 {/* 網頁摘要氣泡 (置頂呈現) */}
-                <div className="flex flex-col items-start gap-y-1">
-                  <div className="flex items-center justify-between w-full text-xs text-muted-foreground font-semibold px-1">
-                    <span className="flex items-center gap-1 text-sm">📄 網頁摘要 {pageHost && `(${pageHost})`}</span>
-                    {/* 精簡快捷動作組 */}
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <button
-                        onClick={onClickSummarize}
-                        disabled={loading}
-                        className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
-                        title={text.retry}
-                      >
-                        🔄 {loading ? '...' : text.retry}
-                      </button>
-                      <span className="text-border">|</span>
-                      <button
-                        onClick={copy}
-                        className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
-                        title={text.copy}
-                      >
-                        📋 複製
-                      </button>
-                      <span className="text-border">|</span>
-                      <button
-                        onClick={exportMarkdown}
-                        className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
-                        title={text.markdown}
-                      >
-                        📄 MD
-                      </button>
-                      <span className="text-border">|</span>
-                      <button
-                        onClick={handleClear}
-                        className="hover:text-destructive transition flex items-center gap-0.5 text-xs font-semibold"
-                        title={text.clear}
-                      >
-                        🗑️ {text.clear}
-                      </button>
+                {!!summary && (
+                  <div className="flex flex-col items-start gap-y-1">
+                    <div className="flex items-center justify-between w-full text-xs text-muted-foreground font-semibold px-1">
+                      <span className="flex items-center gap-1 text-sm">📄 網頁摘要 {pageHost && `(${pageHost})`}</span>
+                      {/* 精簡快捷動作組 */}
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <button
+                          onClick={onClickSummarize}
+                          disabled={loading}
+                          className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
+                          title={text.retry}
+                        >
+                          🔄 {loading ? '...' : text.retry}
+                        </button>
+                        <span className="text-border">|</span>
+                        <button
+                          onClick={copy}
+                          className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
+                          title={text.copy}
+                        >
+                          📋 複製
+                        </button>
+                        <span className="text-border">|</span>
+                        <button
+                          onClick={exportMarkdown}
+                          className="hover:text-foreground transition flex items-center gap-0.5 text-xs font-semibold"
+                          title={text.markdown}
+                        >
+                          📄 MD
+                        </button>
+                        <span className="text-border">|</span>
+                        <button
+                          onClick={handleClear}
+                          className="hover:text-destructive transition flex items-center gap-0.5 text-xs font-semibold"
+                          title={text.clear}
+                        >
+                          🗑️ {text.clear}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-full rounded-2xl bg-background border border-border px-4 py-3 text-lg leading-relaxed text-foreground/90 shadow-sm">
+                      <div
+                        className="prose prose-sm prose-slate dark:prose-invert max-w-none text-base"
+                        dangerouslySetInnerHTML={{ __html: markedHtml }}
+                      />
                     </div>
                   </div>
-                  <div className="w-full rounded-2xl bg-background border border-border px-4 py-3 text-lg leading-relaxed text-foreground/90 shadow-sm">
-                    <div
-                      className="prose prose-sm prose-slate dark:prose-invert max-w-none text-base"
-                      dangerouslySetInnerHTML={{ __html: markedHtml }}
-                    />
-                  </div>
-                </div>
+                )}
 
                 {/* 續問對話記錄 */}
                 {chatMessages.map((message) => {
@@ -953,7 +988,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
               )}
 
               <div className="mt-3 flex items-center justify-between gap-1">
-                <div className="flex min-w-0 flex-1 items-center gap-1">
+                <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto no-scrollbar">
                   <PanelModeSwitch
                     active="ai"
                     onChat={() => {
@@ -963,7 +998,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
                     chatLabel={text.chatTab}
                     aiLabel={text.aiTab}
                   />
-                  <div className="flex items-center gap-0.5">
+                  <div className="flex items-center gap-0.5 shrink-0">
                     <ImageButton
                       disabled={chatLoading || !canChat}
                       onSelect={handleSelectChatImage}
@@ -975,7 +1010,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({ onClose, isEmbed = f
                 <button
                   onClick={sendFollowUpQuestion}
                   disabled={chatLoading || !chatInput.trim() || !canChat}
-                  className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow hover:bg-primary/95 transition disabled:opacity-50 flex items-center justify-center"
+                  className="shrink-0 rounded-full bg-primary px-3 py-2 text-sm font-bold text-primary-foreground shadow hover:bg-primary/95 transition disabled:opacity-50 flex items-center justify-center min-w-max"
                 >
                   <span className="mr-1">{text.chatSend}</span>
                   <CornerDownLeftIcon className="text-primary-foreground/75" size={10}></CornerDownLeftIcon>
