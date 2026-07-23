@@ -93,12 +93,12 @@ const MessageItem: FC<MessageItemProps> = (props) => {
 
         <div
           className={cn(
-            'min-w-0 max-w-[calc(100%_-_2.5rem)] flex-1 overflow-hidden rounded-2xl border px-4 py-3 shadow-sm',
+            'min-w-0 max-w-[calc(100%_-_2.5rem)] flex-1 overflow-hidden rounded-2xl px-4 py-3 shadow-xs',
             isOwnMessage
-              ? 'rounded-tr-sm border-primary/30 bg-primary/15 text-foreground dark:border-primary/40 dark:bg-primary/20'
+              ? 'rounded-tr-sm bg-primary/10 text-foreground dark:bg-primary/20'
               : props.isAi
-                ? 'rounded-tl-sm border-border bg-background text-foreground'
-                : 'rounded-tl-sm border-border bg-muted/30 text-foreground'
+                ? 'rounded-tl-sm bg-amber-500/10 text-foreground dark:bg-amber-500/15'
+                : 'rounded-tl-sm bg-muted/60 text-foreground'
           )}
         >
           <div className={cn('flex min-w-0 items-baseline gap-2 leading-tight', isOwnMessage && 'justify-end')}>
@@ -173,7 +173,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
           </div>
 
           {!isRecalled && props.isAi && props.onForwardAi && (
-            <div className="mt-2 rounded-lg border border-amber-200/80 bg-amber-100/50 px-2.5 py-2 text-xs text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-200">
+            <div className="mt-2.5 rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
               {text.aiLocalOnlyPrompt}
             </div>
           )}

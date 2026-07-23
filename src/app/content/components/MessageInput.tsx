@@ -57,7 +57,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           autoFocus={autoFocus}
           maxLength={maxLength}
           className={cn(
-            'w-full min-h-[42px] max-h-28 resize-none rounded-xl border border-border bg-muted px-3 py-2.5 text-base leading-6 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-foreground pb-7',
+            'w-full min-h-[42px] max-h-28 resize-none rounded-xl border border-border/40 bg-muted/60 px-3 py-2.5 text-base leading-relaxed focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-foreground pb-7',
             {
               'border-amber-400/80 focus-visible:ring-amber-500': nearLimit,
               'border-red-400/90 focus-visible:ring-red-500': atLimit,

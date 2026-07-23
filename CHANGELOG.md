@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [2.1.8] - 2026-07-23
+
+### Fixed
+
+- **移除突兀的 1px 實線外框 (Remove Jarring 1px Borders)**：
+  - 徹底移除對話氣泡卡片外層突兀的 `border` 1px 實線黑框（[MessageItem.tsx](file:///Users/david/Documents/git/tbdavid2019/chrome-webtalk/src/app/content/components/MessageItem.tsx)），改用自然的軟背景色調（`bg-primary/10`, `bg-amber-500/10`, `bg-muted/60`）配合 `shadow-xs` 質感。
+  - 移除 AI 訊息內部提示框的硬邊框。
+  - 軟化訊息列表容器與輸入框的邊框粗糙感（[MessageInput.tsx](file:///Users/david/Documents/git/tbdavid2019/chrome-webtalk/src/app/content/components/MessageInput.tsx) & [Footer/index.tsx](file:///Users/david/Documents/git/tbdavid2019/chrome-webtalk/src/app/content/views/Footer/index.tsx)）。
+
 ## [2.1.7] - 2026-07-23
 
 ### Changed
