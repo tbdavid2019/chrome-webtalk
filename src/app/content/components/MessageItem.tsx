@@ -93,12 +93,12 @@ const MessageItem: FC<MessageItemProps> = (props) => {
 
         <div
           className={cn(
-            'min-w-0 max-w-[calc(100%_-_2.5rem)] flex-1 overflow-hidden rounded-2xl border px-3.5 py-2.5 shadow-sm',
+            'min-w-0 max-w-[calc(100%_-_2.5rem)] flex-1 overflow-hidden rounded-2xl border px-4 py-3 shadow-sm',
             isOwnMessage
-              ? 'rounded-br-md border-primary/25 bg-primary/10 text-foreground dark:border-primary/40 dark:bg-primary/20 dark:text-slate-50'
+              ? 'rounded-tr-sm border-primary/30 bg-primary/15 text-foreground dark:border-primary/40 dark:bg-primary/20'
               : props.isAi
-                ? 'rounded-bl-md border-amber-200/70 bg-amber-50/70 text-foreground dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-slate-50'
-                : 'rounded-bl-md border-border/80 bg-card/80 text-foreground'
+                ? 'rounded-tl-sm border-border bg-background text-foreground'
+                : 'rounded-tl-sm border-border bg-muted/30 text-foreground'
           )}
         >
           <div className={cn('flex min-w-0 items-baseline gap-2 leading-tight', isOwnMessage && 'justify-end')}>

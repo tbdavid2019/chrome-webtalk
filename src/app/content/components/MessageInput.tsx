@@ -1,9 +1,9 @@
 import { forwardRef, type ChangeEvent, CompositionEvent, type KeyboardEvent, ClipboardEvent } from 'react'
+import { Loader2 } from 'lucide-react'
 
 import { cn } from '@/utils'
 import { Textarea } from '@/components/ui/Textarea'
 import { ScrollArea } from '@/components/ui/ScrollArea'
-import LoadingIcon from '@/assets/images/loading.svg'
 
 export interface MessageInputProps {
   value?: string
@@ -84,8 +84,8 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           {currentLength}/{maxLength}
         </div>
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center text-slate-800 after:absolute after:inset-0 after:backdrop-blur-xs dark:text-slate-100">
-            <LoadingIcon className="relative z-10 size-10"></LoadingIcon>
+          <div className="absolute inset-0 flex items-center justify-center text-primary after:absolute after:inset-0 after:backdrop-blur-xs">
+            <Loader2 className="relative z-10 size-7 animate-spin text-primary" />
           </div>
         )}
       </div>
