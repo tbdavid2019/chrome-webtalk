@@ -741,11 +741,11 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
           }
         ></MessageInput>
         <div className="mt-3 flex items-center justify-between gap-1">
-          <div className="flex min-w-0 flex-1 items-center gap-1">
+          <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto no-scrollbar">
             {enableAi && (
               <PanelModeSwitch active="chat" onAi={handleAskAi} chatLabel={text.chatTab} aiLabel={text.aiTab} />
             )}
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 shrink-0">
               <EmojiButton onSelect={handleInjectEmoji}></EmojiButton>
               <ImageButton disabled={inputLoading} onSelect={handleInjectImage}></ImageButton>
               <Button
@@ -773,7 +773,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
             </div>
           </div>
           <Button
-            className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/95 flex items-center justify-center"
+            className="shrink-0 rounded-full bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/95 flex items-center justify-center min-w-max"
             size="sm"
             disabled={isSending || inputLoading}
             onClick={handleSend}
