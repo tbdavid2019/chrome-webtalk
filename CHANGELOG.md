@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [2.1.7] - 2026-07-23
+
+### Changed
+
+- **Chat UI 與 Summary UI 設計完全齊平 (UI Design Alignment)**：
+  - 調整 Chat 模式的對話氣泡卡片風格與邊框圓角（`rounded-2xl`），讓對話卡片與 Summary Panel 視覺語言（`border-border bg-background shadow-sm`）100% 保持一致。
+- **專案全 Icon 盤點與 Lucide 風格替換 (Icon Audit & Lucide Replacement)**：
+  - 替換 `Header` 中的內聯自訂 Material SVG 圖示為 Lucide `UsersIcon`。
+  - 替換 `MessageInput` 中的自訂 `loading.svg` 為 Lucide `Loader2` 旋轉圖示。
+  - 替換 `Checkbox` 與 `RadioGroup` 中的 `@radix-ui/react-icons` 為 Lucide `CheckIcon`。
+  - 替換 `BadgeList` 中的 `@radix-ui/react-icons` 為 Lucide `Github` 圖示。
+
 ## [2.1.6] - 2026-07-23
 
 ### Changed

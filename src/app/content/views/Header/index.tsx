@@ -1,5 +1,5 @@
 import { useState, type FC } from 'react'
-import { BugIcon, Globe2Icon, XIcon } from 'lucide-react'
+import { BugIcon, Globe2Icon, UsersIcon, XIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/HoverCard'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
@@ -17,12 +17,6 @@ import AppStatusDomain from '@/domain/AppStatus'
 import UserInfoDomain from '@/domain/UserInfo'
 import { getUiText } from '@/utils'
 
-const MaterialGroupIcon: FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
-    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-2.99 1.34-2.99 3S14.34 11 16 11zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5.01 6.34 5.01 8 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-  </svg>
-)
-
 const PresenceCount: FC<{ count: number; capped?: boolean; label?: string }> = ({ count, capped, label }) => {
   const tone =
     count > 1
@@ -39,7 +33,7 @@ const PresenceCount: FC<{ count: number; capped?: boolean; label?: string }> = (
         tone
       )}
     >
-      <MaterialGroupIcon className="size-[17px]" />
+      <UsersIcon className="size-[15px]" />
       <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full border border-background bg-primary px-1 py-0.5 text-[10px] font-bold leading-none text-primary-foreground shadow-sm">
         {import.meta.env.FIREFOX ? displayCount : <NumberFlow className="tabular-nums" willChange value={count} />}
         {capped && import.meta.env.FIREFOX === false && <span>+</span>}
