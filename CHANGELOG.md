@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [2.1.5] - 2026-07-23
+
+### Fixed
+
+- **滾輪向上滾動修復 (Critical Scroll Fix)**：
+  - 移除 `App.tsx` 中包覆 `SummaryPanel` 外層的 `pointerEvents: 'none'` 父層 `<div>`。該屬性會導致瀏覽器在 Shadow DOM 命中測試 (Hit-testing) 時忽略面板並將滑鼠滾輪事件穿透傳送給底層網頁，致使滾輪無法向上滾動。
+  - 修正 `useEffect` 自動滾動競爭條件（Race condition），僅在有新訊息或 AI 思考中時滾動至底部，防止生成摘要時 smooth scroll 動畫覆蓋 `scrollTop = 0`。
+  - 隔離 `chatListRef` 的 `onWheel` 事件冒泡 (`stopPropagation`)。
+
 ## [2.1.4] - 2026-07-23
 
 ### Fixed

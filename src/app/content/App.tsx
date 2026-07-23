@@ -295,25 +295,14 @@ export default function App({
         </>
       )}
       {enableAi && showSummary && (
-        <div
+        <SummaryPanel
+          key="summary-panel"
+          zIndex={getPanelZIndex('summary')}
           onMouseDown={() => setTopPanel('summary')}
-          style={{
-            zIndex: getPanelZIndex('summary'),
-            position: 'fixed',
-            top: 0,
-            right: 0,
-            width: 'auto',
-            height: '100%',
-            pointerEvents: 'none'
-          }}
-        >
-          <SummaryPanel
-            key="summary-panel"
-            isEmbed={isEmbed}
-            mobilePlacement={mobilePlacement}
-            onClose={() => setShowSummary(false)}
-          />
-        </div>
+          isEmbed={isEmbed}
+          mobilePlacement={mobilePlacement}
+          onClose={() => setShowSummary(false)}
+        />
       )}
       {!buttonsHidden && !appOpenStatus && !showSummary && <AppButton enableAi={enableAi} isEmbed={isEmbed} />}
       <DanmakuContainer ref={danmakuContainerRef} style={{ opacity: userInfo?.danmakuOpacity ?? 0.8 }} />
