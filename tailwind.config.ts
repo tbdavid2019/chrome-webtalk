@@ -13,7 +13,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Segoe UI', ...defaultTheme.fontFamily.sans]
+        sans: ['JetBrainsMono', 'GenJyuuGothic', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Segoe UI', ...defaultTheme.fontFamily.sans]
       },
       fontSize: {
         '2xs': '0.625rem'

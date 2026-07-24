@@ -1,9 +1,13 @@
 # CHANGELOG
 
-## [Unreleased] - 2026-07-23
+## [Unreleased] - 2026-07-24
 
 ### Changed
 
+- **中英文預設字體全面升級 (Default Font Stack Upgrade)**：
+  - 中文字體預設改用 `GenJyuuGothic` (源柔黑體 Medium, `GenJyuuGothic-Medium.woff2`)。
+  - 英文字體預設改用 `JetBrainsMono` (JetBrains Mono Medium, `JetBrainsMono-Medium.woff2`)。
+  - 更新 Shadow DOM、Tailwind CSS、Tailwind Config 以及 Vercel Embed 的字體載入與打包流程，確保 Extension 與 Vercel 部署頁面皆能完美載入新字體。
 - **Chat 訊息資訊層級重整**：作者與時間移到訊息泡泡外，自己的訊息不再重複顯示姓名與「你」標籤；頁面來源縮成單行圖示與標題，操作列改為低干擾的 icon toolbar，降低資訊堆疊。
 - **Chat / Summary 字體與泡泡統一**：兩個介面的正文統一為 15px／24px 行高，摘要、AI 回覆、聊天室訊息與輸入框共用相同密度、圓角及背景層級。
 - **控制元件統一**：左下角 Chat / AI 切換改成與「繁／簡／En」語言切換相同的 segmented control；輸入工具與送出按鈕同步採用一致的方形圓角。

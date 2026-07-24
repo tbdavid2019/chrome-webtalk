@@ -3,13 +3,15 @@
   src: url('/fonts/JetBrainsMono-Medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
-  font-family: 'MapleMono';
-  src: url('/fonts/MapleMonoNormal-Medium.woff2') format('woff2');
+  font-family: 'GenJyuuGothic';
+  src: url('/fonts/GenJyuuGothic-Medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
+  font-display: swap;
 }
 
 @tailwind base;
@@ -19,7 +21,7 @@
 @layer base {
   :host,
   :root {
-    --font-ui: 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Segoe UI', ui-sans-serif, system-ui, -apple-system,
+    --font-ui: 'JetBrainsMono', 'GenJyuuGothic', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Segoe UI', ui-sans-serif, system-ui, -apple-system,
       BlinkMacSystemFont, Roboto, sans-serif;
 
     /* 拿鐵暖咖 / 書香紙墨色系 (Light) */

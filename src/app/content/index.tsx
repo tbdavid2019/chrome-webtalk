@@ -115,12 +115,14 @@ export default defineContentScript({
             src: url('${browser.runtime.getURL('/fonts/JetBrainsMono-Medium.woff2' as any)}') format('woff2');
             font-weight: 500;
             font-style: normal;
+            font-display: swap;
           }
           @font-face {
-            font-family: 'MapleMono';
-            src: url('${browser.runtime.getURL('/fonts/MapleMonoNormal-Medium.woff2' as any)}') format('woff2');
+            font-family: 'GenJyuuGothic';
+            src: url('${browser.runtime.getURL('/fonts/GenJyuuGothic-Medium.woff2' as any)}') format('woff2');
             font-weight: 500;
             font-style: normal;
+            font-display: swap;
           }
         `
         container.append(fontStyle)
