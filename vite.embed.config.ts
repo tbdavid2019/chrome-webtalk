@@ -37,6 +37,14 @@ const createEmbedGuide = (): Plugin => ({
         source: readFileSync(path.resolve(`src/app/embed/public/${fileName}`))
       })
     }
+
+    for (const fontName of ['GenJyuuGothic-Medium.woff2', 'JetBrainsMono-Medium.woff2']) {
+      this.emitFile({
+        type: 'asset',
+        fileName: `fonts/${fontName}`,
+        source: readFileSync(path.resolve(`src/public/fonts/${fontName}`))
+      })
+    }
   }
 })
 
