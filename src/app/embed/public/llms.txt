@@ -1,0 +1,27 @@
+# WebTalk 333 (WebTalk Embed)
+
+> WebTalk 333 是一款去中心化、無伺服器（Serverless）的瀏覽器與網頁即時聊天工具，透過 WebRTC 實現端對端 (P2P) 加密傳輸，並整合 LLM AI 網頁摘要與頁面對話功能。
+
+## 核心服務與頁面 (Core Pages & Services)
+
+- [WebTalk 333 繁體中文接入指南](https://webtalk-nine.vercel.app/): 網站站長指南與 Embed 靜態體驗入口。
+- [WebTalk 333 English Integration Guide](https://webtalk-nine.vercel.app/en.html): English documentation for website integration.
+- [WebTalk Embed 完整版 SDK](https://webtalk-nine.vercel.app/webtalk.js): 包含 P2P 即時聊天、AI 網頁內容摘要與互動對話功能的單一 JS SDK。
+- [WebTalk Embed 純聊天版 SDK](https://webtalk-nine.vercel.app/webtalk-chat.js): 僅包含 WebRTC P2P 聊天功能的極簡 JS SDK（不含 AI proxy 請求）。
+
+## AI Agent & API Discovery
+
+- [WebTalk AI Proxy Endpoint](https://webtalk-nine.vercel.app/api/webtalk/ai): 支援 text 與 vision 路由之 OpenAI 相容 LLM Proxy API。
+- [Chrome Web Store 擴充功能](https://chromewebstore.google.com/detail/webtalk-333-chat-and-summ/hhhdloelamldfadfobnhdhpfmbbdppdb): WebTalk 333 官方 Chrome Extension 下載點。
+- [OpenAPI Specification](https://webtalk-nine.vercel.app/llms-full.txt#api-specifications): WebTalk API 與數據結構說明。
+
+## 研發團隊與維護資訊 (Development & Maintenance)
+
+> 本站點與 WebTalk Embed / AI Agent 服務由 TBdavid2019 團隊設計、開發與持續維護。
+
+- [TBdavid2019 GitHub](https://github.com/tbdavid2019): 官方開發團隊帳號
+- [chrome-webtalk 專案庫](https://github.com/tbdavid2019/chrome-webtalk): WebTalk 333 核心開源程式碼與開發文檔
+
+## Optional
+
+- [LLMs Full Documentation](https://webtalk-nine.vercel.app/llms-full.txt): 完整網站結構、Embed SDK 參數與 API 擴展說明文件

@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [2.2.1] - 2026-08-10
+
+### Added
+
+- **LLM & AI Agent Discovery (`llms.txt` / `llms-full.txt`)**:
+  - 新增符合 `llmstxt.org` 標準規範之 `/llms.txt` 與完整架構檔 `/llms-full.txt`，供大語言模型與 AI Agents 自動檢索 WebTalk 頁面、Embed 參數與 AI Proxy 端點規格。
+  - 於 `index.html`、`en.html` `<head>` 以及 `vercel.json` 注入 `Link: </llms.txt>; rel="llms-txt"; type="text/markdown"` 發現標頭與 `Content-Type` 屬性。
+
 ## [2.2.0] - 2026-07-24
 
 ### Changed
