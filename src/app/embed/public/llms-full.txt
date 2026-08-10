@@ -1,0 +1,121 @@
+# WebTalk 333 (WebTalk Embed) - Comprehensive LLM Documentation
+
+> WebTalk 333 是一套去中心化、無伺服器 (Serverless) 構架的瀏覽器擴充功能與網站嵌入式即時互動工具。本文件為大語言模型 (LLMs) 與 AI Agents 提供完整且結構化的網站架構、嵌入式 SDK 選項、對接 API 規格與開發維護資訊。
+
+---
+
+## 1. 網站結構與公共頁面 (Public Pages & Architecture)
+
+### 1.1 繁體中文接入指南與測試頁 (Index)
+- **URL**: `https://webtalk-nine.vercel.app/`
+- **Content-Type**: `text/html; charset=utf-8`
+- **目的**: 網站站長安裝與整合指南，提供 Embed 標籤複製、房間隔離策略展示、手機 RWD 效果示範與線上即時體驗。
+- **元資料標籤**: `meta[name="webtalk-page-id"]="webtalk-embed-guide-zh-Hant"`
+
+### 1.2 English Integration Guide
+- **URL**: `https://webtalk-nine.vercel.app/en.html`
+- **Content-Type**: `text/html; charset=utf-8`
+- **Purpose**: English document and quick-start guide for website administrators to embed WebTalk widget.
+
+---
+
+## 2. WebTalk Embed SDK 規格 (Script Specifications)
+
+WebTalk Embed 提供兩種打包構建版本，站長可透過 `<script>` 標籤直接在任何 Web 頁面載入。
+
+### 2.1 混合版 (Hybrid Version: Chat + AI)
+- **Script URL**: `https://webtalk-nine.vercel.app/webtalk.js`
+- **功能範圍**: 包含 WebRTC P2P 端對端聊天室、Dicebear 本地頭像生成、頁面內容 LLM 一鍵摘要與 AI 對話問答。
+- **典型嵌入程式碼**:
+```html
+<script
+  async
+  src="https://webtalk-nine.vercel.app/webtalk.js"
+  data-webtalk-scope="origin"
+  data-webtalk-ai-endpoint="https://webtalk-nine.vercel.app/api/webtalk/ai"
+></script>
+```
+
+### 2.2 純聊天版 (Chat-Only Version)
+- **Script URL**: `https://webtalk-nine.vercel.app/webtalk-chat.js`
+- **功能範圍**: 僅包含純 WebRTC P2P 聊天室與 Dicebear 本地頭像，不發送任何 AI Proxy 請求，適合純通訊場景。
+
+### 2.3 HTML data-* 配置參數 (Configuration Attributes)
+
+| 屬性名稱 | 預設值 | 可選值 | 說明 |
+|---|---|---|---|
+| `data-webtalk-scope` | `meta` | `origin`, `meta`, `path` | 房間劃分策略：全站共用 (`origin`)、頁面 Meta 隔離 (`meta`) 或完整路徑隔離 (`path`)。 |
+| `data-webtalk-page-id` | `''` | 字串 | 當 `scope="meta"` 時的自訂頁面房間識別碼（若未指定則自動讀取 `meta[name="webtalk-page-id"]`）。 |
+| `data-webtalk-ai-endpoint` | `''` | URL | 指定 AI 通訊代理端點。 |
+| `data-webtalk-mobile-placement` | `bottom` | `bottom`, `top` | 手機裝置下聊天室面板覆蓋位置。 |
+| `data-webtalk-auto-mount` | `true` | `true`, `false` | 是否在腳本載入後自動掛載組件。設為 `false` 可手動呼叫 `window.WebTalk.mount()`。 |
+| `data-webtalk-custom-style` | `''` | CSS URL | 注入客製化 Shadow DOM 樣式檔。 |
+
+---
+
+## 3. API 規格與 Agent 介面 (API Specifications)
+
+<a id="api-specifications"></a>
+
+WebTalk 部署於 Vercel 之 Serverless AI 代理端點。
+
+### 3.1 AI Chat & Summary Endpoint (`POST /api/webtalk/ai`)
+
+- **URL**: `https://webtalk-nine.vercel.app/api/webtalk/ai`
+- **HTTP Method**: `POST`
+- **Content-Type**: `application/json`
+- **CORS 支持**: 支援跨網域請求 (`Access-Control-Allow-Origin: *` 或經環境變數設定之域名)。
+
+#### Request Format:
+```json
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are WebTalk AI assistant..."
+    },
+    {
+      "role": "user",
+      "content": "請摘要此頁面內容"
+    }
+  ],
+  "route": "text"
+}
+```
+
+#### Field Descriptions:
+- `messages` (Array<Message>, Required): 包含 `role` (`system` | `user` | `assistant`) 與 `content` 的對話陣列。長度上限為 24 則。
+- `route` (String, Optional): 模型選擇路由。
+  - `"text"` (預設): 走純文字/推理大語言模型 (`openai/gpt-oss-120b` 或配置模型)。
+  - `"vision"`: 當內容含圖片時走視覺模型 (`meta-llama/llama-4-scout-17b-16e-instruct` 或配置模型)。
+
+#### Error Response Format:
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable error description."
+  }
+}
+```
+
+#### Status & Error Codes:
+- `200 OK`: 成功回傳 OpenAI 相容之 `chat/completions` JSON 響應。
+- `400 Bad Request` (`INVALID_JSON`): Body 解析 JSON 失敗。
+- `403 Forbidden` (`ORIGIN_NOT_ALLOWED`): 發送請求之 Origin 未在允許清單內。
+- `405 Method Not Allowed` (`METHOD_NOT_ALLOWED`): 非 POST 請求。
+- `413 Payload Too Large` (`PAYLOAD_TOO_LARGE`): 請求總字數超過上限 (500,000 bytes)。
+- `422 Unprocessable Entity` (`INVALID_MESSAGES`): `messages` 格式不正確或為空。
+- `502 Bad Gateway` (`UPSTREAM_UNAVAILABLE`): 上游 LLM API (Groq/OpenAI) 連線失敗。
+- `503 Service Unavailable` (`AI_NOT_CONFIGURED`): 服務端未配置 LLM API Key。
+
+---
+
+## 4. 研發團隊與開源資訊 (Maintenance & Team Credits)
+
+- **專案名稱**: WebTalk 333 (chrome-webtalk)
+- **授權條款**: AGPL-3.0-only
+- **官方 GitHub 組織 / 帳號**: [TBdavid2019](https://github.com/tbdavid2019)
+- **GitHub Repository**: [tbdavid2019/chrome-webtalk](https://github.com/tbdavid2019/chrome-webtalk)
+- **Chrome Web Store 頁面**: [WebTalk 333 - Chat and Summarize on any website](https://chromewebstore.google.com/detail/webtalk-333-chat-and-summ/hhhdloelamldfadfobnhdhpfmbbdppdb)
+- **聯繫與問題回報**: [GitHub Issues](https://github.com/tbdavid2019/chrome-webtalk/issues)

@@ -29,7 +29,9 @@ const createEmbedGuide = (): Plugin => ({
       'icon-192.png',
       'icon-512.png',
       'og-image.png',
-      'site.webmanifest'
+      'site.webmanifest',
+      'llms.txt',
+      'llms-full.txt'
     ]) {
       this.emitFile({
         type: 'asset',

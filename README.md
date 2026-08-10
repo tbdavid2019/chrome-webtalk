@@ -36,6 +36,7 @@ WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webta
 
 ## 🆕 近期更新
 
+- 🤖 **LLM & AI Agent 標準索引支持 (v2.2.1)**：依照 `llmstxt.org` 標準於網頁版 (Vercel Build) 提供 `/llms.txt` 與 `/llms-full.txt`，並在 HTTP 標頭與 `<head>` 注入 Link 發現標籤，便於大語言模型與 AI Agent 自動檢索 WebTalk 服務、API 端點與 Embed 整合規格。
 - 🚀 **Website Embed 雙版本與手機 RWD (v2.0.6)**：Embed 現在同時產生純 P2P 的 `webtalk-chat.js` 與含 AI 的 `webtalk.js`；手機以不修改宿主網站的半螢幕覆蓋方式呈現聊天室。網站 Embed 隱藏 extension 專屬設定入口；使用者若已安裝 extension，extension 偵測到官方 widget 後會主動讓位。Vercel 根目錄新增可直接給站長閱讀的繁中接入指南。
 - 🛠️ **Website Embed page room 隔離 (v2.0.5)**：房間 ID 的判定與 IndexedDB 訊息歷史改由核心層依 room 分區；Wiki 的每個 `webtalk-page-id` 會有獨立聊天與本機歷史。`meta` 模式缺少 page id 時不再悄悄退回整站共用房間，請明確使用 `origin` 模式才會共用。
 - 🛠️ **Website Embed 瀏覽器修正 (v2.0.4)**：修正一般網站載入 `webtalk.js` 時的 `process is not defined` runtime error，Embed 現在可正常初始化聊天室。
