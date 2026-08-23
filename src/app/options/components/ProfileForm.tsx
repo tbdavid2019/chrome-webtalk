@@ -20,6 +20,12 @@ import BlurFade from '@/components/magicui/BlurFade'
 import { Checkbox } from '@/components/ui/Checkbox'
 import Link from '@/components/Link'
 import { getUiText } from '@/utils'
+import {
+  DEFAULT_DISPLAY_FONT_FAMILY,
+  DEFAULT_DISPLAY_FONT_SIZE,
+  type DisplayFontFamily,
+  type DisplayFontSize
+} from '@/utils/displayTypography'
 
 const defaultUserInfo: UserInfo = {
   id: nanoid(),
@@ -27,6 +33,8 @@ const defaultUserInfo: UserInfo = {
   avatar: '',
   createTime: Date.now(),
   language: 'auto',
+  displayFontSize: DEFAULT_DISPLAY_FONT_SIZE,
+  displayFontFamily: DEFAULT_DISPLAY_FONT_FAMILY,
   compatibilityMode: 'legacy',
   themeMode: 'system',
   developerMode: false,
@@ -65,6 +73,12 @@ const formSchema = v.object({
       [v.literal('auto'), v.literal('zh_TW'), v.literal('zh_CN'), v.literal('en')],
       'Please select interface language. / 請選擇介面語言'
     )
+  ),
+  displayFontSize: v.optional(
+    v.union([v.literal('small'), v.literal('medium'), v.literal('large'), v.literal('xlarge')])
+  ),
+  displayFontFamily: v.optional(
+    v.union([v.literal('webtalk'), v.literal('system'), v.literal('cjk'), v.literal('serif'), v.literal('mono')])
   ),
   compatibilityMode: v.optional(v.union([v.literal('legacy'), v.literal('upstream')])),
   themeMode: v.pipe(
@@ -195,18 +209,15 @@ const ProfileForm: FC = () => {
             <FormItem>
               <FormControl>
                 <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="enable-room-avatars"
-                    onCheckedChange={field.onChange}
-                    checked={field.value}
-                  />
+                  <Checkbox id="enable-room-avatars" onCheckedChange={field.onChange} checked={field.value} />
                   <FormLabel className="cursor-pointer font-semibold" htmlFor="enable-room-avatars">
                     Different avatar per website 不同網站使用不同頭像
                   </FormLabel>
                 </div>
               </FormControl>
               <FormDescription>
-                When enabled, you will automatically use a different randomly generated avatar on different websites. The avatar chosen above will be your default. /
+                When enabled, you will automatically use a different randomly generated avatar on different websites.
+                The avatar chosen above will be your default. /
                 開啟後，在不同網站聊天的頭像會自動隨機不同。上方設定的頭像會作為預設頭像。
               </FormDescription>
               <FormMessage />
@@ -221,7 +232,11 @@ const ProfileForm: FC = () => {
             <FormItem>
               <FormLabel className="font-semibold">{text.languageLabel}</FormLabel>
               <FormControl>
-                <RadioGroup className="flex flex-wrap gap-x-4 gap-y-2" onValueChange={field.onChange} value={field.value}>
+                <RadioGroup
+                  className="flex flex-wrap gap-x-4 gap-y-2"
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="auto" id="language-auto" />
                     <Label className="cursor-pointer" htmlFor="language-auto">
@@ -276,6 +291,76 @@ const ProfileForm: FC = () => {
                 </RadioGroup>
               </FormControl>
               <FormDescription>{text.compatibilityDescription}</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="displayFontSize"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">Display Font Size 顯示字級</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  className="flex flex-wrap gap-x-4 gap-y-2"
+                  onValueChange={(value) => field.onChange(value as DisplayFontSize)}
+                  value={field.value ?? DEFAULT_DISPLAY_FONT_SIZE}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="small" id="display-font-size-small" />
+                    <Label className="cursor-pointer" htmlFor="display-font-size-small">
+                      Small 小
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="medium" id="display-font-size-medium" />
+                    <Label className="cursor-pointer" htmlFor="display-font-size-medium">
+                      Medium 中
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="large" id="display-font-size-large" />
+                    <Label className="cursor-pointer" htmlFor="display-font-size-large">
+                      Large 大
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="xlarge" id="display-font-size-xlarge" />
+                    <Label className="cursor-pointer" htmlFor="display-font-size-xlarge">
+                      Extra large 特大
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormDescription>調整 WebTalk 面板中的文字大小。 / Adjust text size in WebTalk panels.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="displayFontFamily"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">Display Font 顯示字型</FormLabel>
+              <FormControl>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onChange={(event) => field.onChange(event.target.value as DisplayFontFamily)}
+                  value={field.value ?? DEFAULT_DISPLAY_FONT_FAMILY}
+                >
+                  <option value="webtalk">WebTalk 預設字型</option>
+                  <option value="system">System 系統介面字型</option>
+                  <option value="cjk">CJK 中文優先字型</option>
+                  <option value="serif">Serif 襯線字型</option>
+                  <option value="mono">Monospace 等寬字型</option>
+                </select>
+              </FormControl>
+              <FormDescription>
+                使用作業系統可用的字型堆疊；不需要額外讀取完整字型清單的權限。 / Uses system font stacks without
+                requesting access to the full installed-font list.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

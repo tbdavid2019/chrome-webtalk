@@ -36,6 +36,8 @@ WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webta
 
 ## 🆕 近期更新
 
+- 🧰 **WebMCP 工具支援與自動探索 (v2.3.0)**：AI Workspace 會自動探索目前分頁提供的 WebMCP 工具，顯示工具名稱、用途描述、輸入 schema 與安全標註；工具新增或移除時會自動更新。WebMCP 面板預設摺疊並放在 AI 內容區下方，避免搶過 AI 空間主要內容。若分頁不支援 WebMCP，面板會保持隱藏，不顯示打擾性提示。AI 也能在支援 tool-calling 的模型下呼叫網站工具。
+- 🔠 **使用者字型與字級設定 (v2.3.0)**：設定頁新增小／中／大／特大字級，以及 WebTalk 預設、系統、中文優先、襯線與等寬字型選擇。設定會保存並套用到 WebTalk overlay；此功能不需要新增 Chrome 權限。
 - 🤖 **LLM & AI Agent 標準索引支持 (v2.2.1)**：依照 `llmstxt.org` 標準於網頁版 (Vercel Build) 提供 `/llms.txt` 與 `/llms-full.txt`，並在 HTTP 標頭與 `<head>` 注入 Link 發現標籤，便於大語言模型與 AI Agent 自動檢索 WebTalk 服務、API 端點與 Embed 整合規格。
 - 🚀 **Website Embed 雙版本與手機 RWD (v2.0.6)**：Embed 現在同時產生純 P2P 的 `webtalk-chat.js` 與含 AI 的 `webtalk.js`；手機以不修改宿主網站的半螢幕覆蓋方式呈現聊天室。網站 Embed 隱藏 extension 專屬設定入口；使用者若已安裝 extension，extension 偵測到官方 widget 後會主動讓位。Vercel 根目錄新增可直接給站長閱讀的繁中接入指南。
 - 🛠️ **Website Embed page room 隔離 (v2.0.5)**：房間 ID 的判定與 IndexedDB 訊息歷史改由核心層依 room 分區；Wiki 的每個 `webtalk-page-id` 會有獨立聊天與本機歷史。`meta` 模式缺少 page id 時不再悄悄退回整站共用房間，請明確使用 `origin` 模式才會共用。
@@ -125,6 +127,8 @@ pnpm build
 - **AI 推薦議題 / 問題**：若設定頁保持預設開啟，聊天室輸入框上方會出現幾個根據當前頁面內容產生的推薦議題；AI 空間也會顯示推薦問題。點擊後只會帶入輸入框，仍由你決定是否送出。
 - **語系控制**：到設定頁的 `Interface Language` 可切換介面語言，`Auto` 會跟隨瀏覽器；`@ai` 房間回覆也會跟著這個設定決定回答語言。
 - **AI 訊息管理**：AI 回覆會以獨立樣式顯示，不會進入彈幕；你可以封鎖某位使用者並同步隱藏他觸發的 AI，或在設定頁開啟 `Hide All AI Messages` 完全隱藏 AI 訊息。
+- **WebMCP 工具**：在支援 WebMCP 的 Chrome 中，AI Workspace 會顯示目前頁面的工具名稱、用途描述、輸入 schema 與安全標註，並透過 `toolchange` 即時更新；AI 聊天也會自動探索並在必要時呼叫工具後再回答。若目前分頁不支援 WebMCP，面板會保持隱藏，不打擾一般使用。若要在本機測試，請到 `chrome://flags/#enable-webmcp-testing` 開啟 WebMCP 並重新啟動 Chrome；請使用支援 tool-calling 的模型。
+- **顯示設定**：到設定頁的 `Display Font Size` 可調整面板字級，`Display Font` 可選擇系統介面、中文優先、襯線或等寬字型。這些選項使用作業系統字型堆疊，不會讀取完整的已安裝字型清單。
 - **訊息長度提示**：聊天輸入框目前上限為 `500` 字元；接近上限會變色提醒，達到上限時會主動顯示警告。
 - **Developer Mode**：若你是進階使用者，可到擴充功能設定頁開啟 `Developer Mode 開發者模式`，顯示跨網站 presence 與站點切換/debug 入口。
 - **原版相容測試模式**：若你想逐步和原版 `molvqingtai/WebChat` 公開房間互通，可在設定頁把 `Chat Protocol` 切到 `Upstream`。目前公開聊天室優先對齊 `peer-sync / text / history-sync / reaction`；私聊與 AI 會以 fork 專用 `extension` metadata 疊在 upstream text 上，只在支援這個 fork 的 peer 之間完整還原。

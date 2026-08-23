@@ -39,6 +39,7 @@ import {
 import ImageButton from '@/app/content/components/ImageButton'
 import PanelModeSwitch from '@/app/content/components/PanelModeSwitch'
 import MessageInput from '@/app/content/components/MessageInput'
+import WebMcpToolsPanel from '@/components/WebMcpToolsPanel'
 
 type SummaryPanelProps = {
   onClose: () => void
@@ -977,6 +978,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                 )}
               </div>
             )}
+            <WebMcpToolsPanel />
           </div>
 
           {/* 底部功能與輸入框控制欄 */}

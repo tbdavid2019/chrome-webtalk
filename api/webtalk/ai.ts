@@ -3,6 +3,8 @@ type AiRoute = 'text' | 'vision'
 interface AiRequestBody {
   messages?: unknown
   route?: AiRoute
+  tools?: unknown
+  tool_choice?: unknown
 }
 
 interface VercelRequestLike {
@@ -147,7 +149,8 @@ export default async function handler(request: VercelRequestLike, response: Verc
       },
       body: JSON.stringify({
         model,
-        messages: body.messages
+        messages: body.messages,
+        ...(Array.isArray(body.tools) && body.tools.length ? { tools: body.tools, tool_choice: body.tool_choice } : {})
       })
     })
 
