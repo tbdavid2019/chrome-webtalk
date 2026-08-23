@@ -21,12 +21,21 @@ export { cleanURL, isAbsoluteURL, assembleURL, buildFullURL } from './url'
 export { requestAiChatReply } from './requestAiChatReply'
 export { requestPageSuggestions } from './requestPageSuggestions'
 export { loadAiApiConfig, requestAiCompletion } from './aiClient'
+export {
+  executeWebMcpTool,
+  getWebMcpTools,
+  isWebMcpAvailable,
+  normalizeWebMcpTools,
+  serializeWebMcpResult,
+  subscribeWebMcpToolChanges
+} from './webmcp'
 export { detectAppLocale, getUiText, resolveAppLocale } from './uiText'
 export { compareHLC, createHLC, maxHLC, receiveHLCEvent, sendHLCEvent } from './hlc'
 export type { AppLocale, AppLocalePreference } from './uiText'
 export { resolvePageId, resolveRoomId, resolveRoomKey, WEBTALK_DEFAULT_META_NAME } from './roomId'
 export type { RoomDocumentLike, RoomIdentityOptions, RoomLocationLike, RoomScope } from './roomId'
 export type { AiApiConfig, AiChatMessage, AiCompletionResult } from './aiClient'
+export type { AiToolDefinition, WebMcpModelContext, WebMcpTool, WebMcpToolHandle, WebMcpToolRegistry } from './webmcp'
 export type {
   PageSuggestion,
   PageSuggestionCategory,

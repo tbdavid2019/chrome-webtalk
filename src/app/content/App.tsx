@@ -9,7 +9,7 @@ import ChatRoomDomain from '@/domain/ChatRoom'
 import UserInfoDomain from '@/domain/UserInfo'
 import Setup from '@/app/content/views/Setup'
 import MessageListDomain from '@/domain/MessageList'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { SummaryPanel } from '@/components/SummaryPanel'
 import { Toaster } from 'sonner'
 import DanmakuContainer from './components/DanmakuContainer'
@@ -20,6 +20,12 @@ import VirtualRoomDomain from '@/domain/VirtualRoom'
 import { MAX_AVATAR_SIZE } from '@/constants/config'
 import type { MobilePlacement } from '@/app/embed/options'
 import { createRandomEmbedUserInfo, shouldAutoCreateEmbedUserInfo } from '@/app/embed/userInfo'
+import {
+  DEFAULT_DISPLAY_FONT_FAMILY,
+  DEFAULT_DISPLAY_FONT_SIZE,
+  DISPLAY_FONT_FAMILY_VALUES,
+  DISPLAY_FONT_SCALE_VALUES
+} from '@/utils/displayTypography'
 
 const OVERLAY_BASE_Z_INDEX = 2147482000
 
@@ -262,9 +268,20 @@ export default function App({
       : (userInfo?.themeMode ?? (checkDarkMode() ? 'dark' : 'light'))
   const getPanelZIndex = (panel: 'main' | 'summary') =>
     topPanel === panel ? OVERLAY_BASE_Z_INDEX + 1 : OVERLAY_BASE_Z_INDEX
+  const displayFontFamily = userInfo?.displayFontFamily ?? DEFAULT_DISPLAY_FONT_FAMILY
+  const displayFontSize = userInfo?.displayFontSize ?? DEFAULT_DISPLAY_FONT_SIZE
 
   return (
-    <div id="app" className={cn('contents', themeMode)}>
+    <div
+      id="app"
+      className={cn('contents', themeMode)}
+      style={
+        {
+          '--font-ui': DISPLAY_FONT_FAMILY_VALUES[displayFontFamily],
+          zoom: DISPLAY_FONT_SCALE_VALUES[displayFontSize]
+        } as CSSProperties
+      }
+    >
       {appStatusLoadIsFinished && (
         <>
           <AppMain

@@ -10,6 +10,8 @@ export interface UserInfo {
   avatar: string
   createTime: number
   language?: 'auto' | 'zh_TW' | 'zh_CN' | 'en'
+  displayFontSize?: 'small' | 'medium' | 'large' | 'xlarge'
+  displayFontFamily?: 'webtalk' | 'system' | 'cjk' | 'serif' | 'mono'
   compatibilityMode?: 'legacy' | 'upstream'
   themeMode: 'system' | 'light' | 'dark'
   developerMode?: boolean

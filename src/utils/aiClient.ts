@@ -1,4 +1,5 @@
 import { getPlatform } from '@/platform'
+import type { AiToolDefinition } from './webmcp'
 
 export interface AiApiConfig {
   apiKey: string
@@ -8,9 +9,10 @@ export interface AiApiConfig {
 }
 
 export interface AiChatMessage {
-  role: 'system' | 'user' | 'assistant'
+  role: 'system' | 'user' | 'assistant' | 'tool'
   content:
     | string
+    | null
     | Array<
         | {
             type: 'text'
@@ -23,11 +25,23 @@ export interface AiChatMessage {
             }
           }
       >
+  tool_call_id?: string
+  tool_calls?: AiToolCall[]
+}
+
+export interface AiToolCall {
+  id: string
+  type: 'function'
+  function: {
+    name: string
+    arguments: string
+  }
 }
 
 export interface AiCompletionResult {
   content: string
   model: string
+  toolCalls: AiToolCall[]
 }
 
 export const loadAiApiConfig = async (): Promise<AiApiConfig> => {
@@ -63,6 +77,7 @@ export const requestAiCompletion = async (input: {
   model?: string
   visionModel?: string
   route?: 'text' | 'vision'
+  tools?: AiToolDefinition[]
 }): Promise<AiCompletionResult> => {
   const stored = await loadAiApiConfig()
   const isProxy = getPlatform().ai.mode === 'proxy'
@@ -85,6 +100,7 @@ export const requestAiCompletion = async (input: {
     body: JSON.stringify({
       model,
       messages: input.messages,
+      ...(input.tools?.length ? { tools: input.tools, tool_choice: 'auto' } : {}),
       ...(isProxy && input.route ? { route: input.route } : {})
     })
   })
@@ -96,11 +112,14 @@ export const requestAiCompletion = async (input: {
     throw new Error(errorMessage)
   }
 
-  const content = (json?.choices?.[0]?.message?.content || json?.content)?.trim()
-  if (!content) {
+  const message = json?.choices?.[0]?.message
+  const rawContent = message?.content || json?.content
+  const content = typeof rawContent === 'string' ? rawContent.trim() : ''
+  const toolCalls = Array.isArray(message?.tool_calls) ? (message.tool_calls as AiToolCall[]) : []
+  if (!content && toolCalls.length === 0) {
     const apiError = json?.error?.message || 'Unknown API Error'
     throw new Error(apiError)
   }
 
-  return { content, model: json?.model || model }
+  return { content, model: json?.model || model, toolCalls }
 }
