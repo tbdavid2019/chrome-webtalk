@@ -1,12 +1,20 @@
 import { createStorage } from 'unstorage'
 import indexedDbDriver from 'unstorage/drivers/indexedb'
 import localStorageDriver from 'unstorage/drivers/localstorage'
-import { LocalStorageExtern, IndexDBStorageExtern, BrowserSyncStorageExtern } from '@/domain/externs/Storage'
-import { STORAGE_NAME } from '@/constants/config'
+import {
+  LocalStorageExtern,
+  IndexDBStorageExtern,
+  BrowserSyncStorageExtern,
+  BrowserLocalStorageExtern,
+  UserInfoStorageExtern
+} from '@/domain/externs/Storage'
+import { STORAGE_NAME, USER_INFO_AVATAR_STORAGE_KEY, USER_INFO_STORAGE_KEY } from '@/constants/config'
 import { platformStorageDriver } from '@/platform/storageDriver'
 
-import { Storage } from '@/domain/externs/Storage'
+import { Storage, type StorageValue } from '@/domain/externs/Storage'
 import { EVENT } from '@/constants/event'
+import type { UserInfo } from '@/domain/UserInfo'
+import { mergeUserInfoStorage, splitUserInfoStorage, type UserInfoLocalStorage } from '@/domain/userInfoStorage'
 
 /**
  * Waiting to be resolved
@@ -23,6 +31,10 @@ export const indexDBStorage = createStorage({
 
 export const browserSyncStorage = createStorage({
   driver: platformStorageDriver({ storageArea: 'sync' })
+})
+
+export const browserLocalStorage = createStorage({
+  driver: platformStorageDriver({ storageArea: 'local' })
 })
 
 export const LocalStorageImpl = LocalStorageExtern.impl({
@@ -66,4 +78,60 @@ export const BrowserSyncStorageImpl = BrowserSyncStorageExtern.impl({
   clear: browserSyncStorage.clear,
   watch: browserSyncStorage.watch as Storage['watch'],
   unwatch: browserSyncStorage.unwatch
+})
+
+export const BrowserLocalStorageImpl = BrowserLocalStorageExtern.impl({
+  name: STORAGE_NAME,
+  get: browserLocalStorage.getItem,
+  set: browserLocalStorage.setItem,
+  remove: browserLocalStorage.removeItem,
+  clear: browserLocalStorage.clear,
+  watch: browserLocalStorage.watch as Storage['watch'],
+  unwatch: browserLocalStorage.unwatch
+})
+
+export const UserInfoStorageImpl = UserInfoStorageExtern.impl({
+  name: STORAGE_NAME,
+  get: async <T extends StorageValue>(key: string) => {
+    const [syncValue, localValue] = await Promise.all([
+      BrowserSyncStorageImpl.value.get<UserInfo>(key),
+      BrowserLocalStorageImpl.value.get<UserInfoLocalStorage>(USER_INFO_AVATAR_STORAGE_KEY)
+    ])
+    return mergeUserInfoStorage(syncValue, localValue) as T | null
+  },
+  set: async (key, value) => {
+    if (value === null) {
+      await UserInfoStorageImpl.value.remove(key)
+      return
+    }
+
+    const { sync, local } = splitUserInfoStorage(value as UserInfo)
+    await Promise.all([
+      BrowserSyncStorageImpl.value.set(key, sync),
+      BrowserLocalStorageImpl.value.set(USER_INFO_AVATAR_STORAGE_KEY, local)
+    ])
+  },
+  remove: async (key) => {
+    await Promise.all([
+      BrowserSyncStorageImpl.value.remove(key),
+      BrowserLocalStorageImpl.value.remove(USER_INFO_AVATAR_STORAGE_KEY)
+    ])
+  },
+  clear: async () => {
+    await Promise.all([
+      BrowserSyncStorageImpl.value.remove(USER_INFO_STORAGE_KEY),
+      BrowserLocalStorageImpl.value.remove(USER_INFO_AVATAR_STORAGE_KEY)
+    ])
+  },
+  watch: async (callback) => {
+    const [unwatchSync, unwatchLocal] = await Promise.all([
+      BrowserSyncStorageImpl.value.watch(callback),
+      BrowserLocalStorageImpl.value.watch(callback)
+    ])
+
+    return async () => {
+      await Promise.all([unwatchSync(), unwatchLocal()])
+    }
+  },
+  unwatch: async () => undefined
 })

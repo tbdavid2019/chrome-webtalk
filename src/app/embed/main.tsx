@@ -4,7 +4,13 @@ import { Remesh } from 'remesh'
 import { RemeshRoot, RemeshScope } from 'remesh-react'
 
 import App from '@/app/content/App'
-import { LocalStorageImpl, IndexDBStorageImpl, BrowserSyncStorageImpl } from '@/domain/impls/Storage'
+import {
+  LocalStorageImpl,
+  IndexDBStorageImpl,
+  BrowserSyncStorageImpl,
+  BrowserLocalStorageImpl,
+  UserInfoStorageImpl
+} from '@/domain/impls/Storage'
 import { DanmakuImpl } from '@/domain/impls/Danmaku'
 import { NotificationImpl } from '@/domain/impls/Notification'
 import { ToastImpl } from '@/domain/impls/Toast'
@@ -93,6 +99,8 @@ export const createWebTalkMount = (capabilities: WebTalkEmbedCapabilities) => {
         LocalStorageImpl,
         IndexDBStorageImpl,
         BrowserSyncStorageImpl,
+        BrowserLocalStorageImpl,
+        UserInfoStorageImpl,
         chatRoom,
         VirtualRoomImpl,
         ToastImpl,

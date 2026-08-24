@@ -27,10 +27,7 @@ const AvatarSelect = React.forwardRef<HTMLInputElement, AvatarSelectProps>(
         }
 
         try {
-          /**
-           * In chrome storage.sync, each key-value pair supports a maximum storage of 8kb
-           * and all key-value pairs support a maximum storage of 100kb.
-           */
+          /** Keep avatar payloads small for local storage and peer synchronization. */
           const blob = await compressImage({ input: file, targetSize: compressSize, outputType: 'image/webp' })
           const base64 = await blobToBase64(blob)
           onSuccess?.(base64)

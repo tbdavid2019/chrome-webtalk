@@ -36,6 +36,7 @@ WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webta
 
 ## 🆕 近期更新
 
+- 🛠️ **使用者資料儲存修正 (v2.3.1)**：使用者設定改由 `storage.sync` 保存，頭像與不同網站頭像改由本機 `storage.local` 保存，避免頭像資料超過 Chrome `storage.sync` 單筆 8 KB 限制。舊版資料會在下一次保存設定時自動相容處理；此修正不需要新增 Chrome 權限。
 - 🧰 **WebMCP 工具支援與自動探索 (v2.3.0)**：AI Workspace 會自動探索目前分頁提供的 WebMCP 工具，顯示工具名稱、用途描述、輸入 schema 與安全標註；工具新增或移除時會自動更新。WebMCP 面板預設摺疊並放在 AI 內容區下方，避免搶過 AI 空間主要內容。若分頁不支援 WebMCP，面板會保持隱藏，不顯示打擾性提示。AI 也能在支援 tool-calling 的模型下呼叫網站工具。
 - 🔠 **使用者字型與字級設定 (v2.3.0)**：設定頁新增小／中／大／特大字級，以及 WebTalk 預設、系統、中文優先、襯線與等寬字型選擇。設定會保存並套用到 WebTalk overlay；此功能不需要新增 Chrome 權限。
 - 🤖 **LLM & AI Agent 標準索引支持 (v2.2.1)**：依照 `llmstxt.org` 標準於網頁版 (Vercel Build) 提供 `/llms.txt` 與 `/llms-full.txt`，並在 HTTP 標頭與 `<head>` 注入 Link 發現標籤，便於大語言模型與 AI Agent 自動檢索 WebTalk 服務、API 端點與 Embed 整合規格。
@@ -150,7 +151,7 @@ pnpm build
 - **房間如何形成**：內容腳本會把 `location.host` 轉十六進位作為房號（`src/domain/impls/ChatRoom.ts`），同一個網域的使用者都連到同一房間。
 - **即時傳輸**：Website 與 Extension 的公開訊息都走 WebRTC DataChannel；不再使用 Vercel WebSocket relay。
 - **歷史同步**：每個節點本地保留完整訊息；新 peer 加入時，舊 peer 依最後訊息時間批次推送近 `SYNC_HISTORY_MAX_DAYS`（預設 3 天）的紀錄，避免漏掉談話（`src/domain/ChatRoom.ts:332-470`）。
-- **本地儲存**：使用 `unstorage` 驅動的 IndexedDB/LocalStorage 保存訊息與設定（`src/domain/impls/Storage.ts`），即使離線或重新載入也能保留記錄，再由其他節點補齊差異。
+- **本地儲存**：訊息歷史使用 IndexedDB；使用者設定使用 `chrome.storage.sync` 同步，頭像與不同網站頭像使用 `chrome.storage.local` 保存。這樣可避免頭像資料超過 Chrome Sync 的單筆容量限制。
 
 ---
 

@@ -6,7 +6,13 @@ import { defineContentScript } from 'wxt/sandbox'
 import { createShadowRootUi } from 'wxt/client'
 
 import App from './App'
-import { LocalStorageImpl, IndexDBStorageImpl, BrowserSyncStorageImpl } from '@/domain/impls/Storage'
+import {
+  LocalStorageImpl,
+  IndexDBStorageImpl,
+  BrowserSyncStorageImpl,
+  BrowserLocalStorageImpl,
+  UserInfoStorageImpl
+} from '@/domain/impls/Storage'
 import { DanmakuImpl } from '@/domain/impls/Danmaku'
 import { NotificationImpl } from '@/domain/impls/Notification'
 import { ToastImpl } from '@/domain/impls/Toast'
@@ -65,6 +71,8 @@ export default defineContentScript({
         LocalStorageImpl,
         IndexDBStorageImpl,
         BrowserSyncStorageImpl,
+        BrowserLocalStorageImpl,
+        UserInfoStorageImpl,
         ChatRoomImpl,
         VirtualRoomImpl,
         ToastImpl,
