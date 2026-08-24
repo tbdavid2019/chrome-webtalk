@@ -192,6 +192,8 @@ export const STORAGE_NAME = 'WEB_TALK_2.0.2' as const
 
 export const USER_INFO_STORAGE_KEY = 'WEB_TALK_USER_INFO' as const
 
+export const USER_INFO_AVATAR_STORAGE_KEY = 'WEB_TALK_USER_AVATARS' as const
+
 export const MESSAGE_LIST_STORAGE_KEY = 'WEB_TALK_MESSAGE_LIST' as const
 
 export const APP_STATUS_STORAGE_KEY = 'WEB_TALK_APP_STATUS' as const

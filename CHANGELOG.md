@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## [2.3.1] - 2026-08-24
+
+### Added
+
+- 新增使用者資料的分離儲存機制，將頭像資料保存於本機儲存空間。
+
+### Changed
+
+- `storage.sync` 僅保存小型使用者設定，頭像與不同網站頭像改由 `storage.local` 保存。
+- 保留舊版完整 UserInfo 的回讀相容性，使用者下次保存設定時會自動完成資料拆分。
+
+### Fixed
+
+- 修正 `Resource::kQuotaBytesPerItem quota exceeded`，避免使用者頭像使 `chrome.storage.sync` 單筆資料超過 8 KB 限制。
+
+### Build
+
+- Chrome Extension 建置輸出版本更新為 `2.3.1`。
+- 未新增 Chrome Extension 權限。
+
 ## [2.3.0] - 2026-08-23
 
 ### Added

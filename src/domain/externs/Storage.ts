@@ -85,3 +85,51 @@ export const BrowserSyncStorageExtern = Remesh.extern<Storage>({
     }
   }
 })
+
+export const BrowserLocalStorageExtern = Remesh.extern<Storage>({
+  default: {
+    name: 'STORAGE',
+    get: async () => {
+      throw new Error('"get" not implemented.')
+    },
+    set: async () => {
+      throw new Error('"set" not implemented.')
+    },
+    remove: async () => {
+      throw new Error('"remove" not implemented.')
+    },
+    clear: async () => {
+      throw new Error('"clear" not implemented.')
+    },
+    watch: async () => {
+      throw new Error('"watch" not implemented.')
+    },
+    unwatch: async () => {
+      throw new Error('"unwatch" not implemented.')
+    }
+  }
+})
+
+export const UserInfoStorageExtern = Remesh.extern<Storage>({
+  default: {
+    name: 'STORAGE',
+    get: async () => {
+      throw new Error('"get" not implemented.')
+    },
+    set: async () => {
+      throw new Error('"set" not implemented.')
+    },
+    remove: async () => {
+      throw new Error('"remove" not implemented.')
+    },
+    clear: async () => {
+      throw new Error('"clear" not implemented.')
+    },
+    watch: async () => {
+      throw new Error('"watch" not implemented.')
+    },
+    unwatch: async () => {
+      throw new Error('"unwatch" not implemented.')
+    }
+  }
+})
