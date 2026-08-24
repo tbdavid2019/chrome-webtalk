@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [2.3.2] - 2026-08-24
+
+### Added
+
+- **預設 Groq API Key 與後備支援**：內建預設 Groq API Key 與後備設定，安裝後即可直接體驗 AI 摘要與問答功能，並支援於設定頁自由切換自訂金鑰。
+
+### Build
+
+- Chrome Extension 建置輸出版本更新為 `2.3.2`。
+- 產生上架用套件包 `output/web-talk-333-2.3.2-chrome.zip`。
+- 未新增 Chrome Extension 權限。
+
 ## [2.3.1] - 2026-08-24
 
 ### Added

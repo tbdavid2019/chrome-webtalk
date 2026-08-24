@@ -36,6 +36,7 @@ WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webta
 
 ## 🆕 近期更新
 
+- 🔑 **預設 Groq API Key 與開箱即用 AI 支援 (v2.3.2)**：內建預設 Groq 體驗金鑰與後備設定，安裝後無需額外設定即可體驗 AI 摘要與問答；使用者仍可隨時於設定頁替換為個人 API Key。
 - 🛠️ **使用者資料儲存修正 (v2.3.1)**：使用者設定改由 `storage.sync` 保存，頭像與不同網站頭像改由本機 `storage.local` 保存，避免頭像資料超過 Chrome `storage.sync` 單筆 8 KB 限制。舊版資料會在下一次保存設定時自動相容處理；此修正不需要新增 Chrome 權限。
 - 🧰 **WebMCP 工具支援與自動探索 (v2.3.0)**：AI Workspace 會自動探索目前分頁提供的 WebMCP 工具，顯示工具名稱、用途描述、輸入 schema 與安全標註；工具新增或移除時會自動更新。WebMCP 面板預設摺疊並放在 AI 內容區下方，避免搶過 AI 空間主要內容。若分頁不支援 WebMCP，面板會保持隱藏，不顯示打擾性提示。AI 也能在支援 tool-calling 的模型下呼叫網站工具。
 - 🔠 **使用者字型與字級設定 (v2.3.0)**：設定頁新增小／中／大／特大字級，以及 WebTalk 預設、系統、中文優先、襯線與等寬字型選擇。設定會保存並套用到 WebTalk overlay；此功能不需要新增 Chrome 權限。
