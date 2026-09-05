@@ -10,12 +10,14 @@ export interface DargOptions {
   minY: number
   value?: number
   onChange?: (position: { x: number; y: number }) => void
+  onEnd?: (position: { x: number; y: number }) => void
+  onStart?: () => void
 }
 
 const CLICK_RESET_DELAY = 250
 
 const useDraggable = (options: DargOptions) => {
-  const { initX, initY, maxX = 0, minX = 0, maxY = 0, minY = 0, value, onChange } = options
+  const { initX, initY, maxX = 0, minX = 0, maxY = 0, minY = 0, value, onChange, onEnd, onStart } = options
 
   const mousePosition = useRef({ x: 0, y: 0 })
   const startMousePos = useRef({ x: 0, y: 0 })
@@ -23,6 +25,7 @@ const useDraggable = (options: DargOptions) => {
   const positionRef = useRef({ x: clamp(initX, minX, maxX), y: clamp(initY, minY, maxY) })
 
   const [position, setPosition] = useState(positionRef.current)
+  const [isDragging, setIsDragging] = useState(false)
 
   const hasDraggedRef = useRef(false)
   const ignoreClickRef = useRef(false)
@@ -92,6 +95,7 @@ const useDraggable = (options: DargOptions) => {
 
   const handleEnd = useCallback(() => {
     isMove.current = false
+    setIsDragging(false)
     document.documentElement.style.cursor = ''
     document.documentElement.style.userSelect = ''
 
@@ -105,18 +109,24 @@ const useDraggable = (options: DargOptions) => {
         ignoreClickRef.current = false
         clickResetTimeoutRef.current = undefined
       }, CLICK_RESET_DELAY)
+      onEnd?.(positionRef.current)
     }
-  }, [])
+  }, [onEnd])
 
-  const handleStart = useCallback((e: MouseEvent) => {
-    const { clientX, clientY } = e
-    mousePosition.current = { x: clientX, y: clientY }
-    startMousePos.current = { x: clientX, y: clientY }
-    isMove.current = true
-    hasDraggedRef.current = false
-    document.documentElement.style.userSelect = 'none'
-    document.documentElement.style.cursor = 'grab'
-  }, [])
+  const handleStart = useCallback(
+    (e: MouseEvent) => {
+      const { clientX, clientY } = e
+      mousePosition.current = { x: clientX, y: clientY }
+      startMousePos.current = { x: clientX, y: clientY }
+      isMove.current = true
+      hasDraggedRef.current = false
+      setIsDragging(true)
+      document.documentElement.style.userSelect = 'none'
+      document.documentElement.style.cursor = 'grab'
+      onStart?.()
+    },
+    [onStart]
+  )
 
   const handleRef = useRef<HTMLElement | null>(null)
 
@@ -147,7 +157,7 @@ const useDraggable = (options: DargOptions) => {
     }
   }, [])
 
-  return { setRef, ...position }
+  return { setRef, isDragging, ...position }
 }
 
 export default useDraggable

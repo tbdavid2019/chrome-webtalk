@@ -18,7 +18,7 @@ import AppStatusDomain from '@/domain/AppStatus'
 import { getDay } from 'date-fns'
 import { getPlatform } from '@/platform'
 import useDraggable from '@/hooks/useDraggable'
-import { useFloatingDockOffset } from '@/hooks/useFloatingDockOffset'
+import { useFloatingDockOffset, useFloatingDockPlacement, type DockPlacement } from '@/hooks/useFloatingDockOffset'
 import { clamp } from '@/utils'
 
 const WEBTALK_CHROME_WEB_STORE_URL =
@@ -28,9 +28,15 @@ export interface AppButtonProps {
   className?: string
   enableAi?: boolean
   isEmbed?: boolean
+  defaultPlacement?: DockPlacement
 }
 
-const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = false }) => {
+const AppButton: FC<AppButtonProps> = ({
+  className,
+  enableAi = true,
+  isEmbed = false,
+  defaultPlacement = 'right'
+}) => {
   const send = useRemeshSend()
   const appStatusDomain = useRemeshDomain(AppStatusDomain())
   const toastDomain = useRemeshDomain(ToastDomain())
@@ -44,11 +50,38 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
   const isDarkMode = userInfo?.themeMode === 'dark' ? true : userInfo?.themeMode === 'light' ? false : checkDarkMode()
 
   const [hovered, setHovered] = useState(false)
+  const [viewportWidth, setViewportWidth] = useState(() => (typeof window === 'undefined' ? 1200 : window.innerWidth))
   const [viewportHeight, setViewportHeight] = useState(() => (typeof window === 'undefined' ? 800 : window.innerHeight))
   const [offset, setOffset] = useFloatingDockOffset()
+  const [placement, setPlacement] = useFloatingDockPlacement(
+    userInfo?.floatingButtonPlacement ?? defaultPlacement
+  )
 
   useEffect(() => {
-    const handleResize = () => setViewportHeight(window.innerHeight)
+    if (userInfo?.floatingButtonPlacement && userInfo.floatingButtonPlacement !== placement) {
+      setPlacement(userInfo.floatingButtonPlacement)
+    }
+  }, [userInfo?.floatingButtonPlacement, placement, setPlacement])
+
+  const isLeft = placement === 'left'
+
+  const handleSnapPlacement = (next: DockPlacement) => {
+    setPlacement(next)
+    if (userInfo && userInfo.floatingButtonPlacement !== next) {
+      send(userInfoDomain.command.UpdateUserInfoCommand({ ...userInfo, floatingButtonPlacement: next }))
+    }
+  }
+
+  const handleTogglePlacement = (e?: MouseEvent) => {
+    e?.stopPropagation()
+    handleSnapPlacement(isLeft ? 'right' : 'left')
+  }
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth)
+      setViewportHeight(window.innerHeight)
+    }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
@@ -62,15 +95,30 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
     }
   }, [clampedOffset, offset, setOffset])
 
-  const { setRef: dragRef, y } = useDraggable({
+  const maxHorizontalDrag = Math.max(0, viewportWidth - 60)
+
+  const {
+    setRef: dragRef,
+    isDragging,
+    x,
+    y
+  } = useDraggable({
     initX: 0,
     initY: clampedOffset,
-    minX: 0,
-    maxX: 0,
+    minX: isLeft ? 0 : -maxHorizontalDrag,
+    maxX: isLeft ? maxHorizontalDrag : 0,
     minY: -verticalLimit,
     maxY: verticalLimit,
     value: clampedOffset,
-    onChange: ({ y }) => setOffset(y)
+    onChange: ({ y }) => setOffset(y),
+    onEnd: ({ x }) => {
+      const snapThreshold = Math.max(80, viewportWidth / 3)
+      if (!isLeft && x < -snapThreshold) {
+        handleSnapPlacement('left')
+      } else if (isLeft && x > snapThreshold) {
+        handleSnapPlacement('right')
+      }
+    }
   })
 
   const handleSwitchTheme = () => {
@@ -104,7 +152,6 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
     )
   }
 
-  const isLeft = (userInfo?.floatingButtonPlacement ?? 'right') === 'left'
   const buttonShapeClass = isLeft
     ? 'rounded-r-full rounded-l-none hover:translate-x-0.5'
     : 'rounded-l-full rounded-r-none hover:-translate-x-0.5'
@@ -117,7 +164,8 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={cn(
-        'fixed top-1/2 z-infinity flex flex-col items-center gap-y-2 select-none transform transition-all duration-300 ease-in-out pointer-events-auto',
+        'fixed top-1/2 z-infinity flex flex-col items-center gap-y-2 select-none transform pointer-events-auto',
+        isDragging ? '' : 'transition-all duration-300 ease-in-out',
         isLeft ? 'left-0' : 'right-0',
         isLeft
           ? 'border-l-0 rounded-r-2xl py-3 pr-2 pl-1.5'
@@ -129,9 +177,9 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
         className
       )}
       style={{
-        transform: `translateY(calc(-50% + ${y}px)) translateX(${
+        transform: `translateY(calc(-50% + ${y}px)) translateX(calc(${x}px + ${
           !hovered ? (isLeft ? '-18px' : '18px') : '0px'
-        })`
+        }))`
       }}
     >
       {/* 關閉按鈕 X */}
@@ -154,7 +202,11 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
       </AnimatePresence>
 
       {/* Drag Handle 拖曳把手 */}
-      <div className="text-muted-foreground py-0.5 transition-colors">
+      <div
+        onDoubleClick={handleTogglePlacement}
+        className="text-muted-foreground py-0.5 transition-colors cursor-grab active:cursor-grabbing hover:text-foreground flex items-center justify-center select-none"
+        title={isLeft ? '按住拖曳可搬移至右側，或按兩下快速切換至右側' : '按住拖曳可搬移至左側，或按兩下快速切換至左側'}
+      >
         <GripVerticalIcon size={12} className="rotate-90 pointer-events-none" />
       </div>
 
