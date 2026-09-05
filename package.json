@@ -1,7 +1,7 @@
 {
   "name": "web-talk-333",
   "displayName": "WebTalk 333 - Chat and Summarize on any website.",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Chat with friends on any website. Summary of the page content. WebRTC P2P.",
   "type": "module",
   "scripts": {
@@ -20,7 +20,8 @@
     "clear": "rimraf .output",
     "check": "tsc --noEmit",
     "prepare": "husky",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare",
+    "test:browser": "playwright test"
   },
   "repository": {
     "type": "git",
@@ -107,6 +108,7 @@
     "valibot": "1.0.0-beta.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
