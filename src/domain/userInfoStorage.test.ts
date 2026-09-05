@@ -49,3 +49,14 @@ test('reads legacy avatar fields from the sync value during migration', () => {
 
   assert.deepEqual(mergeUserInfoStorage({ ...legacySync, avatar, globalAvatar, roomAvatars }, null), userInfo)
 })
+
+test('preserves floatingButtonPlacement in sync settings', () => {
+  const customUserInfo: UserInfo = {
+    ...userInfo,
+    floatingButtonPlacement: 'left'
+  }
+  const parts = splitUserInfoStorage(customUserInfo)
+
+  assert.equal(parts.sync.floatingButtonPlacement, 'left')
+  assert.deepEqual(mergeUserInfoStorage(parts.sync, parts.local), customUserInfo)
+})

@@ -26,6 +26,7 @@ export interface UserInfo {
   roomAvatarsEnabled?: boolean
   globalAvatar?: string
   roomAvatars?: Record<string, string>
+  floatingButtonPlacement?: 'right' | 'left'
 }
 
 const UserInfoDomain = Remesh.domain({

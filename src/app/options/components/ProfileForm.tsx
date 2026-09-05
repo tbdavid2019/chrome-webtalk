@@ -48,7 +48,8 @@ const defaultUserInfo: UserInfo = {
   notificationType: 'at',
   roomAvatarsEnabled: true,
   globalAvatar: '',
-  roomAvatars: {}
+  roomAvatars: {},
+  floatingButtonPlacement: 'right'
 }
 
 const formSchema = v.object({
@@ -102,7 +103,8 @@ const formSchema = v.object({
   ),
   roomAvatarsEnabled: v.optional(v.boolean()),
   globalAvatar: v.optional(v.string()),
-  roomAvatars: v.optional(v.any())
+  roomAvatars: v.optional(v.any()),
+  floatingButtonPlacement: v.optional(v.union([v.literal('right'), v.literal('left')]))
 })
 const ProfileForm: FC = () => {
   const send = useRemeshSend()
@@ -487,14 +489,47 @@ const ProfileForm: FC = () => {
               checked={!buttonsHidden}
             />
             <Label className="cursor-pointer font-semibold" htmlFor="show-floating-buttons">
-              Show Floating Button 顯示右側懸浮按鈕
+              {text.profileShowFloatingButtons}
             </Label>
           </div>
-          <FormDescription>
-            Show the floating chat and AI buttons on the right side of the screen. / 在螢幕右側顯示聊天和 AI
-            摘要的懸浮按鈕。如果隱藏，你也可以點擊瀏覽器工具列上的擴充功能圖示來重新顯示。
-          </FormDescription>
+          <FormDescription>{text.profileShowFloatingButtonsDescription}</FormDescription>
         </FormItem>
+
+        {!buttonsHidden && (
+          <div className="space-y-4 pl-6">
+            <FormField
+              control={form.control}
+              name="floatingButtonPlacement"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>{text.profileFloatingButtonPlacement}</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      className="flex gap-x-4"
+                      onValueChange={field.onChange}
+                      value={field.value ?? 'right'}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="right" id="placement-right" />
+                        <Label htmlFor="placement-right" className="cursor-pointer">
+                          {text.profileFloatingButtonPlacementRight}
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="left" id="placement-left" />
+                        <Label htmlFor="placement-left" className="cursor-pointer">
+                          {text.profileFloatingButtonPlacementLeft}
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormDescription>{text.profileFloatingButtonPlacementDescription}</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
         <FormField
           control={form.control}
