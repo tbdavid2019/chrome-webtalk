@@ -104,6 +104,11 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
     )
   }
 
+  const isLeft = (userInfo?.floatingButtonPlacement ?? 'right') === 'left'
+  const buttonShapeClass = isLeft
+    ? 'rounded-r-full rounded-l-none hover:translate-x-0.5'
+    : 'rounded-l-full rounded-r-none hover:-translate-x-0.5'
+
   return (
     <div
       ref={(node) => {
@@ -112,15 +117,21 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={cn(
-        'fixed top-1/2 right-0 z-infinity flex flex-col items-center gap-y-2 select-none transform transition-all duration-300 ease-in-out pointer-events-auto',
-        'bg-background/40 backdrop-blur border border-r-0 border-border/40 shadow-lg rounded-l-2xl py-3 pl-2 pr-1.5 cursor-grab active:cursor-grabbing',
+        'fixed top-1/2 z-infinity flex flex-col items-center gap-y-2 select-none transform transition-all duration-300 ease-in-out pointer-events-auto',
+        isLeft ? 'left-0' : 'right-0',
+        isLeft
+          ? 'border-l-0 rounded-r-2xl py-3 pr-2 pl-1.5'
+          : 'border-r-0 rounded-l-2xl py-3 pl-2 pr-1.5',
+        'bg-background/40 backdrop-blur border border-border/40 shadow-lg cursor-grab active:cursor-grabbing',
         !hovered
           ? 'opacity-50 shadow-none border-transparent'
           : 'opacity-100 shadow-2xl bg-background/90 border-border',
         className
       )}
       style={{
-        transform: `translateY(calc(-50% + ${y}px)) translateX(${!hovered ? '18px' : '0px'})`
+        transform: `translateY(calc(-50% + ${y}px)) translateX(${
+          !hovered ? (isLeft ? '-18px' : '18px') : '0px'
+        })`
       }}
     >
       {/* 關閉按鈕 X */}
@@ -131,7 +142,10 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={handleCloseDock}
-            className="absolute -left-2.5 -top-2.5 z-30 flex size-5 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-foreground shadow-md hover:bg-muted pointer-events-auto"
+            className={cn(
+              'absolute -top-2.5 z-30 flex size-5 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-foreground shadow-md hover:bg-muted pointer-events-auto',
+              isLeft ? '-right-2.5' : '-left-2.5'
+            )}
             title="隱藏懸浮按鈕"
           >
             <XIcon size={10} />
@@ -147,7 +161,10 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
       {/* 1. 聊天按鈕 (藍色兔子) */}
       <Button
         onClick={handleToggleApp}
-        className="relative z-20 size-10 rounded-l-full rounded-r-none border-0 bg-primary/80 p-0 text-xs text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary transition-transform hover:-translate-x-0.5"
+        className={cn(
+          'relative z-20 size-10 border-0 bg-primary/80 p-0 text-xs text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary transition-transform',
+          buttonShapeClass
+        )}
         title="聊天室"
       >
         <AnimatePresence>
@@ -157,7 +174,10 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.1 }}
-              className="absolute -right-1 -top-1 z-30 flex size-4 items-center justify-center"
+              className={cn(
+                'absolute -top-1 z-30 flex size-4 items-center justify-center',
+                isLeft ? '-left-1' : '-right-1'
+              )}
             >
               <span className="absolute inline-flex size-full animate-ping rounded-full opacity-75 bg-orange-400"></span>
               <span className="relative inline-flex size-2 rounded-full bg-orange-500"></span>
@@ -171,7 +191,10 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
       {enableAi && (
         <Button
           onClick={handleToggleSummary}
-          className="relative z-20 size-10 rounded-l-full rounded-r-none border-0 bg-secondary/80 p-0 text-xs text-secondary-foreground shadow-md shadow-secondary/20 hover:bg-secondary transition-transform hover:-translate-x-0.5"
+          className={cn(
+            'relative z-20 size-10 border-0 bg-secondary/80 p-0 text-xs text-secondary-foreground shadow-md shadow-secondary/20 hover:bg-secondary transition-transform',
+            buttonShapeClass
+          )}
           title="網頁摘要與對話"
         >
           <LogoIcon6 className="relative z-20 size-7 overflow-hidden opacity-90" />
@@ -181,7 +204,10 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
       {/* 3. 主題切換按鈕 (太陽/月亮) */}
       <Button
         onClick={handleSwitchTheme}
-        className="relative z-20 size-10 rounded-l-full rounded-r-none border-0 bg-muted hover:bg-muted/80 text-muted-foreground p-0 text-xs shadow-sm hover:text-foreground transition-transform hover:-translate-x-0.5 flex items-center justify-center"
+        className={cn(
+          'relative z-20 size-10 border-0 bg-muted hover:bg-muted/80 text-muted-foreground p-0 text-xs shadow-sm hover:text-foreground transition-transform flex items-center justify-center',
+          buttonShapeClass
+        )}
         title="切換主題"
       >
         {isDarkMode ? <SunIcon size={16} /> : <MoonIcon size={16} />}
@@ -190,7 +216,10 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
       {isEmbed && (
         <Button
           asChild
-          className="relative z-20 size-10 rounded-l-full rounded-r-none border-0 bg-muted p-0 text-xs text-muted-foreground shadow-sm transition-transform hover:-translate-x-0.5 hover:bg-muted/80 hover:text-foreground"
+          className={cn(
+            'relative z-20 size-10 border-0 bg-muted p-0 text-xs text-muted-foreground shadow-sm transition-transform hover:bg-muted/80 hover:text-foreground',
+            buttonShapeClass
+          )}
           title="在 Chrome 安裝 WebTalk 333"
         >
           <a
@@ -207,7 +236,10 @@ const AppButton: FC<AppButtonProps> = ({ className, enableAi = true, isEmbed = f
       {!isEmbed && (
         <Button
           onClick={handleOpenOptionsPage}
-          className="relative z-20 size-10 rounded-l-full rounded-r-none border-0 bg-muted hover:bg-muted/80 text-muted-foreground p-0 text-xs shadow-sm hover:text-foreground transition-transform hover:-translate-x-0.5 flex items-center justify-center"
+          className={cn(
+            'relative z-20 size-10 border-0 bg-muted hover:bg-muted/80 text-muted-foreground p-0 text-xs shadow-sm hover:text-foreground transition-transform flex items-center justify-center',
+            buttonShapeClass
+          )}
           title="設定"
         >
           <SettingsIcon size={16} />
