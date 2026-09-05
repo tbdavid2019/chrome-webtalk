@@ -27,6 +27,8 @@ import {
   DISPLAY_FONT_SCALE_VALUES
 } from '@/utils/displayTypography'
 
+import type { DockPlacement } from '@/hooks/useFloatingDockOffset'
+
 const OVERLAY_BASE_Z_INDEX = 2147482000
 
 export interface AppProps {
@@ -34,6 +36,7 @@ export interface AppProps {
   enableAi?: boolean
   isEmbed?: boolean
   mobilePlacement?: MobilePlacement
+  defaultPlacement?: DockPlacement
 }
 
 if (import.meta.env.FIREFOX) {
@@ -44,7 +47,8 @@ export default function App({
   enableVirtualRoom = true,
   enableAi = true,
   isEmbed = false,
-  mobilePlacement = 'bottom'
+  mobilePlacement = 'bottom',
+  defaultPlacement
 }: AppProps) {
   const send = useRemeshSend()
 
@@ -321,7 +325,9 @@ export default function App({
           onClose={() => setShowSummary(false)}
         />
       )}
-      {!buttonsHidden && !appOpenStatus && !showSummary && <AppButton enableAi={enableAi} isEmbed={isEmbed} />}
+      {!buttonsHidden && !appOpenStatus && !showSummary && (
+        <AppButton enableAi={enableAi} isEmbed={isEmbed} defaultPlacement={defaultPlacement} />
+      )}
       <DanmakuContainer ref={danmakuContainerRef} style={{ opacity: userInfo?.danmakuOpacity ?? 0.8 }} />
     </div>
   )

@@ -21,7 +21,7 @@ import { configurePlatform } from '@/platform'
 import { createWebPlatform } from '@/platform/web'
 import { setRootNode } from '@/utils'
 import type { RoomIdentityOptions } from '@/utils/roomId'
-import { readEmbedOptions, type MobilePlacement } from './options'
+import { readEmbedOptions, type MobilePlacement, type DockPlacement } from './options'
 
 import tailwindCss from '@/assets/styles/tailwind.css?inline'
 import sonnerCss from '@/assets/styles/sonner.css?inline'
@@ -34,6 +34,8 @@ export interface WebTalkEmbedOptions extends RoomIdentityOptions {
   aiEndpoint?: string
   /** Which half of a mobile viewport the overlay occupies. Defaults to bottom. */
   mobilePlacement?: MobilePlacement
+  /** Which side of the viewport the floating button docks on. Defaults to right. */
+  placement?: DockPlacement
 }
 
 export interface WebTalkEmbedCapabilities {
@@ -73,7 +75,8 @@ const readScriptOptions = (script: HTMLScriptElement | null): WebTalkEmbedOption
     metaName: dataset.webtalkMetaName,
     enableVirtualRoom: dataset.webtalkVirtualRoom === 'true',
     aiEndpoint: dataset.webtalkAiEndpoint,
-    mobilePlacement: readEmbedOptions(dataset).mobilePlacement
+    mobilePlacement: readEmbedOptions(dataset).mobilePlacement,
+    placement: readEmbedOptions(dataset).placement
   }
 }
 
@@ -135,6 +138,7 @@ export const createWebTalkMount = (capabilities: WebTalkEmbedCapabilities) => {
               enableAi={capabilities.enableAi}
               isEmbed
               mobilePlacement={options.mobilePlacement}
+              defaultPlacement={options.placement}
             />
           </RemeshScope>
         </RemeshRoot>
