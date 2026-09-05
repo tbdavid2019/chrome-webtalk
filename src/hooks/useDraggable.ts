@@ -26,21 +26,23 @@ const useDraggable = (options: DargOptions) => {
 
   const [position, setPosition] = useState(positionRef.current)
   const [isDragging, setIsDragging] = useState(false)
+  const isMove = useRef(false)
 
   const hasDraggedRef = useRef(false)
   const ignoreClickRef = useRef(false)
   const clickResetTimeoutRef = useRef<number>()
 
   useLayoutEffect(() => {
+    // Controlled vertical updates must not erase the horizontal drag in progress.
+    // Synchronize again on release so even a same-side drop returns to the edge.
+    if (isMove.current) return
     const targetY = value ?? initY
     const newPosition = { x: clamp(initX, minX, maxX), y: clamp(targetY, minY, maxY) }
     if (JSON.stringify(newPosition) !== JSON.stringify(position)) {
       positionRef.current = newPosition
       setPosition(newPosition)
     }
-  }, [initX, initY, maxX, minX, maxY, minY, position, value])
-
-  const isMove = useRef(false)
+  }, [initX, initY, maxX, minX, maxY, minY, position, value, isDragging])
 
   const handlePreventClick = useCallback((event: MouseEvent) => {
     if (!ignoreClickRef.current) return
@@ -94,6 +96,7 @@ const useDraggable = (options: DargOptions) => {
   )
 
   const handleEnd = useCallback(() => {
+    if (!isMove.current) return
     isMove.current = false
     setIsDragging(false)
     document.documentElement.style.cursor = ''
@@ -115,6 +118,7 @@ const useDraggable = (options: DargOptions) => {
 
   const handleStart = useCallback(
     (e: MouseEvent) => {
+      if (e.button !== 0) return
       const { clientX, clientY } = e
       mousePosition.current = { x: clientX, y: clientY }
       startMousePos.current = { x: clientX, y: clientY }

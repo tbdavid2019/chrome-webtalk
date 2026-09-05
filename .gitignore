@@ -60,3 +60,7 @@ coverage/
 storybook-static/
 .antigravitycli/61523c27-45bd-49f4-ab03-24adc267ac83.json
 .vercel
+
+# Browser test output
+test-results/
+playwright-report/

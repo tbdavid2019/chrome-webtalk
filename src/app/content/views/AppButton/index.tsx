@@ -112,7 +112,7 @@ const AppButton: FC<AppButtonProps> = ({
     value: clampedOffset,
     onChange: ({ y }) => setOffset(y),
     onEnd: ({ x }) => {
-      const snapThreshold = Math.max(80, viewportWidth / 3)
+      const snapThreshold = maxHorizontalDrag / 2
       if (!isLeft && x < -snapThreshold) {
         handleSnapPlacement('left')
       } else if (isLeft && x > snapThreshold) {
@@ -178,7 +178,7 @@ const AppButton: FC<AppButtonProps> = ({
       )}
       style={{
         transform: `translateY(calc(-50% + ${y}px)) translateX(calc(${x}px + ${
-          !hovered ? (isLeft ? '-18px' : '18px') : '0px'
+          !hovered && !isDragging ? (isLeft ? '-18px' : '18px') : '0px'
         }))`
       }}
     >
