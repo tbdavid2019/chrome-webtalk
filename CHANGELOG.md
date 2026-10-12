@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## [2.4.3] - 2026-10-12
+
+### Fixed
+
+- 修正 Embed 聊天面板的 Grid 欄位受 Footer 內容最小寬度撐開，造成輸入框與右側按鈕超出可視區的問題。
+
+### Build
+
+- Chrome Extension 與網站 Embed 建置版本同步至 2.4.3；未新增 Chrome 權限。
+- 產生 Chrome 安裝 ZIP；一般建置明確指定 Chrome、Embed 與 Firefox，避免同時執行 Cloudflare 預覽建置。
+
+## [2.4.2] - 2026-10-12
+
+### Added
+
+- 新增 Cloudflare Worker 預覽部署，提供網站 Embed 靜態檔與安裝指南。
+- 預覽 Worker 將 AI API 請求轉送至既有 Vercel API；Artico signaling 與 WebRTC DataChannel 維持原連線方式。
+
+### Changed
+
+- Wrangler 部署設定固定使用 DAVID江江江 Cloudflare 帳號，並只啟用 workers.dev 測試網域。
+
+### Build
+
+- Chrome Extension 與網站 Embed 建置版本同步至 2.4.2；未新增 Chrome 權限。
+- 新增 pnpm deploy:worker:preview 建置並部署 Cloudflare Worker 預覽站。
+
 ## [2.4.1] - 2026-09-05
 
 ### Added
