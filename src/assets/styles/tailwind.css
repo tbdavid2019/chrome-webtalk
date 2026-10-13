@@ -21,8 +21,7 @@
 @layer base {
   :host,
   :root {
-    --font-ui: 'JetBrainsMono', 'GenJyuuGothic', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Segoe UI', ui-sans-serif, system-ui, -apple-system,
-      BlinkMacSystemFont, Roboto, sans-serif;
+    --font-ui: 'GenJyuuGothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', ui-sans-serif, system-ui, sans-serif;
 
     /* 拿鐵暖咖 / 書香紙墨色系 (Light) */
     --background: 37 32% 93%; /* #f4efe7 - 紙張原色，更溫潤有深度 */

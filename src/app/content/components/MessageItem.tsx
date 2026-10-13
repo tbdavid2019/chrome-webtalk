@@ -103,7 +103,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
             {!isOwnMessage && <span className="truncate font-semibold text-foreground">{props.data.username}</span>}
             <div className="flex min-w-0 items-center gap-1.5">
               {props.isAi && (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-[4px] bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-amber-700 dark:text-amber-300">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-amber-700 dark:text-amber-300">
                   <BotIcon size={10} aria-hidden="true" />
                   AI
                   {props.aiOwnerUsername && (
@@ -114,7 +114,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 </span>
               )}
               {props.data.isPrivate && (
-                <span className="inline-flex max-w-40 shrink-0 truncate rounded-[4px] bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-indigo-600 dark:text-indigo-300">
+                <span className="inline-flex max-w-40 shrink-0 truncate rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary">
                   {props.data.userId === props.currentUserId
                     ? text.privateMessageTo.replace('{username}', props.data.toUser?.username ?? '')
                     : text.privateMessageIncoming}
@@ -174,7 +174,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 type="button"
                 variant="ghost"
                 size="xs"
-                className={cn('h-7 rounded-[4px] px-1.5 text-xs', actionClass, props.like && activeActionClass)}
+                className={cn('h-7 rounded-md px-1.5 text-xs', actionClass, props.like && activeActionClass)}
                 onClick={() => props.onLikeChange?.(!props.like)}
                 title={text.likeTitle}
                 aria-label={text.likeTitle}
@@ -186,7 +186,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 type="button"
                 variant="ghost"
                 size="xs"
-                className={cn('h-7 rounded-[4px] px-1.5 text-xs', actionClass, props.hate && activeActionClass)}
+                className={cn('h-7 rounded-md px-1.5 text-xs', actionClass, props.hate && activeActionClass)}
                 onClick={() => props.onHateChange?.(!props.hate)}
                 title={text.dislikeTitle}
                 aria-label={text.dislikeTitle}
@@ -198,7 +198,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 type="button"
                 variant="ghost"
                 size="xs"
-                className={cn('size-7 rounded-[4px] p-0 text-xs', actionClass)}
+                className={cn('size-7 rounded-md p-0 text-xs', actionClass)}
                 onClick={() => props.onCopy?.(props.data)}
                 title={props.copied ? text.copiedTitle : text.copyWithUrlTitle}
                 aria-label={props.copied ? text.copiedTitle : text.copyWithUrlTitle}
@@ -210,7 +210,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   type="button"
                   variant="ghost"
                   size="xs"
-                  className={cn('size-7 rounded-[4px] p-0 text-xs', actionClass)}
+                  className={cn('size-7 rounded-md p-0 text-xs', actionClass)}
                   onClick={() => props.onRecall?.(props.data)}
                   title={text.recallTitle}
                   aria-label={text.recallTitle}
@@ -223,7 +223,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   type="button"
                   variant="ghost"
                   size="xs"
-                  className={cn('size-7 rounded-[4px] p-0 text-xs', actionClass)}
+                  className={cn('size-7 rounded-md p-0 text-xs', actionClass)}
                   onClick={() => props.onOpenPage?.(props.data)}
                   title={text.openPageTitle}
                   aria-label={text.openPageTitle}
@@ -237,7 +237,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   variant="ghost"
                   size="xs"
                   className={cn(
-                    'size-7 rounded-[4px] p-0 text-xs',
+                    'size-7 rounded-md p-0 text-xs',
                     actionClass,
                     props.isForwardedAi && 'bg-primary/10 text-primary hover:bg-primary/10'
                   )}
@@ -255,7 +255,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   variant="ghost"
                   size="xs"
                   className={cn(
-                    'size-7 rounded-[4px] p-0 text-xs',
+                    'size-7 rounded-md p-0 text-xs',
                     actionClass,
                     props.isBanned &&
                       'bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive'

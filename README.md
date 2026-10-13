@@ -15,7 +15,7 @@
 
 除了 Chrome Extension，本專案也提供可嵌入一般網站的 WebTalk Embed。正式站長安裝指南與線上體驗在 **[https://webtalk-nine.vercel.app/](https://webtalk-nine.vercel.app/)**；這是提供網站站長直接複製程式碼、選擇房間策略與測試 WebTalk 的正式網站。
 
-Cloudflare Worker 預覽可用 pnpm deploy:worker:preview 建置與部署。Wrangler 會輸出新的 workers.dev 網域；預覽站提供 Embed 腳本與指南，AI API 由 Worker 轉送至既有 Vercel API。正式 Vercel 網域維持不變，完整設定請參考 [Cloudflare Worker 預覽部署指南](docs/deploy-cloudflare-worker.md)。
+Cloudflare Worker 部署可用 pnpm deploy:worker:preview 建置與發布。支援自訂網域 **[https://webtalk.david888.com/](https://webtalk.david888.com/)** 與 workers.dev 網域；站台提供 Embed 腳本與站長指南，AI API 由 Worker 轉送至既有 Vercel API。正式 Vercel 網域維持不變，完整設定請參考 [Cloudflare Worker 預覽部署指南](docs/deploy-cloudflare-worker.md)。
 
 WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webtalk.js`。若不知道怎麼選，建議直接使用「聊天＋AI＋全站共用聊天室」：
 
@@ -38,6 +38,10 @@ WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webta
 
 ## 🆕 近期更新
 
+- 🎨 **頂部 Header 美學重塑與全局排版細節修復 (v2.4.4)**：
+  - **在線狀態膠囊（Presence Capsule）**：將右上角人數數字與關閉鈕（X）升級為等高（32px）與圓弧對稱設計，整合呼吸綠燈動畫，點擊流暢展開在線成員名單。
+  - **左上角網站識別與標題**：網站 Favicon 新增圓角容器微投影襯托，網域名稱採用乾淨比例字型呈現，子標題清晰展示網頁標題或私聊對象，並將 Header 高度調整為 56px 提供舒適呼吸空間。
+  - **解決混搭字型與邊框雜亂**：修正字型堆疊順序，將 `GenJyuuGothic` 與比例無襯線字型優先排列，避免一般英文文字被強制套用等寬字型；移除生硬的 `rounded-[4px]`，將輸入框與底部工具欄收斂為單一溫潤容器，消除多重卡片嵌套。未新增 Chrome 權限。
 - 🛠️ **Embed 對話面板寬度修正 (v2.4.3)**：限制面板 Grid 欄位在可用寬度內收縮，避免輸入框與送出按鈕被右側邊界裁切。
 - ☁️ **Cloudflare Worker 預覽部署 (v2.4.2)**：新增獨立 workers.dev 測試網域，提供 Embed 靜態檔與指南，AI API 轉送至既有 Vercel endpoint。正式站不變，聊天 signaling 與 WebRTC DataChannel 不需調整。
 - 🛠️ **懸浮 Dock 拖曳修正 (v2.4.1)**：修正拖曳時水平位移被重設，造成拉不到另一側的問題。按住上方把手拖過螢幕中央再放開即可換邊；未過中央則回原側，雙擊把手也可切換。上下位置與左右停靠會保存，不需要新增 Chrome 權限。新增兩種 Embed 的實際瀏覽器回歸測試：先執行 `pnpm build:embed`，再執行 `pnpm test:browser`（需已安裝 Google Chrome）。
