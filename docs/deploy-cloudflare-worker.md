@@ -16,13 +16,14 @@ pnpm exec wrangler login
 pnpm deploy:worker:preview
 ```
 
-Wrangler 會顯示測試網址，格式如下：
+Wrangler 會顯示部署網址，並已綁定正式自訂網域：
 
 ```text
+https://webtalk.david888.com
 https://webtalk-embed-preview.<workers.dev-subdomain>.workers.dev
 ```
 
-目前 Wrangler 設定使用 Cloudflare 帳號 DAVID江江江，並將腳本發布到 workers.dev。此預覽不會修改現有 Vercel deployment、DNS 或正式自訂網域。
+目前 Wrangler 設定使用 Cloudflare 帳號 DAVID江江江，並將腳本發布到 custom domain 與 workers.dev。此部署不會修改現有 Vercel deployment。
 
 ## 測試路徑
 

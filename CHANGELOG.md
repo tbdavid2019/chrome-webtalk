@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## [2.4.4] - 2026-10-13
+
+### Changed
+
+- **頂部 Header 視覺重塑與美學提升**：
+  - 將右上角人數指示器重構為在線狀態膠囊（Presence Capsule），整合呼吸綠燈動畫、即時在線人數與觸控回饋，點擊流暢展開在線成員名單。
+  - 右上角關閉按鈕（X）調整為等高 32px 圓形按鈕（`rounded-full`），與在線膠囊垂直對齊且具備觸覺動效，消除生硬的方形外框。
+  - 左上角網站圖標以圓角容器（`rounded-xl border bg-muted/30 shadow-2xs`）襯托，提升精緻感與識別度。
+  - 提升標題與子標題字級層次，網域名稱採乾淨比例無襯線字型，子標題平穩展示網頁標題或私聊對象，並將 Header 高度調整為 56px（`h-14`），給予舒適視覺呼吸空間。
+- **全局字型堆疊與排版細節修復**：
+  - 修正 `--font-ui` 與 WebTalk 預設字型堆疊順序，將 `GenJyuuGothic` 與比例無襯線字型優先排列，避免一般英文文字與網址被強制套用 JetBrains Mono 等寬字體導致字體混搭不協調。
+  - 統一元件圓角體系，全面移除生硬的 `rounded-[4px]` 與 `rounded-[3px]`，改採系統一致的 `rounded-xl`、`rounded-lg`、`rounded-md` 與 `rounded-full`。
+- **輸入區與推薦議題排版降噪**：
+  - 消除輸入區卡片套卡片的多重邊框與混亂背景，將輸入框與底部工具列收斂為單一溫潤的輸入容器（`rounded-2xl`），具備聚焦微光反饋。
+  - 推薦話題改採輕量膠囊 Pill 標籤，與整體拿鐵暖咖／紙墨色調深度融合。
+  - 優化聊天室空狀態顯示，以細緻的 Lucide Sparkles 圖標與溫暖卡片引導使用者開啟對話。
+
+### Fixed
+
+- 修正頂部關閉按鈕與在線人數按鈕高度不一致（28px vs 32px）與邊框割裂的問題。
+- 修正成員名單與私聊指示器硬編碼 Tailwind `slate` 與 `indigo` 色彩的問題，回歸統一的拿鐵暖咖主題色系變數。
+
+### Build
+
+- Chrome Extension 與網站 Embed 建置版本同步至 2.4.4；未新增 Chrome 權限。
+- Wrangler 新增自訂網域 `webtalk.david888.com` 路由設定，已完成 Cloudflare Worker 部署。
+
 ## [2.4.3] - 2026-10-12
 
 ### Fixed

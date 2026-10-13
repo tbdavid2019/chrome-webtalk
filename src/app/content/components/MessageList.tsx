@@ -1,4 +1,5 @@
 import { FC, useState, type ReactElement } from 'react'
+import { SparklesIcon } from 'lucide-react'
 
 import { type MessageItemProps } from './MessageItem'
 import { type PromptItemProps } from './PromptItem'
@@ -13,16 +14,17 @@ const MessageList: FC<MessageListProps> = ({ children }) => {
 
   if (!children || children.length === 0) {
     return (
-      <div className="flex size-full items-center justify-center bg-background px-4 py-6">
-        <div className="my-auto flex w-full max-w-[320px] flex-col items-center justify-center gap-y-3 rounded-xl bg-muted/50 px-6 py-8 text-center">
-          <span className="text-2xl" aria-hidden="true">
-            ✨
-          </span>
-          <p className="text-sm leading-6 text-muted-foreground">
-            目前聊天室沒有人發言。
-            <br />
-            輸入訊息並按下 Enter 開始聊天。
-          </p>
+      <div className="flex size-full items-center justify-center bg-background px-4 py-8">
+        <div className="my-auto flex w-full max-w-[280px] flex-col items-center justify-center gap-y-3.5 rounded-2xl border border-border/50 bg-muted/30 p-7 text-center shadow-2xs">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-2xs">
+            <SparklesIcon className="size-5 stroke-[1.8]" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold text-foreground">目前聊天室尚無訊息</h4>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              輸入訊息並按下 Enter，或點選下方推薦話題開始聊天
+            </p>
+          </div>
         </div>
       </div>
     )

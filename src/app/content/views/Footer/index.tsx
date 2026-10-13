@@ -655,17 +655,17 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
         </Portal>
       </Presence>
       {privateChatTarget && (
-        <div className="mb-1.5 flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm animate-in fade-in-0 slide-in-from-bottom-1 dark:border-indigo-950/50 dark:bg-indigo-950/30 dark:text-indigo-400">
+        <div className="mb-1.5 flex items-center justify-between rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary shadow-2xs animate-in fade-in-0 slide-in-from-bottom-1">
           <div className="flex items-center gap-1.5 truncate">
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            <span className="relative flex size-2 shrink-0">
+              <span className="animate-ping absolute inline-flex size-full rounded-full bg-primary/60 opacity-75"></span>
+              <span className="relative inline-flex rounded-full size-2 bg-primary"></span>
             </span>
             <span className="truncate">私密對話中 (僅傳送給 @{privateChatTarget.username})</span>
           </div>
           <button
             onClick={() => send(chatRoomDomain.command.SelectPrivateChatTargetCommand(null))}
-            className="text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 font-bold ml-2 shrink-0 transition-colors"
+            className="text-primary/80 hover:text-primary font-bold ml-2 shrink-0 transition-colors"
           >
             取消
           </button>
@@ -674,7 +674,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
       {aiTopicSuggestionsEnabled && !privateChatTarget && (
         <div
           className={cn(
-            'rounded-xl bg-muted/50 p-3',
+            'rounded-xl border border-border/40 bg-muted/30 p-2.5 shadow-2xs transition-all',
             suggestionsExpanded ? 'px-3 py-3' : 'px-3 py-2',
             suggestionsExpanded && 'max-sm:max-h-28 max-sm:overflow-y-auto max-sm:overscroll-contain'
           )}
@@ -686,15 +686,15 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
             aria-expanded={suggestionsExpanded}
             aria-controls="webtalk-chat-suggestions"
           >
-            <span className="text-sm font-semibold text-foreground">{text.chatSuggestionsTitle}</span>
+            <span className="text-xs font-semibold text-foreground">{text.chatSuggestionsTitle}</span>
             <span className="flex items-center gap-2">
               {pageSuggestionsLoading && (
-                <span className="text-xs font-normal text-muted-foreground">{text.chatSuggestionsLoading}</span>
+                <span className="text-[11px] font-normal text-muted-foreground">{text.chatSuggestionsLoading}</span>
               )}
               <ChevronDown
                 aria-hidden="true"
                 className={cn(
-                  'size-4 shrink-0 text-muted-foreground transition-transform',
+                  'size-3.5 shrink-0 text-muted-foreground transition-transform',
                   suggestionsExpanded && 'rotate-180'
                 )}
               />
@@ -702,15 +702,15 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
           </button>
           {suggestionsExpanded && (
             <div id="webtalk-chat-suggestions">
-              <div className="mb-3 mt-1 text-xs text-muted-foreground">{text.chatSuggestionsDescription}</div>
-              <div className="flex flex-wrap gap-2">
+              <div className="mb-2.5 mt-1 text-[11px] text-muted-foreground">{text.chatSuggestionsDescription}</div>
+              <div className="flex flex-wrap gap-1.5">
                 {pageSuggestions.map((item, index) => (
                   <Button
                     key={`${item.label}-${index}`}
                     type="button"
                     variant="outline"
                     size="xs"
-                    className="h-auto rounded-md border-0 bg-background px-3 py-1.5 text-left text-sm whitespace-normal hover:bg-muted"
+                    className="h-auto rounded-full border border-border/60 bg-background/90 px-3 py-1 text-left text-xs whitespace-normal text-foreground/90 shadow-2xs hover:bg-background hover:shadow-xs active:scale-98 transition-all"
                     onClick={() => handleInsertSuggestedPrompt(item.prompt)}
                     title={item.prompt}
                   >
@@ -722,7 +722,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
           )}
         </div>
       )}
-      <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+      <div className="rounded-2xl border border-border/60 bg-muted/25 p-2.5 shadow-2xs transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 focus-within:bg-muted/35">
         <MessageInput
           ref={shareRef}
           value={message}
@@ -740,47 +740,47 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
                 ? text.aiPromptPlaceholder
                 : text.chatPlaceholder
           }
-        ></MessageInput>
-        <div className="mt-3 flex items-center justify-between gap-1">
+        />
+        <div className="mt-2 flex items-center justify-between gap-1 pt-1.5 border-t border-border/40">
           <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto no-scrollbar">
             {enableAi && (
               <PanelModeSwitch active="chat" onAi={handleAskAi} chatLabel={text.chatTab} aiLabel={text.aiTab} />
             )}
             <div className="flex items-center gap-0.5 shrink-0">
-              <EmojiButton onSelect={handleInjectEmoji}></EmojiButton>
-              <ImageButton disabled={inputLoading} onSelect={handleInjectImage}></ImageButton>
+              <EmojiButton onSelect={handleInjectEmoji} />
+              <ImageButton disabled={inputLoading} onSelect={handleInjectImage} />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="shrink-0 rounded-md text-muted-foreground hover:text-foreground"
+                className="size-8 shrink-0 rounded-lg text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-colors"
                 onClick={handleInsertPageUrl}
                 title={text.insertPageLink}
               >
-                <LinkIcon size={20} />
+                <LinkIcon size={17} />
               </Button>
               {enableAi && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="shrink-0 rounded-md text-muted-foreground hover:text-foreground"
+                  className="size-8 shrink-0 rounded-lg text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-colors"
                   onClick={handleInjectAiPrompt}
                   title={text.aiInsertTitle}
                 >
-                  <BotIcon size={20} />
+                  <BotIcon size={17} />
                 </Button>
               )}
             </div>
           </div>
           <Button
-            className="flex min-w-max shrink-0 items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            className="flex h-8 min-w-max shrink-0 items-center justify-center rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-2xs hover:bg-primary/90 hover:shadow-xs active:scale-95 transition-all"
             size="sm"
             disabled={isSending || inputLoading}
             onClick={handleSend}
           >
             <span className="mr-1">{text.sendMessage}</span>
-            <CornerDownLeftIcon className="text-primary-foreground/75" size={10}></CornerDownLeftIcon>
+            <CornerDownLeftIcon className="text-primary-foreground/80" size={11} />
           </Button>
         </div>
       </div>

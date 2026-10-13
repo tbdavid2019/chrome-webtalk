@@ -14,6 +14,7 @@ export interface MessageInputProps {
   disabled?: boolean
   loading?: boolean
   placeholder?: string
+  variant?: 'embedded' | 'standalone'
   onChange?: (e: ChangeEvent<HTMLTextAreaElement>) => void
   onPaste?: (e: ClipboardEvent<HTMLTextAreaElement>) => void
   onKeyDown?: (e: KeyboardEvent<HTMLTextAreaElement>) => void
@@ -40,7 +41,8 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       autoFocus,
       disabled,
       loading,
-      placeholder = 'Type your message here...'
+      placeholder = 'Type your message here...',
+      variant = 'embedded'
     },
     ref
   ) => {
@@ -57,10 +59,13 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           autoFocus={autoFocus}
           maxLength={maxLength}
           className={cn(
-            'w-full min-h-[42px] max-h-28 resize-none rounded-lg border border-border/50 bg-muted/60 px-3 py-2.5 pb-6 text-[15px] leading-6 text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0',
+            'w-full min-h-[44px] max-h-28 resize-none text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/70',
+            variant === 'embedded'
+              ? 'border-0 bg-transparent px-2.5 pt-1.5 pb-6 focus:outline-none focus-visible:ring-0 shadow-none'
+              : 'rounded-xl border border-border/60 bg-muted/30 px-3 py-2 pb-6 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0',
             {
-              'border-amber-400/80 focus-visible:ring-amber-500': nearLimit,
-              'border-red-400/90 focus-visible:ring-red-500': atLimit,
+              'placeholder:text-amber-500/70': nearLimit,
+              'placeholder:text-red-500/70': atLimit,
               'disabled:opacity-100': loading
             }
           )}
@@ -74,17 +79,17 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           disabled={disabled || loading}
         />
         <div
-          className={cn('absolute bottom-1.5 right-3 text-[11px] font-medium leading-none tabular-nums', {
-            'text-muted-foreground': !nearLimit,
-            'text-amber-600 dark:text-amber-400': nearLimit && !atLimit,
-            'text-red-600 dark:text-red-400': atLimit,
+          className={cn('absolute bottom-1 right-2.5 text-[10.5px] font-medium leading-none tabular-nums', {
+            'text-muted-foreground/70': !nearLimit,
+            'text-amber-600 dark:text-amber-400 font-semibold': nearLimit && !atLimit,
+            'text-red-600 dark:text-red-400 font-semibold': atLimit,
             'opacity-50': disabled || loading
           })}
         >
           {currentLength}/{maxLength}
         </div>
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center text-primary after:absolute after:inset-0 after:backdrop-blur-xs">
+          <div className="absolute inset-0 flex items-center justify-center text-primary rounded-xl after:absolute after:inset-0 after:backdrop-blur-xs">
             <Loader2 className="relative z-10 size-7 animate-spin text-primary" />
           </div>
         )}

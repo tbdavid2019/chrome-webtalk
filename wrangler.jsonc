@@ -5,6 +5,12 @@
   "compatibility_date": "2026-10-12",
   "account_id": "379570860738dd1757ba7f67ef2bdffe",
   "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "webtalk.david888.com",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": "./output/webtalk",
     "binding": "ASSETS",

@@ -694,15 +694,15 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
           isEmbed && isMobile ? 'min-w-0 max-w-none border-l-0' : ''
         }`}
       >
-        <div className="flex h-12 items-center justify-between border-b border-border bg-background px-4 max-sm:px-3">
+        <div className="flex h-14 items-center justify-between border-b border-border/60 bg-background/95 backdrop-blur-xs px-4 max-sm:px-3">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-2xs">
               <SparklesIcon size={16} aria-hidden="true" />
             </span>
-            <span className="truncate text-[15px] font-semibold tracking-[-0.01em] text-foreground">{text.title}</span>
+            <span className="truncate text-sm font-semibold tracking-tight text-foreground">{text.title}</span>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 max-sm:gap-1">
-            <div className="flex h-8 shrink-0 items-center rounded-[4px] border border-border/80 bg-muted/40 p-0.5">
+            <div className="flex h-8 shrink-0 items-center rounded-lg border border-border/70 bg-muted/40 p-0.5 shadow-2xs">
               {(
                 [
                   { code: 'zh_TW', label: '繁' },
@@ -713,9 +713,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                 <button
                   key={lang.code}
                   onClick={() => setLanguage(lang.code)}
-                  className={`h-full rounded-[3px] px-2.5 text-xs font-semibold transition-all max-sm:px-2 ${
+                  className={`h-full rounded-md px-2.5 text-xs font-semibold transition-all max-sm:px-2 ${
                     language === lang.code
-                      ? 'bg-background text-foreground shadow-sm'
+                      ? 'bg-background text-foreground shadow-xs'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -725,24 +725,24 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
             </div>
             <button
               onClick={handleOpenHistory}
-              className="hidden h-8 shrink-0 items-center justify-center rounded-[4px] border border-border bg-background px-3 text-xs font-semibold leading-none text-foreground transition hover:bg-muted sm:inline-flex"
+              className="hidden h-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/80 px-3 text-xs font-semibold leading-none text-foreground transition-all hover:bg-muted/80 shadow-2xs sm:inline-flex"
             >
               {text.history}
             </button>
             <button
               onClick={() => setShowApiSettings(!showApiSettings)}
-              className="flex size-8 shrink-0 items-center justify-center rounded-[4px] border border-border bg-background text-foreground transition hover:bg-muted"
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/80 text-foreground transition-all hover:bg-muted/80 shadow-2xs"
               title="API setting 設置"
               aria-label="API setting 設置"
             >
-              <SettingsIcon size={17} strokeWidth={2} aria-hidden="true" />
+              <SettingsIcon size={16} strokeWidth={2} aria-hidden="true" />
             </button>
             <button
               onClick={onClose}
-              className="flex size-8 shrink-0 items-center justify-center rounded-[4px] border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/80 text-muted-foreground transition-all hover:bg-muted/80 hover:text-foreground active:scale-95 shadow-2xs"
               title="關閉 AI 空間"
             >
-              <XIcon size={16} />
+              <XIcon size={15} strokeWidth={2} />
             </button>
           </div>
         </div>
@@ -896,7 +896,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                         <button
                           onClick={onClickSummarize}
                           disabled={loading}
-                          className="flex size-7 items-center justify-center rounded-[4px] transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                          className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
                           title={text.retry}
                           aria-label={text.retry}
                         >
@@ -904,7 +904,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                         </button>
                         <button
                           onClick={copy}
-                          className="flex size-7 items-center justify-center rounded-[4px] transition-colors hover:bg-muted hover:text-foreground"
+                          className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-muted hover:text-foreground"
                           title={text.copy}
                           aria-label={text.copy}
                         >
@@ -912,7 +912,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                         </button>
                         <button
                           onClick={exportMarkdown}
-                          className="flex size-7 items-center justify-center rounded-[4px] transition-colors hover:bg-muted hover:text-foreground"
+                          className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-muted hover:text-foreground"
                           title={text.markdown}
                           aria-label={text.markdown}
                         >
@@ -920,7 +920,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                         </button>
                         <button
                           onClick={handleClear}
-                          className="flex size-7 items-center justify-center rounded-[4px] transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-destructive/10 hover:text-destructive"
                           title={text.clear}
                           aria-label={text.clear}
                         >
@@ -983,7 +983,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
 
           {/* 底部功能與輸入框控制欄 */}
           <div className="flex flex-col gap-2 pt-1 shrink-0">
-            <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+            <div className="rounded-2xl border border-border/60 bg-muted/25 p-2.5 shadow-2xs transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 focus-within:bg-muted/35">
               <MessageInput
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}

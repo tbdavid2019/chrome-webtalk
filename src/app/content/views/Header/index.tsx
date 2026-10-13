@@ -1,5 +1,5 @@
 import { useState, type FC } from 'react'
-import { BugIcon, Globe2Icon, XIcon } from 'lucide-react'
+import { BugIcon, Globe2Icon, LockIcon, XIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/HoverCard'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
@@ -24,9 +24,13 @@ const PresenceCount: FC<{ count: number; capped?: boolean; label?: string }> = (
     <span
       role="status"
       aria-label={`${label ? `${label}: ` : ''}${displayCount}`}
-      className="inline-flex h-8 min-w-8 items-center justify-center rounded-[4px] border border-border/80 bg-muted/40 px-2 text-xs font-semibold leading-none tabular-nums text-foreground transition-colors"
+      className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border/70 bg-background/80 hover:bg-muted/70 px-2.5 text-xs font-medium text-foreground transition-all shadow-2xs"
     >
-      <span className="inline-flex items-center">
+      <span className="relative flex size-2 shrink-0">
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500/70 opacity-75"></span>
+        <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+      </span>
+      <span className="inline-flex items-center font-semibold text-foreground/90">
         {import.meta.env.FIREFOX ? displayCount : <NumberFlow className="tabular-nums" willChange value={count} />}
         {capped && import.meta.env.FIREFOX === false && <span>+</span>}
       </span>
@@ -75,21 +79,37 @@ const Header: FC = () => {
   }
 
   return (
-    <div className="z-10 flex h-12 items-center justify-between border-b border-border bg-background px-4">
-      <div className="flex min-w-0 items-center gap-2">
-        <Avatar className="size-8 rounded-md">
-          <AvatarImage src={siteInfo.icon} alt="favicon" />
-          <AvatarFallback>
-            <Globe2Icon size="100%" className="text-muted-foreground" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0">
-          <span className="block truncate text-[15px] font-semibold tracking-[-0.01em] text-foreground">
-            {siteInfo.hostname.replace(/^www\./i, '')}
-          </span>
-          <span className="block truncate text-xs leading-4 text-muted-foreground">
-            {privateChatTarget ? `Private with @${privateChatTarget.username}` : siteInfo.title}
-          </span>
+    <div className="z-10 flex h-14 items-center justify-between border-b border-border/60 bg-background/95 backdrop-blur-xs px-4">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="relative flex size-9 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted/30 p-1 shadow-2xs">
+          <Avatar className="size-full rounded-lg">
+            <AvatarImage src={siteInfo.icon} alt="favicon" className="size-full object-contain" />
+            <AvatarFallback className="bg-transparent">
+              <Globe2Icon className="size-4 text-muted-foreground" />
+            </AvatarFallback>
+          </Avatar>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <h3
+              className="truncate text-[13.5px] font-semibold tracking-tight text-foreground"
+              title={siteInfo.hostname}
+            >
+              {siteInfo.hostname.replace(/^www\./i, '')}
+            </h3>
+            {privateChatTarget && (
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                <LockIcon size={9} />
+                私聊
+              </span>
+            )}
+          </div>
+          <p
+            className="truncate text-[11.5px] leading-tight text-muted-foreground mt-0.5"
+            title={privateChatTarget ? `私聊對象: @${privateChatTarget.username}` : (siteInfo.title || siteInfo.hostname)}
+          >
+            {privateChatTarget ? `與 @${privateChatTarget.username} 私聊` : (siteInfo.title || '網頁即時聊天室')}
+          </p>
         </div>
         {developerMode && virtualOnlineGroup.length > 1 && (
           <HoverCard>
@@ -129,7 +149,7 @@ const Header: FC = () => {
                           <h4 className="flex-1 truncate text-sm font-semibold text-foreground">
                             {site.hostname.replace(/^www\./i, '')}
                           </h4>
-                <PresenceCount count={site.users.length} label={text.peopleOnline} />
+                          <PresenceCount count={site.users.length} label={text.peopleOnline} />
                         </div>
                         <AvatarCircles max={9} size="xs" avatarUrls={site.users.map((user) => user.userAvatar)} />
                       </div>
@@ -141,22 +161,27 @@ const Header: FC = () => {
           </HoverCard>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Popover open={chatUserListOpen} onOpenChange={setChatUserListOpen}>
           <PopoverTrigger asChild>
-            <Button
-              className="rounded-[4px] p-0 hover:no-underline animate-in fade-in"
-              variant="link"
+            <button
+              type="button"
+              className="rounded-full p-0 transition hover:opacity-90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={text.peopleOnline}
+              title={`${text.peopleOnline} (${cappedChatOnlineCount}) - 點擊查看在線名單`}
             >
               <PresenceCount count={cappedChatOnlineCount} capped={chatOnlineCount > 99} label={text.peopleOnline} />
-            </Button>
+            </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-40 rounded-md p-0">
-            <ScrollArea type="scroll" className="max-h-[204px] min-h-9 p-1" ref={setChatUserListScrollParentRef}>
+          <PopoverContent align="end" className="w-48 rounded-xl border border-border/80 bg-popover p-1.5 shadow-lg">
+            <div className="flex items-center justify-between border-b border-border/40 px-2 py-1.5 text-xs font-semibold text-muted-foreground mb-1">
+              <span>在線成員</span>
+              <span className="tabular-nums text-[11px] font-normal">{chatUserList.length} 人</span>
+            </div>
+            <ScrollArea type="scroll" className="max-h-[220px] min-h-9" ref={setChatUserListScrollParentRef}>
               <Virtuoso
                 data={chatUserList}
-                defaultItemHeight={28}
+                defaultItemHeight={32}
                 customScrollParent={chatUserListScrollParentRef!}
                 itemContent={(_index, user) => {
                   const isMe = user.userId === userInfo?.id
@@ -173,28 +198,27 @@ const Header: FC = () => {
                         setChatUserListOpen(false)
                       }}
                       className={cn(
-                        'my-0.5 flex items-center gap-x-2 rounded-xl px-2 py-1.5 outline-none select-none',
-                        !isMe && 'cursor-pointer hover:bg-accent/70 active:bg-accent transition-colors',
-                        isSelected &&
-                          'bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100/50 dark:border-indigo-900/50'
+                        'my-0.5 flex items-center gap-x-2 rounded-lg px-2 py-1.5 outline-none select-none transition-colors text-xs',
+                        !isMe && 'cursor-pointer hover:bg-muted/70 active:bg-muted',
+                        isSelected && 'bg-primary/10 border border-primary/20 text-primary font-semibold'
                       )}
                       title={isMe ? undefined : isSelected ? '取消私聊' : '點擊開始私聊'}
                     >
-                      <Avatar className="size-4 shrink-0">
+                      <Avatar className="size-5 shrink-0 rounded-full">
                         <AvatarImage className="size-full" src={user.userAvatar} alt="avatar" />
                         <AvatarFallback>{user.username.at(0)}</AvatarFallback>
                       </Avatar>
                       <div
                         className={cn(
-                          'flex-1 truncate text-sm text-slate-500 dark:text-slate-50',
-                          isSelected && 'text-indigo-600 dark:text-indigo-400 font-semibold'
+                          'flex-1 truncate font-medium text-foreground/80',
+                          isSelected && 'text-primary font-semibold'
                         )}
                       >
-                        {user.username} {isMe && '(me)'}
+                        {user.username} {isMe && <span className="text-[10px] text-muted-foreground font-normal">(我)</span>}
                       </div>
                       {isSelected && (
-                        <span className="text-[9px] bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 px-1 py-0.5 rounded font-bold shrink-0">
-                          🔒 私聊
+                        <span className="text-[10px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-semibold shrink-0">
+                          私聊中
                         </span>
                       )}
                     </div>
@@ -206,11 +230,11 @@ const Header: FC = () => {
         </Popover>
         <button
           onClick={handleClose}
-          className="flex size-7 items-center justify-center rounded-[4px] border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground shrink-0"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/80 text-muted-foreground transition-all hover:bg-muted/80 hover:text-foreground active:scale-95 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           title="關閉聊天"
           aria-label="關閉聊天"
         >
-          <XIcon size={14} />
+          <XIcon size={15} strokeWidth={2} />
         </button>
       </div>
     </div>
