@@ -1,21 +1,22 @@
 import { type FC, useState, type MouseEvent, useEffect } from 'react'
-import { SettingsIcon, MoonIcon, SunIcon, XIcon, GripVerticalIcon, ChromeIcon } from 'lucide-react'
+import {
+  SettingsIcon,
+  MoonIcon,
+  SunIcon,
+  XIcon,
+  GripVerticalIcon,
+  ChromeIcon,
+  MessageSquareTextIcon,
+  SparklesIcon
+} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { useRemeshDomain, useRemeshQuery, useRemeshSend } from 'remesh-react'
 import { Button } from '@/components/ui/Button'
 import UserInfoDomain from '@/domain/UserInfo'
 import ToastDomain from '@/domain/Toast'
-import { checkDarkMode, cn } from '@/utils'
-import LogoIcon0 from '@/assets/images/logo-0.svg'
-import LogoIcon1 from '@/assets/images/logo-1.svg'
-import LogoIcon2 from '@/assets/images/logo-2.svg'
-import LogoIcon3 from '@/assets/images/logo-3.svg'
-import LogoIcon4 from '@/assets/images/logo-4.svg'
-import LogoIcon5 from '@/assets/images/logo-5.svg'
-import LogoIcon6 from '@/assets/images/logo-6.svg'
+import { checkDarkMode, cn, subscribeDarkModeChange } from '@/utils'
 import AppStatusDomain from '@/domain/AppStatus'
-import { getDay } from 'date-fns'
 import { getPlatform } from '@/platform'
 import useDraggable from '@/hooks/useDraggable'
 import { useFloatingDockOffset, useFloatingDockPlacement, type DockPlacement } from '@/hooks/useFloatingDockOffset'
@@ -45,9 +46,13 @@ const AppButton: FC<AppButtonProps> = ({
   const userInfoDomain = useRemeshDomain(UserInfoDomain())
   const userInfo = useRemeshQuery(userInfoDomain.query.UserInfoQuery())
 
-  const DayLogo = [LogoIcon0, LogoIcon1, LogoIcon2, LogoIcon3, LogoIcon4, LogoIcon5, LogoIcon6][getDay(Date())]
+  const [detectedIsDark, setDetectedIsDark] = useState(() => checkDarkMode())
 
-  const isDarkMode = userInfo?.themeMode === 'dark' ? true : userInfo?.themeMode === 'light' ? false : checkDarkMode()
+  useEffect(() => {
+    return subscribeDarkModeChange(setDetectedIsDark)
+  }, [])
+
+  const isDarkMode = userInfo?.themeMode === 'dark' ? true : userInfo?.themeMode === 'light' ? false : detectedIsDark
 
   const [hovered, setHovered] = useState(false)
   const [viewportWidth, setViewportWidth] = useState(() => (typeof window === 'undefined' ? 1200 : window.innerWidth))
@@ -210,11 +215,11 @@ const AppButton: FC<AppButtonProps> = ({
         <GripVerticalIcon size={12} className="rotate-90 pointer-events-none" />
       </div>
 
-      {/* 1. 聊天按鈕 (藍色兔子) */}
+      {/* 1. 聊天按鈕 (Lucide MessageSquareText) */}
       <Button
         onClick={handleToggleApp}
         className={cn(
-          'relative z-20 size-10 border-0 bg-primary/80 p-0 text-xs text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary transition-transform',
+          'relative z-20 size-10 border-0 bg-primary p-0 text-xs text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90 transition-transform flex items-center justify-center',
           buttonShapeClass
         )}
         title="聊天室"
@@ -237,19 +242,19 @@ const AppButton: FC<AppButtonProps> = ({
           )}
         </AnimatePresence>
 
-        <DayLogo className="relative z-20 size-7 overflow-hidden opacity-90"></DayLogo>
+        <MessageSquareTextIcon size={19} strokeWidth={2} className="relative z-20 text-primary-foreground" />
       </Button>
 
       {enableAi && (
         <Button
           onClick={handleToggleSummary}
           className={cn(
-            'relative z-20 size-10 border-0 bg-secondary/80 p-0 text-xs text-secondary-foreground shadow-md shadow-secondary/20 hover:bg-secondary transition-transform',
+            'relative z-20 size-10 border-0 bg-secondary p-0 text-xs text-secondary-foreground shadow-md shadow-secondary/20 hover:bg-secondary/90 transition-transform flex items-center justify-center',
             buttonShapeClass
           )}
           title="網頁摘要與對話"
         >
-          <LogoIcon6 className="relative z-20 size-7 overflow-hidden opacity-90" />
+          <SparklesIcon size={19} strokeWidth={2} className="relative z-20 text-secondary-foreground" />
         </Button>
       )}
 

@@ -88,7 +88,7 @@ const ApiSettingsForm: FC = () => {
   }
 
   return (
-    <section className="w-[450px] space-y-6 rounded-xl border border-slate-200 bg-white/70 p-8 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/60">
+    <section className="w-[450px] space-y-6 rounded-2xl border border-border/80 bg-card p-8 shadow-sm backdrop-blur text-card-foreground">
       <div>
         <h2 className="text-xl font-semibold">API setting / AI 服務設定</h2>
         <p className="text-sm text-muted-foreground">
@@ -97,7 +97,7 @@ const ApiSettingsForm: FC = () => {
             href="https://console.groq.com/"
             target="_blank"
             rel="noreferrer"
-            className="text-blue-500 hover:underline font-medium"
+            className="text-primary hover:underline font-semibold"
           >
             Groq Console
           </a>{' '}
@@ -107,7 +107,7 @@ const ApiSettingsForm: FC = () => {
 
       <div className="space-y-2">
         <Label className="font-semibold">
-          Groq API Key <span className="text-red-500">*</span>
+          Groq API Key <span className="text-destructive">*</span>
         </Label>
         <Input
           type="password"

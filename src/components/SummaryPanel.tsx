@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSummarize } from '@/hooks/useSummarize'
-import { marked } from 'marked'
 import html2canvas from 'html2canvas'
 import { getPlatform } from '@/platform'
 import type { MobilePlacement } from '@/app/embed/options'
@@ -8,8 +7,7 @@ import { resolveEmbedPanelStyle } from '@/app/content/views/AppMain/panelStyle'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { Markdown } from '@/components/Markdown'
 import { motion, AnimatePresence } from 'framer-motion'
 import { nanoid } from 'nanoid'
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY, HISTORY_LIMIT } from '@/types/summaryHistory'
@@ -674,7 +672,6 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
     }
   }
 
-  const markedHtml = marked.parse(summary || text.noContent)
   const canChat = !loading
   const hasStartedChat = Boolean(summary || chatMessages.length > 0 || chatLoading)
 
@@ -690,19 +687,20 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
           zIndex,
           ...embedPanelStyle
         }}
-        className={`pointer-events-auto fixed right-0 top-0 z-infinity grid h-full w-[440px] min-w-[380px] max-w-[860px] grid-rows-[auto_1fr] border-l border-border bg-background shadow-2xl ${
-          isEmbed && isMobile ? 'min-w-0 max-w-none border-l-0' : ''
-        }`}
+        className={cn(
+          'pointer-events-auto fixed right-0 top-0 z-infinity grid h-full w-[440px] min-w-[380px] max-w-full max-sm:w-full max-sm:min-w-0 grid-rows-[auto_1fr] border-l-2 border-[#17324d] dark:border-[#2b4a6b] bg-background font-sans text-foreground shadow-[-12px_0_36px_rgba(23,50,77,0.16)] dark:shadow-[-12px_0_40px_rgba(0,0,0,0.55)]',
+          isEmbed && isMobile && 'min-w-0 max-w-none border-l-0'
+        )}
       >
-        <div className="flex h-14 items-center justify-between border-b border-border/60 bg-background/95 backdrop-blur-xs px-4 max-sm:px-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-2xs">
-              <SparklesIcon size={16} aria-hidden="true" />
+        <div className="relative z-10 flex h-15 items-center justify-between border-b-2 border-[#17324d]/15 dark:border-[#2b4a6b] bg-[#fff9e8] dark:bg-[#13273c] px-4 before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-[#ffb010]">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="relative flex size-9 shrink-0 items-center justify-center rounded-xl border-2 border-[#17324d] bg-[#ffb010] text-[#2b251a] shadow-[0_2px_0_#17324d] dark:border-[#ffb010] dark:bg-[#1b3450] dark:text-[#ffb010] dark:shadow-none">
+              <SparklesIcon size={16} aria-hidden="true" strokeWidth={1.8} />
             </span>
-            <span className="truncate text-sm font-semibold tracking-tight text-foreground">{text.title}</span>
+            <span className="truncate font-sans text-[15px] font-bold tracking-tight text-foreground">{text.title}</span>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 max-sm:gap-1">
-            <div className="flex h-8 shrink-0 items-center rounded-lg border border-border/70 bg-muted/40 p-0.5 shadow-2xs">
+            <div className="flex h-8 shrink-0 items-center rounded-full border-[1.5px] border-[#17324d] bg-[#fff0cc] p-0.5 dark:border-[#2b4a6b] dark:bg-[#0c1927]">
               {(
                 [
                   { code: 'zh_TW', label: '繁' },
@@ -713,10 +711,10 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                 <button
                   key={lang.code}
                   onClick={() => setLanguage(lang.code)}
-                  className={`h-full rounded-md px-2.5 text-xs font-semibold transition-all max-sm:px-2 ${
+                  className={`h-full rounded-full px-2.5 font-sans text-xs font-bold transition-all max-sm:px-1.5 ${
                     language === lang.code
-                      ? 'bg-background text-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-[#17324d] text-[#fff9e8] shadow-2xs dark:bg-[#ffb010] dark:text-[#0b1826]'
+                      : 'text-[#2b251a]/75 hover:text-[#2b251a] dark:text-[#cbd5e1] dark:hover:text-[#fff9e8]'
                   }`}
                 >
                   {lang.label}
@@ -725,24 +723,25 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
             </div>
             <button
               onClick={handleOpenHistory}
-              className="hidden h-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/80 px-3 text-xs font-semibold leading-none text-foreground transition-all hover:bg-muted/80 shadow-2xs sm:inline-flex"
+              className="hidden h-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#17324d] bg-[#fffefa] px-3 font-sans text-xs font-bold text-[#2b251a] transition-all hover:bg-[#ffb010] active:translate-y-0.5 shadow-[0_2px_0_#17324d] dark:border-[#2b4a6b] dark:bg-[#1b3450] dark:text-[#fff9e8] dark:shadow-none dark:hover:border-[#ffb010] dark:hover:bg-[#ffb010] dark:hover:text-[#0b1826] sm:inline-flex"
             >
               {text.history}
             </button>
             <button
               onClick={() => setShowApiSettings(!showApiSettings)}
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/80 text-foreground transition-all hover:bg-muted/80 shadow-2xs"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#17324d] bg-[#fffefa] text-[#2b251a] transition-all hover:bg-[#ffb010] active:translate-y-0.5 shadow-[0_2px_0_#17324d] dark:border-[#2b4a6b] dark:bg-[#1b3450] dark:text-[#fff9e8] dark:shadow-none dark:hover:border-[#ffb010] dark:hover:bg-[#ffb010] dark:hover:text-[#0b1826]"
               title="API setting 設置"
               aria-label="API setting 設置"
             >
-              <SettingsIcon size={16} strokeWidth={2} aria-hidden="true" />
+              <SettingsIcon size={14} strokeWidth={1.8} aria-hidden="true" />
             </button>
             <button
               onClick={onClose}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/80 text-muted-foreground transition-all hover:bg-muted/80 hover:text-foreground active:scale-95 shadow-2xs"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#17324d] bg-[#fffefa] text-[#2b251a] transition-all hover:bg-[#ffb010] active:translate-y-0.5 shadow-[0_2px_0_#17324d] dark:border-[#2b4a6b] dark:bg-[#1b3450] dark:text-[#fff9e8] dark:shadow-none dark:hover:border-[#ffb010] dark:hover:bg-[#ffb010] dark:hover:text-[#0b1826]"
               title="關閉 AI 空間"
+              aria-label="關閉 AI 空間"
             >
-              <XIcon size={15} strokeWidth={2} />
+              <XIcon size={14} strokeWidth={2} />
             </button>
           </div>
         </div>
@@ -752,15 +751,15 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
             <div className="shrink-0 space-y-3 rounded-xl border border-border bg-muted/30 p-4">
               <h3 className="text-sm font-semibold text-foreground">API setting</h3>
               <div className="space-y-2">
-                <Label htmlFor="api-key" className="text-sm text-slate-500 flex items-center justify-between">
+                <Label htmlFor="api-key" className="text-sm text-foreground/80 flex items-center justify-between">
                   <span>
-                    Groq API Key <span className="text-red-500">*</span>
+                    Groq API Key <span className="text-destructive">*</span>
                   </span>
                   <a
                     href="https://console.groq.com/"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs text-blue-500 hover:underline"
+                    className="text-xs text-primary font-semibold underline underline-offset-2 hover:opacity-80"
                   >
                     申請 API Key
                   </a>
@@ -776,7 +775,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="api-base-url" className="text-sm text-slate-500">
+                <Label htmlFor="api-base-url" className="text-sm text-foreground/80">
                   API Base URL
                 </Label>
                 <Input
@@ -786,10 +785,10 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                   onChange={(e) => setApiBaseURL(e.target.value)}
                   className="text-sm"
                 />
-                <p className="text-xs text-gray-500">預設default: {defaultApiBaseURL}</p>
+                <p className="text-xs text-muted-foreground">預設default: {defaultApiBaseURL}</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="api-model-name" className="text-sm text-slate-500">
+                <Label htmlFor="api-model-name" className="text-sm text-foreground/80">
                   模型名稱 / Model Name
                 </Label>
                 <Input
@@ -799,7 +798,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                   onChange={(e) => setApiModelName(e.target.value)}
                   className="text-sm"
                 />
-                <p className="text-xs text-gray-500">預設: {defaultModelName}</p>
+                <p className="text-xs text-muted-foreground">預設: {defaultModelName}</p>
               </div>
               <div className="flex justify-end gap-2">
                 <button
@@ -820,14 +819,19 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
 
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {aiTopicSuggestionsEnabled && (
-              <div className={cn('mb-3 rounded-xl bg-muted/50 p-3', suggestionsExpanded ? 'px-3 py-3' : 'px-3 py-2')}>
+              <div
+                className={cn(
+                  'mb-3 rounded-2xl border-[1.5px] border-[#d6bc7c] border-l-4 border-l-[#a9471d] bg-[#faefd4]/75 p-3 shadow-[0_4px_14px_rgba(79,58,14,0.06)] transition-all dark:border-[#2b4a6b] dark:border-l-4 dark:border-l-[#ffb010] dark:bg-[#13273c]',
+                  suggestionsExpanded ? 'px-3.5 py-3' : 'px-3.5 py-2'
+                )}
+              >
                 <button
                   type="button"
                   className="flex w-full items-center justify-between gap-2 text-left"
                   onClick={() => setSuggestionsExpanded((expanded) => !expanded)}
                   aria-expanded={suggestionsExpanded}
                 >
-                  <span className="text-sm font-semibold text-foreground">{text.suggestedQuestions}</span>
+                  <span className="font-sans text-[13px] font-bold text-foreground">{text.suggestedQuestions}</span>
                   <span className="flex items-center gap-2">
                     {suggestionsLoading && (
                       <span className="text-xs font-normal text-muted-foreground">{text.suggestionsLoading}</span>
@@ -835,7 +839,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                     <ChevronDown
                       aria-hidden="true"
                       className={cn(
-                        'size-4 shrink-0 text-muted-foreground transition-transform',
+                        'size-3.5 shrink-0 text-muted-foreground transition-transform',
                         suggestionsExpanded && 'rotate-180'
                       )}
                     />
@@ -844,15 +848,15 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                 {suggestionsExpanded && (
                   <div className="mt-2">
                     {!!text.suggestionsDescription && (
-                      <div className="mb-2 text-xs text-muted-foreground">{text.suggestionsDescription}</div>
+                      <div className="mb-2 font-sans text-xs font-medium text-muted-foreground">{text.suggestionsDescription}</div>
                     )}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {suggestedQuestions.map((item, index) => (
                         <button
                           key={`${item.label}-${index}`}
                           type="button"
                           onClick={() => handleInsertSuggestion(item.prompt)}
-                          className="rounded-md bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted"
+                          className="h-auto rounded-full border-[1.5px] border-[#17324d] bg-[#ffb010] px-3.5 py-1 text-left font-sans text-[13px] font-bold whitespace-normal text-[#2b251a] shadow-[0_2px_0_#17324d] hover:bg-[#f2a600] hover:-translate-y-0.5 active:translate-y-0 transition-all dark:border-[#ffb010] dark:bg-[#ffb010]/15 dark:text-[#ffb010] dark:shadow-none dark:hover:bg-[#ffb010] dark:hover:text-[#0b1826]"
                           title={item.prompt}
                         >
                           {item.label}
@@ -865,15 +869,15 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
             )}
             {!hasStartedChat ? (
               /* 1. 未產生摘要且未對話時的引導介面 */
-              <div className="my-auto flex flex-1 flex-col items-center justify-center gap-y-4 rounded-xl bg-muted/50 p-6 text-center">
-                <span className="text-2xl" aria-hidden="true">
-                  ✨
-                </span>
-                <p className="max-w-[300px] text-sm leading-6 text-muted-foreground">{text.noContent}</p>
+              <div className="my-auto flex flex-1 flex-col items-center justify-center gap-y-3.5 rounded-2xl border-[1.5px] border-[#d6bc7c] border-l-4 border-l-[#a9471d] bg-[#faefd4]/85 p-6 text-center shadow-[0_8px_22px_rgba(79,58,14,0.08)] dark:border-[#2b4a6b] dark:border-l-4 dark:border-l-[#ffb010] dark:bg-[#13273c] dark:shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+                <div className="flex size-11 items-center justify-center rounded-xl border-2 border-[#17324d] bg-[#ffb010] text-[#2b251a] shadow-[0_2px_0_#17324d] dark:border-[#ffb010] dark:bg-[#ffb010] dark:text-[#0b1826]">
+                  <SparklesIcon size={20} strokeWidth={1.8} aria-hidden="true" />
+                </div>
+                <p className="max-w-[300px] font-sans text-[13px] font-medium leading-relaxed text-muted-foreground">{text.noContent}</p>
                 <button
                   onClick={onClickSummarize}
                   disabled={loading}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                  className="flex h-9 items-center justify-center rounded-xl border-[1.5px] border-[#17324d] bg-[#17324d] px-4 font-sans text-[13px] font-bold text-[#fff9e8] shadow-[0_2px_0_#0f2337] hover:bg-[#0f2337] active:translate-y-0.5 transition-all dark:border-[#ffb010] dark:bg-[#ffb010] dark:text-[#0b1826] dark:shadow-none dark:hover:bg-[#ffc03d] disabled:opacity-50"
                 >
                   {loading ? text.loading : text.summarize}
                 </button>
@@ -928,11 +932,10 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                         </button>
                       </div>
                     </div>
-                    <div className="w-full rounded-xl bg-muted/70 px-3 py-2.5 text-[15px] leading-6 text-foreground">
-                      <div
-                        className="prose prose-sm prose-slate dark:prose-invert max-w-none text-[15px] leading-6 [&_p]:my-0"
-                        dangerouslySetInnerHTML={{ __html: markedHtml }}
-                      />
+                    <div className="w-full rounded-xl bg-muted/70 px-3 py-2.5 text-sm leading-relaxed text-foreground">
+                      <Markdown className="prose-sm max-w-none text-sm leading-relaxed [&_p]:my-0">
+                        {summary || text.noContent}
+                      </Markdown>
                     </div>
                   </div>
                 )}
@@ -946,7 +949,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                         {isUser ? text.you : 'AI'}
                       </span>
                       <div
-                        className={`max-w-[88%] rounded-xl px-3 py-2.5 text-[15px] leading-6 ${
+                        className={`max-w-[88%] rounded-xl px-3 py-2.5 text-sm leading-relaxed ${
                           isUser
                             ? 'rounded-tr-sm bg-primary/10 text-foreground dark:bg-primary/20'
                             : 'rounded-tl-sm bg-muted/70 text-foreground'
@@ -955,12 +958,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                         {isUser ? (
                           <p className="whitespace-pre-wrap break-words">{message.content}</p>
                         ) : (
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            className="prose prose-sm prose-slate dark:prose-invert prose-a:underline max-w-none text-[15px] leading-6 [&_p]:my-0"
-                          >
+                          <Markdown className="prose-sm max-w-none text-sm leading-relaxed [&_p]:my-0">
                             {message.content}
-                          </ReactMarkdown>
+                          </Markdown>
                         )}
                       </div>
                     </div>
@@ -971,7 +971,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                 {chatLoading && (
                   <div className="flex flex-col items-start gap-y-1">
                     <span className="px-0.5 text-xs font-semibold text-muted-foreground">AI</span>
-                    <div className="animate-pulse rounded-xl rounded-tl-sm bg-muted/70 px-3 py-2.5 text-[15px] font-medium leading-6 text-primary">
+                    <div className="animate-pulse rounded-xl rounded-tl-sm bg-muted/70 px-3 py-2.5 text-sm font-medium leading-relaxed text-primary">
                       {text.chatThinking}
                     </div>
                   </div>
@@ -983,7 +983,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
 
           {/* 底部功能與輸入框控制欄 */}
           <div className="flex flex-col gap-2 pt-1 shrink-0">
-            <div className="rounded-2xl border border-border/60 bg-muted/25 p-2.5 shadow-2xs transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 focus-within:bg-muted/35">
+            <div className="rounded-2xl border-2 border-[#17324d] bg-[#fffefa] p-2.5 shadow-[0_4px_14px_rgba(23,50,77,0.08)] transition-all focus-within:border-[#17324d] focus-within:ring-2 focus-within:ring-[#ffb010]/50 dark:border-[#2b4a6b] dark:bg-[#13273c] dark:focus-within:border-[#ffb010]">
               <MessageInput
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
@@ -1034,7 +1034,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                         <button
                           type="button"
                           onClick={() => setChatImages((prev) => prev.filter((image) => image.id !== item.id))}
-                          className="mt-1 rounded-md border border-border bg-background px-2 py-0.5 text-[11px] font-semibold text-foreground transition hover:bg-muted"
+                          className="mt-1 rounded-md border border-border bg-background px-2 py-0.5 text-xs font-semibold text-foreground transition hover:bg-muted"
                         >
                           {text.removeImage}
                         </button>
@@ -1067,10 +1067,10 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                 <button
                   onClick={sendFollowUpQuestion}
                   disabled={chatLoading || !chatInput.trim() || !canChat}
-                  className="flex min-w-max shrink-0 items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                  className="flex h-8.5 min-w-max shrink-0 items-center justify-center rounded-xl border-[1.5px] border-[#17324d] bg-[#17324d] px-3.5 font-sans text-[13px] font-bold text-[#fff9e8] shadow-[0_2px_0_#0f2337] hover:bg-[#0f2337] active:translate-y-0.5 transition-all dark:border-[#ffb010] dark:bg-[#ffb010] dark:text-[#0b1826] dark:shadow-none dark:hover:bg-[#ffc03d] disabled:opacity-50"
                 >
                   <span className="mr-1">{text.chatSend}</span>
-                  <CornerDownLeftIcon className="text-primary-foreground/75" size={10}></CornerDownLeftIcon>
+                  <CornerDownLeftIcon className="text-current/75" size={10}></CornerDownLeftIcon>
                 </button>
               </div>
             </div>

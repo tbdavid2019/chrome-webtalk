@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="在任何網站加入 WebTalk 333：全站或每頁聊天室，結合即時多人交流與 AI 摘要、頁面對話。" />
-    <meta name="theme-color" content="#111827" />
+    <meta name="theme-color" content="#FFB010" />
     <meta name="webtalk-page-id" content="webtalk-embed-guide-zh-Hant" />
     <title>WebTalk 333｜網站安裝指南</title>
     <link rel="canonical" href="https://webtalk-nine.vercel.app/" />
@@ -50,7 +50,23 @@
     <style>
       :root {
         color-scheme: light dark;
+        /* Brand Colors - david888.com & 2md.aiurl.tw */
+        --saffron: #ffb010;
+        --saffron-hover: #f2a600;
+        --saffron-light: #fff0cc;
+        --deep-blue: #17324d;
+        --deep-blue-dark: #0f2337;
+        --clay: #a9471d;
+        --warm-cream: #fff9e8;
+        --canvas: #fff0cc;
+        --ink: #2b251a;
+        --text-muted: #594e36;
+        --border-color: #d6bc7c;
+
         font-family:
+          'GenJyuuGothic',
+          'JetBrains Mono',
+          'Noto Sans TC',
           ui-sans-serif,
           system-ui,
           -apple-system,
@@ -63,34 +79,34 @@
         margin: 0 auto;
         padding: 104px 24px 80px;
         line-height: 1.65;
-        color: #1f2937;
-        background: #fafafa;
+        color: var(--ink);
+        background: var(--canvas);
       }
       h1 {
         font-size: clamp(2rem, 6vw, 3.5rem);
         line-height: 1.05;
         letter-spacing: -0.05em;
         margin-bottom: 12px;
+        color: var(--ink);
       }
       h2 {
         margin-top: 52px;
         font-size: 1.5rem;
+        color: var(--ink);
       }
       h3 {
         margin-top: 28px;
+        color: var(--ink);
       }
       .lead {
         font-size: 1.15rem;
-        color: #4b5563;
+        color: var(--text-muted);
         max-width: 720px;
       }
-      .card,
-      pre {
-        border: 1px solid #e5e7eb;
-        background: #fff;
-        border-radius: 14px;
-      }
       .card {
+        border: 1px solid var(--border-color);
+        background: var(--warm-cream);
+        border-radius: 14px;
         padding: 22px;
         margin: 16px 0;
       }
@@ -111,8 +127,10 @@
         padding-top: 48px;
         overflow: auto;
         line-height: 1.5;
-        background: #111827;
-        color: #e5e7eb;
+        background: #0c1927;
+        border: 1px solid #2b4a6b;
+        color: #fff9e8;
+        border-radius: 14px;
       }
       code {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -121,27 +139,30 @@
         position: absolute;
         top: 9px;
         right: 9px;
-        border: 1px solid #4b5563;
+        border: 1px solid #2b4a6b;
         border-radius: 7px;
-        padding: 4px 9px;
-        background: #1f2937;
-        color: #e5e7eb;
+        padding: 4px 11px;
+        background: var(--saffron);
+        color: var(--ink);
         font: inherit;
         font-size: 0.8rem;
-        font-weight: 700;
+        font-weight: 800;
         cursor: pointer;
+        transition: background 0.15s ease;
       }
       [data-copy-code]:hover,
       [data-copy-code]:focus-visible {
-        background: #374151;
+        background: var(--saffron-hover);
+        outline: 2px solid var(--deep-blue);
       }
       p code,
       li code,
       td code {
-        padding: 2px 5px;
+        padding: 2px 6px;
         border-radius: 5px;
-        background: #e5e7eb;
-        color: #111827;
+        background: rgba(23, 50, 77, 0.08);
+        color: var(--deep-blue);
+        font-weight: 600;
       }
       table {
         width: 100%;
@@ -152,30 +173,33 @@
       td {
         padding: 11px;
         text-align: left;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border-color);
         vertical-align: top;
       }
       th {
-        color: #4b5563;
+        color: var(--text-muted);
+        font-weight: 700;
       }
       .tag {
         display: inline-block;
-        padding: 3px 9px;
+        padding: 4px 12px;
         border-radius: 999px;
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: var(--saffron);
+        color: var(--ink);
         font-size: 0.8rem;
-        font-weight: 700;
+        font-weight: 800;
+        border: 1px solid rgba(43, 37, 26, 0.15);
       }
       .notice {
-        border-left: 4px solid #2563eb;
+        border-left: 4px solid var(--deep-blue);
         padding: 14px 18px;
-        background: #eff6ff;
+        background: rgba(23, 50, 77, 0.06);
         border-radius: 0 10px 10px 0;
+        color: var(--ink);
       }
       .warning {
-        border-left-color: #d97706;
-        background: #fffbeb;
+        border-left-color: var(--clay);
+        background: rgba(169, 71, 29, 0.08);
       }
       .language-switch {
         display: flex;
@@ -184,14 +208,22 @@
       }
       .language-switch a,
       .language-switch span {
-        padding: 5px 10px;
-        border: 1px solid #d1d5db;
+        padding: 5px 12px;
+        border: 1px solid var(--border-color);
         border-radius: 999px;
         text-decoration: none;
       }
+      .language-switch a {
+        color: var(--text-muted);
+      }
+      .language-switch a:hover {
+        color: var(--deep-blue);
+        border-color: var(--deep-blue);
+      }
       .language-switch span {
-        border-color: #2563eb;
-        color: #1d4ed8;
+        border-color: var(--deep-blue);
+        background: var(--deep-blue);
+        color: var(--warm-cream);
         font-weight: 700;
       }
       .site-header {
@@ -202,13 +234,13 @@
         align-items: center;
         justify-content: space-between;
         padding: 12px 24px;
-        border-bottom: 1px solid #e5e7eb;
-        background: rgb(250 250 250 / 88%);
+        border-bottom: 2px solid var(--saffron);
+        background: rgb(255 249 232 / 92%);
         backdrop-filter: blur(12px);
       }
       .site-brand {
-        color: inherit;
-        font-size: 1rem;
+        color: var(--deep-blue);
+        font-size: 1.05rem;
         font-weight: 800;
         letter-spacing: -0.02em;
         text-decoration: none;
@@ -216,13 +248,16 @@
       footer {
         margin-top: 64px;
         padding-top: 24px;
-        border-top: 1px solid #e5e7eb;
-        color: #6b7280;
+        border-top: 1px solid var(--border-color);
+        color: var(--text-muted);
         font-size: 0.9rem;
       }
       footer a {
-        color: inherit;
+        color: var(--deep-blue);
         font-weight: 700;
+      }
+      footer a:hover {
+        text-decoration: underline;
       }
       @media (max-width: 640px) {
         body {
@@ -237,40 +272,66 @@
       }
       @media (prefers-color-scheme: dark) {
         body {
-          color: #e5e7eb;
-          background: #111827;
+          color: #fff9e8;
+          background: #0c1927;
+        }
+        h1, h2, h3 {
+          color: #fff9e8;
         }
         .lead,
         th {
           color: #cbd5e1;
         }
         .card {
-          background: #1f2937;
-          border-color: #374151;
+          background: #13273c;
+          border-color: #2b4a6b;
         }
         .site-header {
-          border-color: #374151;
-          background: rgb(17 24 39 / 88%);
+          border-bottom-color: var(--saffron);
+          background: rgb(19 39 60 / 92%);
+        }
+        .site-brand {
+          color: var(--saffron);
+        }
+        .language-switch a {
+          color: #cbd5e1;
+          border-color: #2b4a6b;
+        }
+        .language-switch a:hover {
+          color: var(--saffron);
+          border-color: var(--saffron);
+        }
+        .language-switch span {
+          border-color: var(--saffron);
+          background: var(--saffron);
+          color: #0b1826;
         }
         footer {
-          border-color: #374151;
+          border-color: #2b4a6b;
           color: #cbd5e1;
         }
         p code,
         li code,
         td code {
-          background: #374151;
-          color: #f9fafb;
+          background: #1b3450;
+          color: var(--saffron);
         }
         th,
         td {
-          border-color: #374151;
+          border-color: #2b4a6b;
         }
         .notice {
-          background: #172554;
+          border-left-color: #7cc2ff;
+          background: #152a40;
+          color: #fff9e8;
         }
         .warning {
-          background: #451a03;
+          border-left-color: #f08354;
+          background: #2a1b15;
+          color: #fff9e8;
+        }
+        footer a {
+          color: var(--saffron);
         }
       }
     </style>

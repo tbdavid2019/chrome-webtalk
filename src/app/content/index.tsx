@@ -121,19 +121,26 @@ export default defineContentScript({
           @font-face {
             font-family: 'JetBrainsMono';
             src: url('${browser.runtime.getURL('/fonts/JetBrainsMono-Medium.woff2' as any)}') format('woff2');
-            font-weight: 500;
+            font-weight: 300 500;
             font-style: normal;
             font-display: swap;
           }
           @font-face {
             font-family: 'GenJyuuGothic';
             src: url('${browser.runtime.getURL('/fonts/GenJyuuGothic-Medium.woff2' as any)}') format('woff2');
-            font-weight: 500;
+            font-weight: 300 500;
             font-style: normal;
             font-display: swap;
           }
         `
         container.append(fontStyle)
+
+        if (!document.getElementById('webtalk-font-faces')) {
+          const headStyle = document.createElement('style')
+          headStyle.id = 'webtalk-font-faces'
+          headStyle.textContent = fontStyle.textContent
+          ;(document.head || document.documentElement)?.appendChild(headStyle)
+        }
 
         const root = createRoot(app)
         root.render(

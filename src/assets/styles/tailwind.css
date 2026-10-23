@@ -1,7 +1,7 @@
 @font-face {
   font-family: 'JetBrainsMono';
   src: url('/fonts/JetBrainsMono-Medium.woff2') format('woff2');
-  font-weight: 500;
+  font-weight: 300 500;
   font-style: normal;
   font-display: swap;
 }
@@ -9,7 +9,7 @@
 @font-face {
   font-family: 'GenJyuuGothic';
   src: url('/fonts/GenJyuuGothic-Medium.woff2') format('woff2');
-  font-weight: 500;
+  font-weight: 300 500;
   font-style: normal;
   font-display: swap;
 }
@@ -21,68 +21,99 @@
 @layer base {
   :host,
   :root {
-    --font-ui: 'GenJyuuGothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', ui-sans-serif, system-ui, sans-serif;
+    --font-ui: 'GenJyuuGothic', -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Segoe UI', Roboto, ui-sans-serif, system-ui, sans-serif;
 
-    /* 拿鐵暖咖 / 書香紙墨色系 (Light) */
-    --background: 37 32% 93%; /* #f4efe7 - 紙張原色，更溫潤有深度 */
-    --foreground: 17 23% 11%; /* #231915 - 深咖黑，比純黑溫柔 */
+    /* david888.com & 2md.aiurl.tw Brand Colors (Light Mode) */
+    /* 5 Base Colors with Tonal Tints: Saffron, Deep Blue, Clay, Warm Cream, Ink */
+    --saffron: 40 100% 53%; /* #ffb010 - Signature Saffron */
+    --saffron-hover: 41 100% 47%; /* #f2a600 */
+    --saffron-light: 42 100% 90%; /* #fff0cc */
+    --deep-blue: 210 54% 20%; /* #17324d - Signature Deep Blue */
+    --deep-blue-dark: 210 57% 14%; /* #0f2337 */
+    --clay: 18 71% 39%; /* #a9471d - Warm Terracotta Clay */
+    --warm-cream: 44 100% 95%; /* #fff9e8 - Warm Card & Panel Surface */
+    --canvas: 42 100% 90%; /* #fff0cc - Canvas Background */
+    --ink: 39 25% 14%; /* #2b251a - Deep Charcoal Ink */
 
-    --muted: 36 29% 88%; /* 淡米黃，用於輸入框與次要背景 */
-    --muted-foreground: 27 12% 39%; /* 灰褐色 #6e6258 */
+    /* Semantic UI Tokens - Fully WCAG AA & AAA Compliant */
+    --background: 44 100% 95%; /* #fff9e8 Warm Cream panel surface */
+    --foreground: 39 25% 14%; /* #2b251a Ink (Contrast 14.45:1 - WCAG AAA) */
 
-    --popover: 37 32% 93%;
-    --popover-foreground: 17 23% 11%;
+    --muted: 42 80% 91%; /* #fff0cc / Canvas tint for message bubbles & inputs */
+    --muted-foreground: 41 24% 28%; /* #594e36 (Contrast 7.78:1 - WCAG AAA) */
 
-    --card: 37 32% 93%;
-    --card-foreground: 17 23% 11%;
+    --popover: 48 100% 99%; /* #fffefa Elevated Surface */
+    --popover-foreground: 39 25% 14%;
 
-    --border: 27 28% 18% / 0.12; /* 輕柔木咖邊框 rgba(78, 57, 44, 0.12) */
-    --input: 27 28% 18% / 0.12;
+    --card: 44 100% 95%; /* #fff9e8 */
+    --card-foreground: 39 25% 14%;
 
-    --primary: 16 49% 45%; /* 磚紅栗子咖啡 #a45a3f */
-    --primary-foreground: 0 0% 100%;
+    --border: 43 52% 66%; /* #d6bc7c Warm Amber Border */
+    --input: 41 31% 32%; /* #6b5b38 exact 2md.aiurl.tw input border */
 
-    --secondary: 195 25% 30%; /* 深藍綠色 #2f5d6c */
+    /* Primary: Deep Blue in light mode ensures 13.13:1 WCAG AAA contrast for both text-primary & bg-primary */
+    --primary: 210 54% 20%; /* #17324d */
+    --primary-foreground: 44 100% 95%; /* #fff9e8 (Contrast 13.13:1 - WCAG AAA) */
+
+    /* Secondary: Terracotta Clay (Contrast 5.54:1 - WCAG AA) */
+    --secondary: 18 71% 39%; /* #a9471d */
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 36 29% 88%;
-    --accent-foreground: 17 23% 11%;
+    /* Accent: Signature Saffron (always paired with Ink text for 8.30:1 WCAG AAA contrast) */
+    --accent: 40 100% 53%; /* #ffb010 */
+    --accent-foreground: 39 25% 14%; /* #2b251a */
 
-    --destructive: 0 65% 50%;
+    --destructive: 17 79% 31%; /* #8f3511 (Contrast 5.8:1 - WCAG AA) */
     --destructive-foreground: 0 0% 100%;
 
-    --ring: 16 49% 45% / 0.3;
+    --ring: 210 54% 20%; /* #17324d exact david888.com deep blue */
 
     --radius: 1.25rem;
   }
 
   .dark {
-    /* 拿鐵暖咖深色模式 (Dark) */
-    --background: 15 15% 10%; /* #1c1614 - 深碳烤咖啡豆色 */
-    --foreground: 35 38% 93%; /* #f6eee6 - 燕麥白色 */
+    /* david888.com & 2md.aiurl.tw Brand Colors (Dark Mode) */
+    --saffron: 40 100% 53%; /* #ffb010 */
+    --saffron-hover: 41 100% 62%; /* #ffc03d */
+    --saffron-light: 40 80% 20%;
+    --deep-blue: 210 54% 20%; /* #17324d */
+    --deep-blue-dark: 211 55% 10%; /* #0b1826 */
+    --clay: 18 84% 64%; /* #f08354 */
+    --warm-cream: 211 52% 15%; /* #13273c */
+    --canvas: 211 53% 10%; /* #0c1927 */
+    --ink: 44 100% 95%; /* #fff9e8 */
 
-    --muted: 15 15% 17%; /* #2a211d */
-    --muted-foreground: 28 19% 71%; /* #c2b4a8 */
+    /* Semantic UI Tokens - Fully WCAG AA & AAA Compliant */
+    --background: 211 53% 10%; /* #0c1927 Dark Canvas */
+    --foreground: 44 100% 95%; /* #fff9e8 Warm Cream Ink (Contrast 16.86:1 - WCAG AAA) */
 
-    --popover: 15 15% 10%;
-    --popover-foreground: 35 38% 93%;
+    --muted: 211 52% 15%; /* #13273c Dark Surface */
+    --muted-foreground: 213 27% 84%; /* #cbd5e1 Slate (Contrast 11.95:1 - WCAG AAA) */
 
-    --card: 15 15% 10%;
-    --card-foreground: 35 38% 93%;
+    --popover: 212 50% 21%; /* #1b3450 Dark Elevated Surface */
+    --popover-foreground: 44 100% 95%;
 
-    --border: 30 35% 82% / 0.12; /* rgba(240, 223, 207, 0.12) */
-    --input: 30 35% 82% / 0.12;
+    --card: 211 52% 15%; /* #13273c */
+    --card-foreground: 44 100% 95%;
 
-    --primary: 22 62% 62%; /* 暖駝橘色 #d98e63 */
-    --primary-foreground: 15 15% 10%;
+    --border: 211 43% 29%; /* #2b4a6b exact david888.com dark slate border */
+    --input: 211 43% 29%; /* #2b4a6b */
 
-    --secondary: 188 35% 63%; /* 粉藍綠色 #82b8c0 */
-    --secondary-foreground: 15 15% 10%;
+    /* Primary: In dark mode, Saffron #ffb010 delivers signature warmth with 9.69:1 AAA contrast! */
+    --primary: 40 100% 53%; /* #ffb010 */
+    --primary-foreground: 211 55% 10%; /* #0b1826 Deep Dark Ink (Contrast 9.69:1 - WCAG AAA) */
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
+    /* Secondary: Sky Blue #7cc2ff */
+    --secondary: 208 100% 74%; /* #7cc2ff (Contrast 10.8:1 - WCAG AAA) */
+    --secondary-foreground: 211 55% 10%;
 
-    --ring: 22 62% 62% / 0.3;
+    --accent: 212 50% 21%; /* #1b3450 */
+    --accent-foreground: 44 100% 95%;
+
+    --destructive: 0 91% 71%; /* #f87171 (Contrast 8.2:1 - WCAG AAA) */
+    --destructive-foreground: 211 55% 10%;
+
+    --ring: 40 100% 53%; /* #ffb010 exact david888.com saffron */
 
     --radius: 1.25rem;
   }
@@ -93,14 +124,38 @@
     @apply border-border;
   }
 
-  :host,
-  :root {
-    @apply !bg-background !text-foreground !text-base !visible;
-    font-family: var(--font-ui) !important;
-
-    /* Disabled inherit */
+  :host {
     all: initial !important;
     direction: ltr !important;
+    visibility: visible !important;
+    font-family: var(--font-ui) !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :root {
+    direction: ltr !important;
+    visibility: visible !important;
+    font-family: var(--font-ui) !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root,
+  #app,
+  *,
+  *::before,
+  *::after {
+    font-family: var(--font-ui);
+    box-sizing: border-box;
   }
 
   html,
@@ -110,5 +165,13 @@
   textarea,
   select {
     font-family: var(--font-ui);
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: 'JetBrainsMono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+      'Courier New', monospace;
   }
 }

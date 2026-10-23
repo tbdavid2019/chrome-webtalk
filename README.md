@@ -38,6 +38,32 @@ WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webta
 
 ## 🆕 近期更新
 
+- 🎨 **修復 CSS Reset、字型洩漏與邊框語法錯誤，100% 完整對齊 david888.com / 2md.aiurl.tw 視覺標準 (v2.8.0)**：
+  - **CSS Reset 順序與字型繼承徹底修復**：修正 `all: initial !important` 執行次序，優先執行 reset 並注入 `--font-ui`、14px 字級、1.5 行高及語意色，杜絕 Shadow DOM 內部元件繼承系統預設字型（宋體 / Times New Roman）的問題。
+  - **Chromium Shadow DOM `@font-face` 穿透與字重校準**：將 `@font-face` 的 `font-weight` 設為 `300 500`（兼顧 400/500 原生渲染與 600/700 粗體合成層次），並在 Content Script 初始化時將樣式同步注入 `document.head`，解決 Chromium 忽略 ShadowRoot 內 `@font-face` 的問題。
+  - **字型混排精準校準（GenJyuuGothic 源柔黑體優先）**：移除 sans-serif 字型最前端的 `JetBrainsMono`，改為以 `var(--font-ui)` 及 `GenJyuuGothic` 搭配系統無襯線字型優先，解決等寬英文與 CJK 混排時字級忽大忽小的跳動感，同時保護 `code`/`pre` 等寬區塊並統一 `SummaryPanel` 的 `<Markdown>` 渲染。
+  - **HSL CSS 變數無效 Alpha 語法修復**：修正 `--border`、`--input`、`--ring`、`--saffron-light` 內嵌 `/ alpha` 導致 Tailwind 編譯 `border-border/60` 產生無效語法而退回純黑線框（currentColor）的錯誤。
+  - **100% 對齊 david888.com / 2md.aiurl.tw 經典視覺風格**：
+    - 主面板與 AI 空間：立體左側深藍外框（`border-l-2 border-[#17324d] dark:border-[#2b4a6b]`）與多層次深邃柔和陰影。
+    - 頂部 Header：3px 藏紅金識別頂線、暖奶油背景、`[15px]` 粗體無襯線網域標題，以及經典微立體膠囊按鈕（`border-[1.5px] border-[#17324d] bg-[#fffefa] shadow-[0_2px_0_#17324d]`）。
+    - 空狀態卡片：溫潤暖底 `bg-[#faefd4]/85`、左側暖陶土/藏紅雙重立體飾邊（`border-l-4 border-l-[#a9471d]`）、藏紅圖示徽章與 `[15px]` 標題。
+    - 推薦話題與問題：經典藏紅膠囊按鈕（`border-[1.5px] border-[#17324d] bg-[#ffb010] text-[#2b251a] shadow-[0_2px_0_#17324d]`），懸停微浮動反饋。
+    - 輸入框與送出按鈕：高對比純白輸入底框（`border-2 border-[#17324d] bg-[#fffefa]`）搭配沈穩深藍送出按鈕（`bg-[#17324d] text-[#fff9e8] shadow-[0_2px_0_#0f2337]`）。此版本未新增任何 Chrome 權限。
+
+- 🌓 **宿主環境智慧感知、毛玻璃 Bento Header 與 Zero-Noise 在線狀態 (v2.7.0)**：
+  - **宿主網頁環境與背景智慧感知（Host-Aware Adaptive Theme）**：全面升級 `checkDarkMode.ts` 實作四層環境感知瀑布流（顯式 DOM 標記、`color-scheme`、ITU-R BT.601 背景色光學亮度演算、系統媒體查詢兜底），並結合 `MutationObserver` 達成宿主網站切換主題時同一毫秒即時自動同步切換。
+  - **Multiplayer 零雜訊在線狀態哲學（Zero-Noise Presence）**：在線人數僅有自己（<= 1）時完全不顯示在線膠囊或數字，保持極致安靜純淨；僅在有其他訪客（>= 2）時優雅顯露 Lucide `<UsersIcon />` 與人數標籤，點擊開啟名單與私聊。
+  - **頂級毛玻璃與 Bento 品牌 Header（david888.com / 2md.aiurl.tw 精髓）**：全面汰除老舊黃色油漆塊，採用高級毛玻璃（`backdrop-blur-xl`）與 Saffron `#ffb010` 藏紅金 2px 髮絲級光暈識別線，左側 Favicon + JetBrains Mono 網域名稱，右側一體化 Action Capsule（太陽/月亮主題切換、多人在線狀態、關閉按鈕）。
+  - **AI 摘要面板同步換裝**：換裝為毛玻璃 + Saffron 髮絲光暈 Header，語言切換改為微型 Segmented Control，空狀態與操作按鈕全面換用純淨 Lucide 圖示。
+  - **字型混排精準校準（JetBrains Mono + 源柔黑體）**：英數代碼、統計與時間戳記優先使用 JetBrains Mono 等寬字型，中文字符平滑回退至源柔黑體。此版本未新增任何 Chrome 權限。
+- 🎨 **david888.com & 2md.aiurl.tw 品牌風格全面導入與 WCAG 無障礙合規 (v2.5.0)**：
+  - **品牌五大核心色系**：整合 Saffron 藏紅金 (`#ffb010`)、Deep Blue 沉穩深藍 (`#17324d`)、Clay 暖陶土紅 (`#a9471d`)、Warm Cream 溫潤奶油 (`#fff9e8`)、Ink 濃墨黑炭 (`#2b251a`) 與畫布色 Canvas (`#fff0cc`)。
+  - **嚴格符合 WCAG 2.1 對比度規範（全數達標 AA 與 AAA）**：
+    - 淺色模式：主要文字達 14.45:1（AAA 級）、次要文字達 7.78:1（AAA 級）、主要互動元素達 13.13:1（AAA 級）。
+    - 杜絕「黃底白字」無障礙盲區：藏紅金（Saffron）背景上的文字與圖示全面使用深色墨黑（Ink `#2b251a`），對比度達 8.30:1（AAA 級）。
+    - 深色模式：暗色畫布文字達 16.86:1（AAA 級）、主要金黃互動色達 9.69:1（AAA 級）。
+  - **網頁版與 Chrome Extension 視覺完全同步**：包含側邊聊天室、AI 摘要面板、網站安裝指南頁（`index.html` 與 `en.html`）、選項頁面（Options）與歷史紀錄頁面（History），全面換裝品牌色調並設定 `theme-color: #FFB010`。
+  - **全面統一字體大小階層**：徹底掃除歷史遺留的任意硬編碼字級（`10px`、`10.5px`、`11.5px`、`13.5px`、`15px`、`0.72em` 等），將所有訊息、輸入框、Markdown 摘要統一收斂至標準 14px（`text-sm`），次要標籤與時間戳記收斂至 12px（`text-xs`），徹底消除視覺忽大忽小的跳躍感。此版本未新增任何 Chrome 權限。
 - 🎨 **頂部 Header 美學重塑與全局排版細節修復 (v2.4.4)**：
   - **在線狀態膠囊（Presence Capsule）**：將右上角人數數字與關閉鈕（X）升級為等高（32px）與圓弧對稱設計，整合呼吸綠燈動畫，點擊流暢展開在線成員名單。
   - **左上角網站識別與標題**：網站 Favicon 新增圓角容器微投影襯托，網域名稱採用乾淨比例字型呈現，子標題清晰展示網頁標題或私聊對象，並將 Header 高度調整為 56px 提供舒適呼吸空間。

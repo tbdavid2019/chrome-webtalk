@@ -59,10 +59,10 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           autoFocus={autoFocus}
           maxLength={maxLength}
           className={cn(
-            'w-full min-h-[44px] max-h-28 resize-none text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/70',
+            'w-full min-h-[44px] max-h-28 resize-none text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/70',
             variant === 'embedded'
               ? 'border-0 bg-transparent px-2.5 pt-1.5 pb-6 focus:outline-none focus-visible:ring-0 shadow-none'
-              : 'rounded-xl border border-border/60 bg-muted/30 px-3 py-2 pb-6 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0',
+              : 'rounded-xl border border-border/70 bg-muted/30 px-3 py-2 pb-6 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0',
             {
               'placeholder:text-amber-500/70': nearLimit,
               'placeholder:text-red-500/70': atLimit,
@@ -79,10 +79,10 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           disabled={disabled || loading}
         />
         <div
-          className={cn('absolute bottom-1 right-2.5 text-[10.5px] font-medium leading-none tabular-nums', {
+          className={cn('absolute bottom-1 right-2.5 text-xs font-medium leading-none tabular-nums', {
             'text-muted-foreground/70': !nearLimit,
-            'text-amber-600 dark:text-amber-400 font-semibold': nearLimit && !atLimit,
-            'text-red-600 dark:text-red-400 font-semibold': atLimit,
+            'text-amber-700 dark:text-amber-300 font-semibold': nearLimit && !atLimit,
+            'text-destructive font-semibold': atLimit,
             'opacity-50': disabled || loading
           })}
         >

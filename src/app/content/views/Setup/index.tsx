@@ -3,7 +3,7 @@ import { MAX_AVATAR_SIZE } from '@/constants/config'
 import MessageListDomain, { Message, MessageType } from '@/domain/MessageList'
 import UserInfoDomain, { UserInfo } from '@/domain/UserInfo'
 import { generateRandomAvatar } from '@/utils'
-import { UserIcon, RefreshCwIcon } from 'lucide-react'
+import { UserIcon, RefreshCwIcon, SparklesIcon } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { FC, useEffect, useState, useRef } from 'react'
 import { useRemeshDomain, useRemeshSend } from 'remesh-react'
@@ -140,7 +140,10 @@ const Setup: FC = () => {
               maxLength={20}
             />
           </div>
-          <p className="text-[10px] text-muted-foreground font-medium">💡 點擊頭像可以隨機更換頭像</p>
+          <p className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
+            <SparklesIcon size={12} strokeWidth={1.8} className="text-primary shrink-0" />
+            <span>點擊頭像可以隨機更換頭像</span>
+          </p>
         </div>
 
         <PulsatingButton

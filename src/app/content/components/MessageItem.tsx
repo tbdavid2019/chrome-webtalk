@@ -103,18 +103,18 @@ const MessageItem: FC<MessageItemProps> = (props) => {
             {!isOwnMessage && <span className="truncate font-semibold text-foreground">{props.data.username}</span>}
             <div className="flex min-w-0 items-center gap-1.5">
               {props.isAi && (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-amber-700 dark:text-amber-300">
-                  <BotIcon size={10} aria-hidden="true" />
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-500/20 px-1.5 py-0.5 text-xs font-semibold leading-none text-amber-800 dark:text-amber-200">
+                  <BotIcon size={11} aria-hidden="true" />
                   AI
                   {props.aiOwnerUsername && (
-                    <span className="max-w-24 truncate text-amber-700/80 dark:text-amber-300/80">
+                    <span className="max-w-24 truncate text-amber-800/90 dark:text-amber-200/90">
                       @{props.aiOwnerUsername}
                     </span>
                   )}
                 </span>
               )}
               {props.data.isPrivate && (
-                <span className="inline-flex max-w-40 shrink-0 truncate rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary">
+                <span className="inline-flex max-w-40 shrink-0 truncate rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-semibold leading-none text-primary">
                   {props.data.userId === props.currentUserId
                     ? text.privateMessageTo.replace('{username}', props.data.toUser?.username ?? '')
                     : text.privateMessageIncoming}
@@ -122,7 +122,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
               )}
             </div>
             <FormatDate
-              className="shrink-0 text-[11px] tabular-nums text-muted-foreground"
+              className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground"
               date={props.data.sendTime}
               format="MM/dd HH:mm"
             />
@@ -134,7 +134,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
               isOwnMessage
                 ? 'rounded-tr-sm bg-primary/10 dark:bg-primary/20'
                 : props.isAi
-                  ? 'rounded-tl-sm bg-amber-500/10 dark:bg-amber-500/15'
+                  ? 'rounded-tl-sm bg-amber-500/15 dark:bg-amber-500/20'
                   : 'rounded-tl-sm bg-muted/70'
             )}
           >
@@ -155,11 +155,11 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 <span className="font-medium italic">{text.messageRecalled}</span>
               </div>
             ) : (
-              <Markdown className="prose-sm max-w-none text-[15px] leading-6 [&_p]:my-0">{content}</Markdown>
+              <Markdown className="prose-sm max-w-none text-sm leading-relaxed [&_p]:my-0">{content}</Markdown>
             )}
 
             {!isRecalled && props.isAi && props.onForwardAi && (
-              <p className="mt-2 text-xs leading-5 text-amber-800 dark:text-amber-300">{text.aiLocalOnlyPrompt}</p>
+              <p className="mt-2 text-xs leading-normal text-amber-900 dark:text-amber-200">{text.aiLocalOnlyPrompt}</p>
             )}
           </div>
 
@@ -179,8 +179,8 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 title={text.likeTitle}
                 aria-label={text.likeTitle}
               >
-                <ThumbsUpIcon size={13} />
-                <span className="ml-1 tabular-nums">{props.data.likeUsers.length}</span>
+                <ThumbsUpIcon size={13} strokeWidth={1.8} />
+                <span className="ml-1 font-mono tabular-nums">{props.data.likeUsers.length}</span>
               </Button>
               <Button
                 type="button"
@@ -191,8 +191,8 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 title={text.dislikeTitle}
                 aria-label={text.dislikeTitle}
               >
-                <ThumbsDownIcon size={13} />
-                <span className="ml-1 tabular-nums">{props.data.hateUsers.length}</span>
+                <ThumbsDownIcon size={13} strokeWidth={1.8} />
+                <span className="ml-1 font-mono tabular-nums">{props.data.hateUsers.length}</span>
               </Button>
               <Button
                 type="button"
@@ -203,7 +203,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                 title={props.copied ? text.copiedTitle : text.copyWithUrlTitle}
                 aria-label={props.copied ? text.copiedTitle : text.copyWithUrlTitle}
               >
-                {props.copied ? <CheckIcon size={13} /> : <CopyIcon size={13} />}
+                {props.copied ? <CheckIcon size={13} strokeWidth={2} /> : <CopyIcon size={13} strokeWidth={1.8} />}
               </Button>
               {props.onRecall && (
                 <Button
@@ -215,7 +215,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   title={text.recallTitle}
                   aria-label={text.recallTitle}
                 >
-                  <Undo2Icon size={13} />
+                  <Undo2Icon size={13} strokeWidth={1.8} />
                 </Button>
               )}
               {props.data.pageContext?.url && (
@@ -228,7 +228,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   title={text.openPageTitle}
                   aria-label={text.openPageTitle}
                 >
-                  <ExternalLinkIcon size={13} />
+                  <ExternalLinkIcon size={13} strokeWidth={1.8} />
                 </Button>
               )}
               {props.isAi && props.onForwardAi && (
@@ -246,7 +246,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   title={props.isForwardedAi ? text.aiForwardedToRoomTitle : text.aiForwardToRoomTitle}
                   aria-label={props.isForwardedAi ? text.aiForwardedToRoomTitle : text.aiForwardToRoomTitle}
                 >
-                  <ForwardIcon size={13} />
+                  <ForwardIcon size={13} strokeWidth={1.8} />
                 </Button>
               )}
               {props.onToggleBanUser && (
@@ -264,7 +264,7 @@ const MessageItem: FC<MessageItemProps> = (props) => {
                   title={props.isBanned ? text.unbanTitle : text.banTitle}
                   aria-label={props.isBanned ? text.unbanTitle : text.banTitle}
                 >
-                  <UserXIcon size={13} />
+                  <UserXIcon size={13} strokeWidth={1.8} />
                 </Button>
               )}
             </div>
