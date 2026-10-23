@@ -59,7 +59,7 @@ const AppMain: FC<AppMainProps> = ({
             ...panelSizeStyle
           }}
           className={cn(
-            'fixed top-0 right-0 z-infinity h-full min-w-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr_auto] border-l border-border bg-background font-sans text-foreground shadow-2xl overflow-hidden max-w-full',
+            'fixed top-0 right-0 z-infinity h-full min-w-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr_auto] border-l-2 border-[#17324d] dark:border-[#2b4a6b] bg-background font-sans text-foreground shadow-[-12px_0_36px_rgba(23,50,77,0.16)] dark:shadow-[-12px_0_40px_rgba(0,0,0,0.55)] overflow-hidden max-w-full',
             className
           )}
           onMouseDown={onMouseDown}

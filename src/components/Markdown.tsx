@@ -46,24 +46,24 @@ const Markdown: FC<MarkdownProps> = ({ children = '', className }) => {
       urlTransform={urlTransform}
       components={{
         h1: ({ className, ...props }) => (
-          <h1 className={cn('my-2 mt-0 font-semibold text-2xl dark:text-slate-50', className)} {...props} />
+          <h1 className={cn('my-2 mt-0 font-semibold text-2xl dark:text-foreground', className)} {...props} />
         ),
         h2: ({ className, ...props }) => (
-          <h2 className={cn('mb-2 mt-0 font-semibold dark:text-slate-50', className)} {...props} />
+          <h2 className={cn('mb-2 mt-0 font-semibold dark:text-foreground', className)} {...props} />
         ),
         h3: ({ className, ...props }) => (
-          <h3 className={cn('mb-2 mt-0 font-semibold dark:text-slate-50', className)} {...props} />
+          <h3 className={cn('mb-2 mt-0 font-semibold dark:text-foreground', className)} {...props} />
         ),
         h4: ({ className, ...props }) => (
-          <h4 className={cn('mb-2 mt-0 font-semibold dark:text-slate-50', className)} {...props} />
+          <h4 className={cn('mb-2 mt-0 font-semibold dark:text-foreground', className)} {...props} />
         ),
         img: ({ className, alt, ...props }) => (
           <img className={cn('my-2 max-w-[100%] rounded', className)} alt={alt} {...props} />
         ),
-        strong: ({ className, ...props }) => <strong className={cn('dark:text-slate-50', className)} {...props} />,
+        strong: ({ className, ...props }) => <strong className={cn('dark:text-foreground', className)} {...props} />,
         a: ({ className, ...props }) => (
           <a
-            className={cn('text-blue-500', className)}
+            className={cn('text-primary font-semibold underline underline-offset-2 hover:opacity-80', className)}
             target={props.href || '_blank'}
             rel="noopener noreferrer"
             {...props}
@@ -122,7 +122,7 @@ const Markdown: FC<MarkdownProps> = ({ children = '', className }) => {
         )
       }}
       remarkPlugins={[remarkGfm, remarkBreaks]}
-      className={cn('prose prose-base prose-slate break-words dark:text-slate-50', className)}
+      className={cn('prose prose-base prose-slate break-words text-foreground dark:text-foreground', className)}
     >
       {children}
     </ReactMarkdown>

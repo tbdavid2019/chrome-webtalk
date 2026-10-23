@@ -30,12 +30,12 @@ const EmojiButton: FC<EmojiButtonProps> = ({ onSelect }) => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="dark:text-white">
-          <SmileIcon size={20} />
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+          <SmileIcon size={18} strokeWidth={1.8} />
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="z-infinity w-64 overflow-hidden rounded-xl p-0 dark:bg-slate-900"
+        className="z-infinity w-64 overflow-hidden rounded-xl p-0 bg-popover text-popover-foreground border border-border/80"
         onCloseAutoFocus={handleCloseAutoFocus}
       >
         <ScrollArea className="size-64 p-1">

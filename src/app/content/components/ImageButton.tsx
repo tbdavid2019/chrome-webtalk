@@ -32,8 +32,14 @@ const ImageButton = ({ onSelect, onSelectMultiple, disabled, multiple = false }:
   }
 
   return (
-    <Button disabled={disabled} onClick={handleClick} variant="ghost" size="icon" className="dark:text-white">
-      <ImageIcon size={20} />
+    <Button
+      disabled={disabled}
+      onClick={handleClick}
+      variant="ghost"
+      size="icon"
+      className="size-8 shrink-0 rounded-lg text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-colors"
+    >
+      <ImageIcon size={18} strokeWidth={1.8} />
     </Button>
   )
 }

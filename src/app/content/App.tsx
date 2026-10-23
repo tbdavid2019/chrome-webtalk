@@ -15,7 +15,7 @@ import { Toaster } from 'sonner'
 import DanmakuContainer from './components/DanmakuContainer'
 import DanmakuDomain from '@/domain/Danmaku'
 import AppStatusDomain from '@/domain/AppStatus'
-import { checkDarkMode, cn, generateRandomAvatar, getSiteInfo } from '@/utils'
+import { checkDarkMode, cn, generateRandomAvatar, getSiteInfo, subscribeDarkModeChange } from '@/utils'
 import VirtualRoomDomain from '@/domain/VirtualRoom'
 import { MAX_AVATAR_SIZE } from '@/constants/config'
 import type { MobilePlacement } from '@/app/embed/options'
@@ -264,12 +264,18 @@ export default function App({
     }
   }, [])
 
+  const [systemIsDark, setSystemIsDark] = useState(() => checkDarkMode())
+
+  useEffect(() => {
+    return subscribeDarkModeChange(setSystemIsDark)
+  }, [])
+
   const themeMode =
     userInfo?.themeMode === 'system'
-      ? checkDarkMode()
+      ? systemIsDark
         ? 'dark'
         : 'light'
-      : (userInfo?.themeMode ?? (checkDarkMode() ? 'dark' : 'light'))
+      : (userInfo?.themeMode ?? (systemIsDark ? 'dark' : 'light'))
   const getPanelZIndex = (panel: 'main' | 'summary') =>
     topPanel === panel ? OVERLAY_BASE_Z_INDEX + 1 : OVERLAY_BASE_Z_INDEX
   const displayFontFamily = userInfo?.displayFontFamily ?? DEFAULT_DISPLAY_FONT_FAMILY
@@ -282,6 +288,7 @@ export default function App({
       style={
         {
           '--font-ui': DISPLAY_FONT_FAMILY_VALUES[displayFontFamily],
+          fontFamily: 'var(--font-ui)',
           zoom: DISPLAY_FONT_SCALE_VALUES[displayFontSize]
         } as CSSProperties
       }
@@ -305,11 +312,6 @@ export default function App({
               theme={themeMode}
               offset="70px"
               visibleToasts={1}
-              toastOptions={{
-                classNames: {
-                  toast: 'dark:bg-slate-950 border dark:border-slate-600'
-                }
-              }}
               position="top-center"
             />
           </AppMain>

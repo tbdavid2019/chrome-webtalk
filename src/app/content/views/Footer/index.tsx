@@ -641,11 +641,11 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
                     <AvatarFallback>{item.kind === 'ai' ? <BotIcon size={12} /> : item.username.at(0)}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs text-slate-500 dark:text-slate-50">
+                    <div className="truncate text-xs font-semibold text-foreground">
                       {item.kind === 'ai' ? item.label : item.username}
                     </div>
                     {item.kind === 'ai' && (
-                      <div className="truncate text-[10px] text-muted-foreground">{item.description}</div>
+                      <div className="truncate text-xs text-muted-foreground">{item.description}</div>
                     )}
                   </div>
                 </div>
@@ -674,8 +674,7 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
       {aiTopicSuggestionsEnabled && !privateChatTarget && (
         <div
           className={cn(
-            'rounded-xl border border-border/40 bg-muted/30 p-2.5 shadow-2xs transition-all',
-            suggestionsExpanded ? 'px-3 py-3' : 'px-3 py-2',
+            'rounded-2xl border-[1.5px] border-[#d6bc7c] border-l-4 border-l-[#a9471d] bg-[#faefd4]/75 px-3.5 py-3 shadow-[0_4px_14px_rgba(79,58,14,0.06)] transition-all dark:border-[#2b4a6b] dark:border-l-4 dark:border-l-[#ffb010] dark:bg-[#13273c]',
             suggestionsExpanded && 'max-sm:max-h-28 max-sm:overflow-y-auto max-sm:overscroll-contain'
           )}
         >
@@ -686,10 +685,10 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
             aria-expanded={suggestionsExpanded}
             aria-controls="webtalk-chat-suggestions"
           >
-            <span className="text-xs font-semibold text-foreground">{text.chatSuggestionsTitle}</span>
+            <span className="font-sans text-[13px] font-bold text-foreground">{text.chatSuggestionsTitle}</span>
             <span className="flex items-center gap-2">
               {pageSuggestionsLoading && (
-                <span className="text-[11px] font-normal text-muted-foreground">{text.chatSuggestionsLoading}</span>
+                <span className="text-xs font-normal text-muted-foreground">{text.chatSuggestionsLoading}</span>
               )}
               <ChevronDown
                 aria-hidden="true"
@@ -702,27 +701,25 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
           </button>
           {suggestionsExpanded && (
             <div id="webtalk-chat-suggestions">
-              <div className="mb-2.5 mt-1 text-[11px] text-muted-foreground">{text.chatSuggestionsDescription}</div>
+              <div className="mb-2.5 mt-1 font-sans text-xs font-medium text-muted-foreground">{text.chatSuggestionsDescription}</div>
               <div className="flex flex-wrap gap-1.5">
                 {pageSuggestions.map((item, index) => (
-                  <Button
+                  <button
                     key={`${item.label}-${index}`}
                     type="button"
-                    variant="outline"
-                    size="xs"
-                    className="h-auto rounded-full border border-border/60 bg-background/90 px-3 py-1 text-left text-xs whitespace-normal text-foreground/90 shadow-2xs hover:bg-background hover:shadow-xs active:scale-98 transition-all"
+                    className="h-auto rounded-full border-[1.5px] border-[#17324d] bg-[#ffb010] px-3.5 py-1 text-left font-sans text-[13px] font-bold whitespace-normal text-[#2b251a] shadow-[0_2px_0_#17324d] hover:bg-[#f2a600] hover:-translate-y-0.5 active:translate-y-0 transition-all dark:border-[#ffb010] dark:bg-[#ffb010]/15 dark:text-[#ffb010] dark:shadow-none dark:hover:bg-[#ffb010] dark:hover:text-[#0b1826]"
                     onClick={() => handleInsertSuggestedPrompt(item.prompt)}
                     title={item.prompt}
                   >
                     {item.label}
-                  </Button>
+                  </button>
                 ))}
               </div>
             </div>
           )}
         </div>
       )}
-      <div className="rounded-2xl border border-border/60 bg-muted/25 p-2.5 shadow-2xs transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 focus-within:bg-muted/35">
+      <div className="rounded-2xl border-2 border-[#17324d] bg-[#fffefa] p-2.5 shadow-[0_4px_14px_rgba(23,50,77,0.08)] transition-all focus-within:border-[#17324d] focus-within:ring-2 focus-within:ring-[#ffb010]/50 dark:border-[#2b4a6b] dark:bg-[#13273c] dark:focus-within:border-[#ffb010]">
         <MessageInput
           ref={shareRef}
           value={message}
@@ -774,13 +771,13 @@ const Footer: FC<{ enableAi?: boolean; isEmbed?: boolean }> = ({ enableAi = true
             </div>
           </div>
           <Button
-            className="flex h-8 min-w-max shrink-0 items-center justify-center rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-2xs hover:bg-primary/90 hover:shadow-xs active:scale-95 transition-all"
+            className="flex h-8.5 min-w-max shrink-0 items-center justify-center rounded-xl border-[1.5px] border-[#17324d] bg-[#17324d] px-3.5 font-sans text-[13px] font-bold text-[#fff9e8] shadow-[0_2px_0_#0f2337] hover:bg-[#0f2337] active:translate-y-0.5 transition-all dark:border-[#ffb010] dark:bg-[#ffb010] dark:text-[#0b1826] dark:shadow-none dark:hover:bg-[#ffc03d]"
             size="sm"
             disabled={isSending || inputLoading}
             onClick={handleSend}
           >
             <span className="mr-1">{text.sendMessage}</span>
-            <CornerDownLeftIcon className="text-primary-foreground/80" size={11} />
+            <CornerDownLeftIcon className="text-current/80" size={11} />
           </Button>
         </div>
       </div>

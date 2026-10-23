@@ -55,9 +55,8 @@ const AvatarCircles = ({ className, avatarUrls, size, max = 10 }: AvatarCirclesP
       ))}
       <div
         className={cn(
-          'flex items-center justify-center rounded-full border-2 border-white bg-slate-600 text-center text-xs font-medium text-white dark:border-slate-800 p-1',
-          SizeVariants({ size }),
-          size === 'xs' && 'text-2xs'
+          'flex items-center justify-center rounded-full border-2 border-background bg-primary text-center text-xs font-semibold text-primary-foreground p-1',
+          SizeVariants({ size })
         )}
       >
         +{avatarUrls.length}

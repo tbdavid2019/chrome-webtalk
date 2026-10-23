@@ -1,7 +1,7 @@
 import { type FC, useEffect, useState } from 'react'
+import { SparklesIcon } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn, clamp } from '@/utils'
-import LogoIcon6 from '@/assets/images/logo-6.svg'
 import useDraggable from '@/hooks/useDraggable'
 import { useFloatingDockOffset } from '@/hooks/useFloatingDockOffset'
 
@@ -59,7 +59,7 @@ const AppSummaryButton: FC<AppSummaryButtonProps> = ({ className }) => {
         ref={dragRef}
         className="relative z-20 size-11 cursor-grab rounded-l-full rounded-r-none bg-yellow-400 p-0 text-xs shadow-lg shadow-yellow-500/50 after:absolute after:-inset-0.5 after:z-10 after:animate-[shimmer_2s_linear_infinite] after:rounded-l-full after:rounded-r-none after:bg-[conic-gradient(from_var(--shimmer-angle),theme(colors.yellow.500)_0%,theme(colors.white)_10%,theme(colors.yellow.500)_20%)] active:cursor-grabbing"
       >
-        <LogoIcon6 className="relative z-20 max-h-full max-w-full overflow-hidden" />
+        <SparklesIcon size={22} strokeWidth={2} className="relative z-20 text-ink" />
       </Button>
     </div>
   )

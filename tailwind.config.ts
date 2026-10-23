@@ -13,10 +13,29 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['JetBrainsMono', 'GenJyuuGothic', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Segoe UI', ...defaultTheme.fontFamily.sans]
+        sans: [
+          'var(--font-ui)',
+          'GenJyuuGothic',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'PingFang TC',
+          'Noto Sans TC',
+          'Microsoft JhengHei',
+          'Segoe UI',
+          ...defaultTheme.fontFamily.sans
+        ],
+        mono: ['JetBrainsMono', ...defaultTheme.fontFamily.mono]
       },
       fontSize: {
         '2xs': '0.625rem'
+      },
+      spacing: {
+        '8.5': '2.125rem',
+        '15': '3.75rem'
+      },
+      boxShadow: {
+        '2xs': '0 1px 2px 0 rgb(0 0 0 / 0.04)',
+        xs: '0 1px 3px 0 rgb(0 0 0 / 0.06)'
       },
       zIndex: {
         // Use an extremely high value so the extension always floats above site content
@@ -55,7 +74,20 @@ export default {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))'
-        }
+        },
+        saffron: {
+          DEFAULT: 'hsl(var(--saffron))',
+          hover: 'hsl(var(--saffron-hover))',
+          light: 'hsl(var(--saffron-light))'
+        },
+        'deep-blue': {
+          DEFAULT: 'hsl(var(--deep-blue))',
+          dark: 'hsl(var(--deep-blue-dark))'
+        },
+        clay: 'hsl(var(--clay))',
+        'warm-cream': 'hsl(var(--warm-cream))',
+        canvas: 'hsl(var(--canvas))',
+        ink: 'hsl(var(--ink))'
       },
       minWidth: {
         screen: '100vw'

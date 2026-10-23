@@ -11,7 +11,7 @@ export interface PanelModeSwitchProps {
 const PanelModeSwitch = ({ active, onChat, onAi, chatLabel, aiLabel }: PanelModeSwitchProps) => {
   return (
     <div
-      className="flex h-8 shrink-0 items-center rounded-lg border border-border/70 bg-muted/40 p-0.5 shadow-2xs"
+      className="flex h-8.5 shrink-0 items-center rounded-full border-[1.5px] border-[#17324d] bg-[#fff0cc] p-0.5 dark:border-[#2b4a6b] dark:bg-[#0c1927]"
       role="group"
       aria-label={`${chatLabel} / ${aiLabel}`}
     >
@@ -21,10 +21,10 @@ const PanelModeSwitch = ({ active, onChat, onAi, chatLabel, aiLabel }: PanelMode
         disabled={active === 'chat'}
         aria-pressed={active === 'chat'}
         className={cn(
-          'h-full rounded-md px-2.5 text-xs font-semibold leading-none transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+          'h-full rounded-full transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
           active === 'chat'
-            ? 'cursor-default bg-background text-foreground shadow-xs disabled:opacity-100'
-            : 'text-muted-foreground hover:text-foreground'
+            ? 'cursor-default rounded-full bg-[#17324d] px-3 font-sans text-xs font-bold text-[#fff9e8] shadow-2xs disabled:opacity-100 dark:bg-[#ffb010] dark:text-[#0b1826]'
+            : 'rounded-full px-3 font-sans text-xs font-bold text-[#2b251a]/75 hover:text-[#2b251a] dark:text-[#cbd5e1] dark:hover:text-[#fff9e8]'
         )}
         title={chatLabel}
       >
@@ -36,10 +36,10 @@ const PanelModeSwitch = ({ active, onChat, onAi, chatLabel, aiLabel }: PanelMode
         disabled={active === 'ai'}
         aria-pressed={active === 'ai'}
         className={cn(
-          'h-full rounded-md px-2.5 text-xs font-semibold leading-none transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+          'h-full rounded-full transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
           active === 'ai'
-            ? 'cursor-default bg-background text-foreground shadow-xs disabled:opacity-100'
-            : 'text-muted-foreground hover:text-foreground'
+            ? 'cursor-default rounded-full bg-[#17324d] px-3 font-sans text-xs font-bold text-[#fff9e8] shadow-2xs disabled:opacity-100 dark:bg-[#ffb010] dark:text-[#0b1826]'
+            : 'rounded-full px-3 font-sans text-xs font-bold text-[#2b251a]/75 hover:text-[#2b251a] dark:text-[#cbd5e1] dark:hover:text-[#fff9e8]'
         )}
         title={aiLabel}
       >

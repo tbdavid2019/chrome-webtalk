@@ -1,6 +1,132 @@
 # CHANGELOG
 
-## [2.4.4] - 2026-10-13
+## [2.8.0] - 2026-10-23
+
+### Fixed
+
+- **CSS Reset `all: initial !important` 排序錯誤修復 (`src/assets/styles/tailwind.css`)**：
+  - 修正 `:host` 中 `all: initial !important` 位於字型與顏色定義之後，導致 Shadow DOM 內部元件繼承 `initial` 預設字型（宋體 / 明體 / Times New Roman）的問題。
+  - 重構為優先執行 `all: initial !important`，並依序定義 `direction: ltr !important`、`visibility: visible !important`、`--font-ui`、14px 字級、1.5 行高、文字與背景顏色，且為 `#root, #app, *, *::before, *::after` 明確套用 `font-family: var(--font-ui)` 與 `box-sizing: border-box`。
+- **Chromium Shadow DOM `@font-face` 穿透與字型字重支援**：
+  - 在 `src/assets/styles/tailwind.css` 與 `src/app/content/index.tsx` 將 `@font-face` 的 `font-weight: 500` 調整為 `font-weight: 300 500`，使 400 (Normal) 與 500 (Medium) 原生套用內建字型檔不退回宋體，同時保留 600/700 粗體合成（Synthetic Bold）層次感。
+  - 在 content script 初始化時將字型樣式同步注入宿主網頁 `document.head`（`#webtalk-font-faces`），徹底解決 Chromium Shadow DOM 內部 `@font-face` 被瀏覽器引擎忽略導致的字型降級問題。
+- **字型堆疊、自訂字型偏好與等寬程式碼區塊保護**：
+  - 移除 `--font-ui`、`fontFamily.sans` 及 `DISPLAY_FONT_FAMILY_VALUES.webtalk` 最前端的 `JetBrainsMono`，改為以 `var(--font-ui)` 與 `GenJyuuGothic` 優先搭配系統無襯線字型，避免等寬英文字型與 CJK 混排產生字級落差與跳動，並完整保留使用者 `displayFontFamily` 字型偏好切換能力。
+  - 在 `tailwind.css` 的 `@layer base` 明確宣告 `code, kbd, samp, pre` 的 `JetBrainsMono` 等寬字型，並於 `SummaryPanel` 統一改用 `<Markdown>` 元件取代 `dangerouslySetInnerHTML`。
+  - 在 `App.tsx` 的 `#app` 根節點行內明確指定 `fontFamily: 'var(--font-ui)'`。
+- **HSL CSS 變數無效 Alpha 語法修復**：
+  - 修正 `--border`、`--input`、`--ring`、`--saffron-light` 內嵌 `/ alpha` 導致 Tailwind 編譯 `border-border/60` 產生無效 CSS `hsl(... / ... / ...)` 造成瀏覽器退回純黑線框（currentColor）的語法錯誤，全面回歸純淨 HSL 數值（`--border: 43 52% 66%` 等）。
+
+### Changed
+
+- **100% 視覺對齊 `david888.com` 與 `2md.aiurl.tw` 經典設計風格**：
+  - **浮動主面板（AppMain / SummaryPanel）**：加入標誌性左側立體深藍輪廓（`border-l-2 border-[#17324d] dark:border-[#2b4a6b]`）與多層次柔和深邃陰影（`shadow-[-12px_0_36px_rgba(23,50,77,0.16)]`）。
+  - **頂部 Header**：統一採用 3px 藏紅金識別頂線、暖奶油背景、`[15px]` 粗體無襯線網域標題，以及經典微立體膠囊控制按鈕（`border-[1.5px] border-[#17324d] bg-[#fffefa] shadow-[0_2px_0_#17324d]`）。
+  - **空狀態卡片（MessageList / SummaryPanel）**：對齊基準卡片設計，採用溫潤暖底 `bg-[#faefd4]/85`、左側暖陶土/藏紅雙重立體飾邊（`border-[1.5px] border-[#d6bc7c] border-l-4 border-l-[#a9471d] dark:border-[#2b4a6b] dark:border-l-4 dark:border-l-[#ffb010]`）、藏紅圖示徽章與 `[15px]` 標題。
+  - **推薦話題與問題膠囊**：全面採用品牌藏紅膠囊按鈕（`border-[1.5px] border-[#17324d] bg-[#ffb010] text-[#2b251a] shadow-[0_2px_0_#17324d]`），懸停微浮動反饋。
+  - **輸入框與送出按鈕**：採用高對比純白輸入底框（`border-2 border-[#17324d] bg-[#fffefa]`）搭配沈穩深藍主要送出按鈕（`bg-[#17324d] text-[#fff9e8] shadow-[0_2px_0_#0f2337]`）。
+  - **模式切換器（PanelModeSwitch）**：全面採用暖色圓角外框與深藍/藏紅雙態切換膠囊。
+
+### Build
+
+- 版本升級至 `2.8.0`。
+- 通過 TypeScript 類型檢查與所有單元測試（47/47 passed），未新增任何 Chrome 擴充功能權限。
+
+## [2.7.0] - 2026-10-23
+
+### Added
+
+- **宿主網頁環境與背景智慧感知（Host-Aware Adaptive Theme）**：
+  - 全面升級 `src/utils/checkDarkMode.ts`，實作四層環境感知瀑布流：
+    1. **第 1 層（顯式 DOM 標記）**：透過 `parseThemeToken` 詞彙邊界正規表達式檢查 `document.documentElement` 與 `document.body` 的 `classList`（`dark`/`light` 等）以及自訂主題屬性（`data-theme`、`data-color-mode`、`data-bs-theme` 等）。
+    2. **第 2 層（行內與 Computed `color-scheme`）**：支援 `dark`、`light`、`only dark`、`only light` 設定，並自動跳過雙向 `light dark` 宣告。
+    3. **第 3 層（真實背景色光學亮度演算）**：依序讀取 `body`、`documentElement` 與 SPA 根容器（`#app, #root, #__next, main`）背景色，將半透明色與白底合成後計算 ITU-R BT.601 感知亮度 `(0.299 * r + 0.587 * g + 0.114 * b) / 255`，`L < 0.5` 智慧判別為深色模式。
+    4. **第 4 層（作業系統偏好兜底）**：回退至 `prefers-color-scheme: dark` 媒體查詢。
+  - 新增 `subscribeDarkModeChange` 工具函式，結合 `MutationObserver`（含延遲掛載 `body` 自動補綁與 `requestAnimationFrame` 去重節流）與 `matchMedia`，當宿主網站（如 david888.com）切換主題時同一毫秒即時自動同步。
+  - 新增 `src/utils/checkDarkMode.test.ts` 單元測試，嚴格驗證詞彙邊界比對、RGB 色彩解析、半透明白底合成、感知亮度演算與訂閱清理。
+- **Multiplayer 零雜訊在線狀態哲學（Zero-Noise Presence）**：
+  - 聊天面板 Header 在僅有自己一人在線（`chatUserList.length <= 1`）時保持極致純淨，完全隱藏在線人數膠囊、數字與圓點。
+  - 僅當有其他訪客（`chatUserList.length >= 2`）時，優雅顯示精緻的 Lucide `<UsersIcon size={13} strokeWidth={1.8} />` 與人數標籤，點擊開啟在線成員清單與私聊視窗。
+
+### Changed
+
+- **頂級毛玻璃與 Bento 品牌 Header（2026 Linear / Arc 級別）**：
+  - 摒棄整片塗滿的色塊，全面改採現代高級毛玻璃面板（`backdrop-blur-xl bg-background/90 border-b border-border/60`）搭配頂部 Saffron `#ffb010` 藏紅金 2px 髮絲級光暈識別線。
+  - 左側 Favicon 圓角容器與網域名稱採用 JetBrains Mono 等寬字型（`font-mono text-xs font-semibold tracking-tight text-foreground`）。
+  - 右側整合為精緻的一體化 Action Capsule 控制組（主題切換、多人在線狀態、關閉按鈕）。
+- **AI 摘要面板（SummaryPanel）同步升級**：
+  - 同步換裝為頂級毛玻璃 + Saffron 髮絲光暈 Header，語言切換採用微型 Segmented Control，空狀態引導與操作按鈕全面換用標準 Lucide Icons。
+
+### Fixed
+
+- 修正 Options 設定頁面與 History 歷史紀錄頁面在主題為 `system` 時深淺色自動偵測與動態同步問題。
+- 修正 `checkDarkMode` 顯式屬性詞彙邊界比對（避免將 `highlight`、`twilight` 誤判為 `light`）。
+- 修正 Light Mode 下 `--primary` 文字對比度，維持 Deep Blue `#17324d`（13.13:1 WCAG AAA）與 Dark Mode Saffron `#ffb010`（9.69:1 WCAG AAA）。
+- 修正 `SummaryPanel` 在窄視窗（`< 440px`）下的 `max-w-full` 響應式防溢位保護。
+
+### Build
+
+- 版本升級至 `2.7.0`。重新產出 Chrome Extension、ZIP 離線包及 Embed 產出物，通過 47/47 單元測試與 Dual-Code-Review（Codex CLI + OpenCode CLI），無新增任何非必要權限。
+
+## [2.6.0] - 2026-10-23
+
+### Added
+
+- 新增作業系統深淺色模式動態監聽、面板頂部深淺切換按鈕，以及於 `AGENTS.md` 明訂全面採用 `lucide-react` 規範。
+
+### Changed
+
+- 調整預設字型堆疊順序為 `'JetBrainsMono', 'GenJyuuGothic'`，並將懸浮工具列全面換裝為 Lucide 圖示。
+
+### Build
+
+- 版本升級至 `2.6.0`，未新增任何 Chrome 權限。
+
+## [2.5.0] - 2026-10-23
+
+### Added
+
+- **全面導入 david888.com 與 2md.aiurl.tw 品牌經典設計體系**：
+  - 整合品牌核心五色（Saffron 藏紅金 `#ffb010`、Deep Blue 沉穩海軍深藍 `#17324d`、Clay 暖陶土磚紅 `#a9471d`、Warm Cream 溫潤暖奶油 `#fff9e8`、Ink 濃墨黑炭 `#2b251a`）與畫布色 Canvas `#fff0cc`。
+  - 在頂部 Header 與 AI 摘要面板置頂加入代表性的 Saffron 金黃漸層品牌識別線（`before:bg-gradient-to-r from-saffron via-saffron-hover to-saffron`）。
+  - 將網站安裝指南（`index.html` 與 `en.html`）全面換裝為 david888.com / 2md.aiurl.tw 風格，包含品牌 Saffron 標籤、深藍外框程式碼區塊、溫潤卡片與導覽列。
+  - 網頁版 HTML Meta `theme-color` 全面同步設定為品牌標準色 `#FFB010`。
+
+### Changed
+
+- **嚴格遵循 WCAG 2.1 對比度標準（AA 與 AAA 級全面達標）**：
+  - **淺色模式（Light Mode）**：
+    - 主文字（Ink `#2b251a`）於 Warm Cream 背景達成 **14.45:1** 對比度（遠超 WCAG AAA 的 7:1 標準）。
+    - 次要文字（`#594e36`）於 Warm Cream 達成 **7.78:1**、於 Canvas 達成 **7.24:1**（全數通過 WCAG AAA）。
+    - 主要互動元素採用 Deep Blue `#17324d`，前景色搭配 Warm Cream `#fff9e8` 達到 **13.13:1** 對比度（通過 AAA）。
+    - 徹底消除「黃底白字」無障礙地雷：在藏紅金 Saffron `#ffb010` 上的所有文字一律使用 Ink `#2b251a` 或 Deep Blue `#17324d`，達成 **8.30:1** 之 AAA 級高對比。
+    - 陶土紅 Clay `#a9471d` 於 Warm Cream 達成 **5.54:1** 對比度（通過 WCAG AA）。
+  - **深色模式（Dark Mode）**：
+    - 主文字 Warm Cream Ink `#fff9e8` 於 Dark Canvas `#0c1927` 達成 **16.86:1**（通過 AAA），於 Dark Surface `#13273c` 達成 **14.44:1**（通過 AAA）。
+    - 次要文字 Slate `#cbd5e1` 於 Dark Canvas 達成 **11.95:1**（通過 AAA）。
+    - 主要色 Saffron `#ffb010` 於暗色畫布達成 **9.69:1**（通過 AAA），其內部文字一律使用深墨黑 `#0b1826`（**9.78:1**，通過 AAA）。
+    - 次要色 Sky Blue `#7cc2ff` 達成 **7.97:1**（通過 AAA）。
+- **網頁版與 Chrome Extension 視覺完全同步**：
+  - 更新 Tailwind 設計 Token、Sonner Toast 彈窗樣式、選項頁面（Options）與歷史紀錄頁面（History），所有端點維持單一美學體驗。
+  - 將 Markdown 與設定表單內的低對比藍色連結改為具備底線、通過 WCAG AAA 的高可視度 `text-primary` 連結。
+  - 補強各個互動按鈕的鍵盤聚焦指示環（`focus-visible:ring-2 focus-visible:ring-ring`），提升鍵盤導航可訪問性。
+- **全面統一字體大小階層，消除字級忽大忽小與任意數值割裂**：
+  - 徹底清除所有零散的任意硬編碼微小字級（`text-[10px]`、`text-[10.5px]`、`text-[11.5px]`、`text-[13.5px]`、`text-[15px]`、`text-[0.72em]`、`text-[0.78em]`、`text-[0.9em]` 等）。
+  - 建立嚴謹協調的兩大核心閱讀級距：
+    - **正文與輸入階層（14px, `text-sm leading-relaxed`）**：訊息氣泡、輸入框打字、Markdown 渲染、AI 摘要與追問全面統一為 14px，打字與送出閱讀體感完全無縫一致。
+    - **次要標籤與元數據階層（12px, `text-xs`）**：時間戳記、微型徽章（AI / 私聊 / 在線人數）、標題副標、WebMCP 工具項目全面統一為 12px，不再有低於 12px 的極小字，杜絕視覺突兀感。
+    - **標題階層（14px, `text-sm font-semibold`）**：面板頂部標題與各分區標題維持舒適比例。
+
+### Fixed
+
+- 修正 Markdown 內超連結、API 設定申請連結與歷史紀錄卡片文字在不同主題下對比度不足（舊為 `text-blue-500` / `text-slate-500`）的問題。
+- 修正 Sonner 浮動提示框在深淺色模式下無法完全融入品牌主色的問題。
+- 修正輸入框計數字數與提示文字在接近上限時的色差警告對比度。
+
+### Build
+
+- Chrome Extension 與網站 Embed 建置版本同步至 2.5.0；未新增任何 Chrome 權限。
+- 通過自動化單元測試（39/39 passed）、TypeScript 語法檢查與 WCAG 嚴格色彩比對測試。
 
 ### Changed
 
