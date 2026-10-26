@@ -21,6 +21,13 @@ export { cleanURL, isAbsoluteURL, assembleURL, buildFullURL } from './url'
 export { requestAiChatReply } from './requestAiChatReply'
 export { requestPageSuggestions } from './requestPageSuggestions'
 export { loadAiApiConfig, requestAiCompletion } from './aiClient'
+export { testAiConnection } from './aiClient'
+export { fetchApiModels, parseApiModels } from './apiModels'
+export type { ApiModelOption } from './apiModels'
+export { API_PROVIDERS, getApiProvider, isApiProvider } from './apiProviders'
+export type { ApiProvider } from './apiProviders'
+export { loadApiProviderSettings, loadApiSettings, saveApiSettings } from './apiSettingsStorage'
+export type { ApiProviderProfile, ApiSettings } from './apiSettingsStorage'
 export {
   executeWebMcpTool,
   getWebMcpTools,

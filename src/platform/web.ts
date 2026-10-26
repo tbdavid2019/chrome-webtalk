@@ -1,4 +1,4 @@
-import type { PlatformAdapter, PlatformNotificationMessage, PlatformStorage, PlatformStorageArea } from './index'
+import type { PlatformAdapter, PlatformNotificationMessage, PlatformStorage, PlatformStorageArea } from './index.ts'
 
 const STORAGE_EVENT = 'webtalk-storage-change'
 const STORAGE_PREFIX = 'WEB_TALK_WEB:'

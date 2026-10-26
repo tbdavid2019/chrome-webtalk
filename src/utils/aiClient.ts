@@ -1,5 +1,6 @@
-import { getPlatform } from '@/platform'
-import type { AiToolDefinition } from './webmcp'
+import { getPlatform } from '../platform/index.ts'
+import { loadApiSettings, type ApiSettings } from './apiSettingsStorage.ts'
+import type { AiToolDefinition } from './webmcp.ts'
 
 export interface AiApiConfig {
   apiKey: string
@@ -55,18 +56,13 @@ export const loadAiApiConfig = async (): Promise<AiApiConfig> => {
     }
   }
 
-  const [groqApiKey, groqApiBaseURL, groqModelName, groqVisionModelName] = await Promise.all([
-    getPlatform().storage.get<string>('sync', 'groqApiKey'),
-    getPlatform().storage.get<string>('sync', 'groqApiBaseURL'),
-    getPlatform().storage.get<string>('sync', 'groqModelName'),
-    getPlatform().storage.get<string>('sync', 'groqVisionModelName')
-  ])
+  const settings = await loadApiSettings()
 
   return {
-    apiKey: String(groqApiKey || platformAi.apiKey || '').trim(),
-    baseURL: String(groqApiBaseURL || platformAi.endpoint).trim(),
-    model: String(groqModelName || platformAi.model).trim(),
-    visionModel: String(groqVisionModelName || platformAi.visionModel).trim()
+    apiKey: String(settings.apiKey || '').trim(),
+    baseURL: String(settings.apiBaseURL || platformAi.endpoint).trim(),
+    model: String(settings.apiModelName || platformAi.model).trim(),
+    visionModel: String(settings.apiVisionModelName || platformAi.visionModel).trim()
   }
 }
 
@@ -78,11 +74,13 @@ export const requestAiCompletion = async (input: {
   visionModel?: string
   route?: 'text' | 'vision'
   tools?: AiToolDefinition[]
+  maxTokens?: number
+  signal?: AbortSignal
 }): Promise<AiCompletionResult> => {
   const stored = await loadAiApiConfig()
   const isProxy = getPlatform().ai.mode === 'proxy'
   const apiKey = (input.apiKey || stored.apiKey).trim()
-  const baseURL = (input.baseURL || stored.baseURL).trim()
+  const baseURL = (input.baseURL || stored.baseURL).trim().replace(/\/+$/, '').replace(/\/models$/i, '').replace(/\/+$/, '')
   const preferredTextModel = (input.model || stored.model).trim()
   const preferredVisionModel = (input.visionModel || stored.visionModel).trim()
   const model = input.route === 'vision' ? preferredVisionModel : preferredTextModel
@@ -100,12 +98,21 @@ export const requestAiCompletion = async (input: {
     body: JSON.stringify({
       model,
       messages: input.messages,
+      ...(input.maxTokens ? { max_tokens: input.maxTokens } : {}),
       ...(input.tools?.length ? { tools: input.tools, tool_choice: 'auto' } : {}),
       ...(isProxy && input.route ? { route: input.route } : {})
-    })
+    }),
+    signal: input.signal
   })
 
-  const json = await response.json()
+  const responseText = await response.text()
+  let json: any
+  try {
+    json = responseText ? JSON.parse(responseText) : null
+  } catch {
+    const status = `HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`
+    throw new Error(response.ok ? `Invalid JSON response (${status})` : status)
+  }
 
   if (!response.ok) {
     const errorMessage = json?.error?.message || `HTTP ${response.status}`
@@ -122,4 +129,23 @@ export const requestAiCompletion = async (input: {
   }
 
   return { content, model: json?.model || model, toolCalls }
+}
+
+export const testAiConnection = async (settings: ApiSettings): Promise<void> => {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15_000)
+  try {
+    const result = await requestAiCompletion({
+      apiKey: settings.apiKey,
+      baseURL: settings.apiBaseURL,
+      model: settings.apiModelName,
+      visionModel: settings.apiVisionModelName,
+      messages: [{ role: 'user', content: 'Reply with OK only.' }],
+      maxTokens: 8,
+      signal: controller.signal
+    })
+    if (!result.content) throw new Error('API 回應沒有文字內容')
+  } finally {
+    clearTimeout(timeout)
+  }
 }

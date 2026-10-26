@@ -2,6 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSummarize } from '@/hooks/useSummarize'
 import html2canvas from 'html2canvas'
 import { getPlatform } from '@/platform'
+import {
+  loadApiProviderSettings,
+  loadApiSettings,
+  saveApiSettings as persistApiSettings
+} from '@/utils/apiSettingsStorage'
+import { testAiConnection } from '@/utils/aiClient'
+import { API_PROVIDERS, getApiProvider, type ApiProvider } from '@/utils/apiProviders'
+import { fetchApiModels, type ApiModelOption } from '@/utils/apiModels'
 import type { MobilePlacement } from '@/app/embed/options'
 import { resolveEmbedPanelStyle } from '@/app/content/views/AppMain/panelStyle'
 import { Input } from '@/components/ui/Input'
@@ -214,9 +222,16 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
   const { summarize, loading, summary, clearSummary, restoreSummary } = useSummarize()
   const [pageText, setPageText] = useState('')
   const [apiKey, setApiKey] = useState(defaultApiKey)
+  const [apiProvider, setApiProvider] = useState<ApiProvider>('groq')
   const [apiBaseURL, setApiBaseURL] = useState(defaultApiBaseURL)
   const [apiModelName, setApiModelName] = useState(defaultModelName)
+  const [apiVisionModelName, setApiVisionModelName] = useState(aiConfig.visionModel)
+  const [availableModels, setAvailableModels] = useState<ApiModelOption[]>([])
+  const [modelsLoading, setModelsLoading] = useState(false)
+  const [providerLoading, setProviderLoading] = useState(false)
   const [showApiSettings, setShowApiSettings] = useState(false)
+  const [apiSettingsSaving, setApiSettingsSaving] = useState(false)
+  const [apiConnectionStatus, setApiConnectionStatus] = useState('')
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
@@ -348,49 +363,123 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
   useEffect(() => {
     if (aiProxyEnabled) return
 
-    Promise.all([
-      getPlatform().storage.get<string>('sync', 'groqApiKey'),
-      getPlatform().storage.get<string>('sync', 'groqApiBaseURL'),
-      getPlatform().storage.get<string>('sync', 'groqModelName')
-    ])
-      .then(([groqApiKey, groqApiBaseURL, groqModelName]) => {
-        if (typeof groqApiKey === 'string') {
-          setApiKey(groqApiKey)
-        }
-        if (typeof groqApiBaseURL === 'string') {
-          setApiBaseURL(groqApiBaseURL)
-        }
-        if (typeof groqModelName === 'string') {
-          setApiModelName(groqModelName)
-        }
+    loadApiSettings()
+      .then((settings) => {
+        setApiProvider(settings.provider)
+        setApiKey(settings.apiKey)
+        setApiBaseURL(settings.apiBaseURL)
+        setApiModelName(settings.apiModelName)
+        setApiVisionModelName(settings.apiVisionModelName)
       })
       .catch((error) => {
         console.error('[WebTalk] ❌ 獲取 API key 失敗', error)
       })
   }, [aiProxyEnabled])
 
-  // 保存 API 設置
-  const saveApiSettings = () => {
-    const trimmedApiKey = apiKey.trim()
-    const trimmedBaseURL = apiBaseURL.trim() || defaultApiBaseURL
-    const trimmedModelName = apiModelName.trim() || defaultModelName
+  const handleProviderChange = async (provider: ApiProvider) => {
+    setProviderLoading(true)
+    setApiProvider(provider)
+    setAvailableModels([])
+    setApiConnectionStatus('')
+    try {
+      const settings = await loadApiProviderSettings(provider)
+      setApiKey(settings.apiKey)
+      setApiBaseURL(settings.apiBaseURL)
+      setApiModelName(settings.apiModelName)
+      setApiVisionModelName(settings.apiVisionModelName)
+    } catch (error) {
+      console.error('[WebTalk] ❌ 無法載入供應商設定', error)
+      setApiKey('')
+      setApiBaseURL(getApiProvider(provider).baseURL)
+      setApiModelName('')
+      setApiVisionModelName('')
+      setApiConnectionStatus('無法載入此供應商的已保存設定。')
+    } finally {
+      setProviderLoading(false)
+    }
+  }
 
-    Promise.all([
-      getPlatform().storage.set('sync', 'groqApiKey', trimmedApiKey),
-      getPlatform().storage.set('sync', 'groqApiBaseURL', trimmedBaseURL),
-      getPlatform().storage.set('sync', 'groqModelName', trimmedModelName)
-    ])
-      .then(() => {
-        setApiKey(trimmedApiKey)
-        setApiBaseURL(trimmedBaseURL)
-        setApiModelName(trimmedModelName)
-        setShowApiSettings(false)
-        alert('✅ API 設置已保存')
+  const handleFetchModels = async () => {
+    setModelsLoading(true)
+    setApiConnectionStatus('正在驗證 API Key 並取得模型…')
+    try {
+      const models = await fetchApiModels({
+        provider: apiProvider,
+        apiKey,
+        apiBaseURL,
+        apiModelName,
+        apiVisionModelName: apiVisionModelName || apiModelName
       })
-      .catch((error) => {
-        console.error('[WebTalk] ❌ 保存 API key 失敗', error)
-        alert('❌ API 設置保存失敗')
-      })
+      setAvailableModels(models)
+      setApiConnectionStatus(`已取得 ${models.length} 個模型。`)
+      if (!models.some((model) => model.id === apiModelName)) setApiModelName(models[0].id)
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error)
+      setAvailableModels([])
+      setApiConnectionStatus(`取得模型失敗：${detail}`)
+    } finally {
+      setModelsLoading(false)
+    }
+  }
+
+  const cancelApiSettings = async () => {
+    try {
+      const settings = await loadApiSettings()
+      setApiProvider(settings.provider)
+      setApiKey(settings.apiKey)
+      setApiBaseURL(settings.apiBaseURL)
+      setApiModelName(settings.apiModelName)
+      setApiVisionModelName(settings.apiVisionModelName)
+    } catch (error) {
+      console.error('[WebTalk] ❌ 重新載入 API 設定失敗', error)
+    }
+    setApiConnectionStatus('')
+    setAvailableModels([])
+    setShowApiSettings(false)
+  }
+
+  // 保存 API 設置
+  const saveApiSettings = async () => {
+    const trimmedApiKey = apiKey.trim()
+    const trimmedBaseURL = apiBaseURL.trim()
+    const trimmedModelName = apiModelName.trim()
+    if (!trimmedApiKey || !trimmedBaseURL || !trimmedModelName) {
+      setApiConnectionStatus('請填寫 API Key、Base URL 和模型名稱。')
+      return
+    }
+
+    const settings = {
+      provider: apiProvider,
+      apiKey: trimmedApiKey,
+      apiBaseURL: trimmedBaseURL,
+      apiModelName: trimmedModelName,
+      apiVisionModelName: apiVisionModelName.trim() || trimmedModelName
+    }
+    setApiSettingsSaving(true)
+    setApiConnectionStatus('')
+    try {
+      await persistApiSettings(settings)
+      setApiKey(trimmedApiKey)
+      setApiBaseURL(trimmedBaseURL)
+      setApiModelName(trimmedModelName)
+    } catch (error) {
+      console.error('[WebTalk] ❌ 保存 API key 失敗', error)
+      setApiConnectionStatus('API 設定無法保存，請檢查瀏覽器儲存空間。')
+      setApiSettingsSaving(false)
+      return
+    }
+
+    setApiConnectionStatus('設定已保存，正在測試 API 連線…')
+    try {
+      await testAiConnection(settings)
+      setApiConnectionStatus('API 連線測試成功，設定已保存。')
+    } catch (error) {
+      console.error('[WebTalk] ❌ API 連線測試失敗', error)
+      const detail = error instanceof Error ? error.message : String(error)
+      setApiConnectionStatus(`設定已保存，但 API 測試失敗：${detail}`)
+    } finally {
+      setApiSettingsSaving(false)
+    }
   }
 
   useEffect(() => {
@@ -727,14 +816,16 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
             >
               {text.history}
             </button>
-            <button
-              onClick={() => setShowApiSettings(!showApiSettings)}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#17324d] bg-[#fffefa] text-[#2b251a] transition-all hover:bg-[#ffb010] active:translate-y-0.5 shadow-[0_2px_0_#17324d] dark:border-[#2b4a6b] dark:bg-[#1b3450] dark:text-[#fff9e8] dark:shadow-none dark:hover:border-[#ffb010] dark:hover:bg-[#ffb010] dark:hover:text-[#0b1826]"
-              title="API setting 設置"
-              aria-label="API setting 設置"
-            >
-              <SettingsIcon size={14} strokeWidth={1.8} aria-hidden="true" />
-            </button>
+            {!aiProxyEnabled && (
+              <button
+                onClick={() => setShowApiSettings(!showApiSettings)}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#17324d] bg-[#fffefa] text-[#2b251a] transition-all hover:bg-[#ffb010] active:translate-y-0.5 shadow-[0_2px_0_#17324d] dark:border-[#2b4a6b] dark:bg-[#1b3450] dark:text-[#fff9e8] dark:shadow-none dark:hover:border-[#ffb010] dark:hover:bg-[#ffb010] dark:hover:text-[#0b1826]"
+                title="API setting 設置"
+                aria-label="API setting 設置"
+              >
+                <SettingsIcon size={14} strokeWidth={1.8} aria-hidden="true" />
+              </button>
+            )}
             <button
               onClick={onClose}
               className="flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[#17324d] bg-[#fffefa] text-[#2b251a] transition-all hover:bg-[#ffb010] active:translate-y-0.5 shadow-[0_2px_0_#17324d] dark:border-[#2b4a6b] dark:bg-[#1b3450] dark:text-[#fff9e8] dark:shadow-none dark:hover:border-[#ffb010] dark:hover:bg-[#ffb010] dark:hover:text-[#0b1826]"
@@ -748,26 +839,38 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
 
         <div className="flex min-h-0 flex-1 flex-col justify-between space-y-3 bg-background p-4 max-sm:space-y-2 max-sm:p-3">
           {showApiSettings && (
-            <div className="shrink-0 space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+            <div className="max-h-[70vh] shrink-0 space-y-3 overflow-y-auto rounded-xl border border-border bg-muted/30 p-4 pr-3">
               <h3 className="text-sm font-semibold text-foreground">API setting</h3>
+              <div className="space-y-2">
+                <Label htmlFor="api-provider-summary" className="text-sm text-foreground/80">Provider / 服務供應商</Label>
+                <select
+                  id="api-provider-summary"
+                  value={apiProvider}
+                  disabled={providerLoading || apiSettingsSaving}
+                  onChange={(event) => void handleProviderChange(event.target.value as ApiProvider)}
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  {API_PROVIDERS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+                </select>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="api-key" className="text-sm text-foreground/80 flex items-center justify-between">
                   <span>
-                    Groq API Key <span className="text-destructive">*</span>
+                    {getApiProvider(apiProvider).label} API Key <span className="text-destructive">*</span>
                   </span>
-                  <a
-                    href="https://console.groq.com/"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs text-primary font-semibold underline underline-offset-2 hover:opacity-80"
-                  >
-                    申請 API Key
-                  </a>
+                  {getApiProvider(apiProvider).keyURL && (
+                    <a
+                      href={getApiProvider(apiProvider).keyURL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-primary font-semibold underline underline-offset-2 hover:opacity-80"
+                    >申請 API Key</a>
+                  )}
                 </Label>
                 <Input
                   id="api-key"
                   type="password"
-                  placeholder="your Groq API Key / 請輸入 Groq API Key"
+                  placeholder={`請輸入 ${getApiProvider(apiProvider).label} API Key`}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   className="text-sm"
@@ -780,40 +883,70 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                 </Label>
                 <Input
                   id="api-base-url"
-                  placeholder="API base URL"
+                  placeholder={getApiProvider(apiProvider).baseURL || 'https://your-api.example/v1'}
                   value={apiBaseURL}
                   onChange={(e) => setApiBaseURL(e.target.value)}
                   className="text-sm"
                 />
-                <p className="text-xs text-muted-foreground">預設default: {defaultApiBaseURL}</p>
+                <p className="text-xs text-muted-foreground">
+                  預設：{getApiProvider(apiProvider).baseURL || '請輸入 OpenAI 相容 API 端點'}
+                </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="api-model-name" className="text-sm text-foreground/80">
-                  模型名稱 / Model Name
-                </Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="api-model-name" className="text-sm text-foreground/80">模型名稱 / Model Name</Label>
+                  <button
+                    type="button"
+                    onClick={handleFetchModels}
+                    disabled={modelsLoading || providerLoading || apiSettingsSaving}
+                    className="rounded-md border border-border bg-background px-3 py-1 text-xs text-foreground hover:bg-muted disabled:opacity-50"
+                  >{modelsLoading ? '讀取中…' : '取得模型'}</button>
+                </div>
                 <Input
                   id="api-model-name"
-                  placeholder="模型名稱"
+                  list="api-model-options-summary"
+                  placeholder="從模型清單選擇，或輸入模型 ID"
                   value={apiModelName}
                   onChange={(e) => setApiModelName(e.target.value)}
                   className="text-sm"
                 />
-                <p className="text-xs text-muted-foreground">預設: {defaultModelName}</p>
+                <datalist id="api-model-options-summary">
+                  {availableModels.map((model) => <option key={model.id} value={model.id}>{model.name || model.id}</option>)}
+                </datalist>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="api-vision-model-name" className="text-sm text-foreground/80">視覺模型（選填）</Label>
+                <Input
+                  id="api-vision-model-name"
+                  list="api-model-options-summary"
+                  placeholder="留白時沿用文字模型"
+                  value={apiVisionModelName}
+                  onChange={(event) => setApiVisionModelName(event.target.value)}
+                  className="text-sm"
+                />
+              </div>
+              {apiProvider === 'openai' && <p className="text-xs text-muted-foreground">OpenAI API 需另外計費；ChatGPT 訂閱不包含 API 額度。</p>}
               <div className="flex justify-end gap-2">
                 <button
-                  onClick={() => setShowApiSettings(false)}
+                  onClick={cancelApiSettings}
+                  disabled={apiSettingsSaving || providerLoading}
                   className="rounded-md border border-border bg-background px-4 py-1.5 text-sm text-foreground hover:bg-muted"
                 >
                   取消
                 </button>
                 <button
                   onClick={saveApiSettings}
-                  className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  disabled={apiSettingsSaving || providerLoading}
+                  className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
                 >
-                  保存
+                  {apiSettingsSaving ? '保存並測試中…' : '保存並測試'}
                 </button>
               </div>
+              {apiConnectionStatus && (
+                <p role="status" aria-live="polite" className="text-xs text-muted-foreground">
+                  {apiConnectionStatus}
+                </p>
+              )}
             </div>
           )}
 

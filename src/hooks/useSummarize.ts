@@ -52,7 +52,7 @@ ${bulletPointInstruction}
       setLoading(false)
       const message = error instanceof Error ? error.message : String(error)
       throw new Error(
-        `API呼叫失敗 (${message})。這可能是因為 API Key、模型或內容長度設定有誤。請檢查 Groq API 設定。`
+        `API 呼叫失敗 (${message})。這可能是因為 API Key、模型或內容長度設定有誤。請檢查 AI 服務設定。`
       )
     }
   }

@@ -1,4 +1,4 @@
-import { createWebPlatform } from './web'
+import { createWebPlatform } from './web.ts'
 
 export type PlatformStorageArea = 'local' | 'sync'
 

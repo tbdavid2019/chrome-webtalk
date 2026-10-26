@@ -1,5 +1,113 @@
 # CHANGELOG
 
+## [2.8.6] - 2026-10-26
+
+### Fixed
+
+- 修正 AI 服務回傳 HTML 或其他非 JSON 錯誤內容時，只顯示 JSON 解析錯誤的問題。
+- 修正 Base URL 以 `/models/` 結尾時，聊天請求端點路徑錯誤的問題。
+
+### Build
+
+- 版本升級至 `2.8.6`。
+- 未新增 Chrome 權限。
+
+## [2.8.5] - 2026-10-26
+
+### Fixed
+
+- 修正已選擇的非 Groq 供應商在 Key 為空時，可能誤用 Groq 起始 Key 的問題。
+- 修正 API 設定載入完成前按「重設」會清空預填 Groq Key 的問題。
+
+### Build
+
+- 版本升級至 `2.8.5`。
+- 未新增 Chrome 權限。
+
+## [2.8.4] - 2026-10-26
+
+### Added
+
+- 新安裝預填免費 Groq 起始 API Key，讓使用者可先體驗 AI 摘要與對話。
+- 為各供應商分別保存 API Key、Base URL、文字與視覺模型，切換後可回復該供應商設定。
+
+### Changed
+
+- 保留內附 Groq 起始額度；額度用完或 Key 失效時，可改用自己的 Groq Key 或切換其他 BYOK 供應商。
+- Embed proxy 模式隱藏不會生效的 BYOK 設定入口；模型清單錯誤可讀取非 JSON HTTP 回應狀態。
+
+### Fixed
+
+- 修正多供應商設定更新時意外移除免費 Groq 起始 Key 的問題。
+- 新增 API 設定遷移、供應商設定保留、模型清單解析與短連線測試的單元測試。
+
+### Build
+
+- 版本升級至 `2.8.4`。
+- 未新增 Chrome 權限。
+
+## [2.8.3] - 2026-10-26
+
+### Added
+
+- BYOK 支援 Groq、Google Gemini、xAI Grok、OpenAI API、DeepSeek、OpenRouter，以及自訂 OpenAI 相容端點。
+- 新增「取得模型」功能，以目前供應商的 API Key 載入可用模型，並可套用到文字與視覺模型欄位。
+
+### Changed
+
+- API Key 欄位會隨供應商切換；切換供應商時清空舊 Key 與模型，避免把憑證送到錯誤服務。
+- 多供應商設定明確區分 OpenAI API 費用與 ChatGPT 訂閱。
+- API 錯誤訊息改為通用 AI 服務設定說明。
+
+### Fixed
+
+- 修正 AI 設定介面僅能設定 Groq，無法使用其他 OpenAI 相容服務的限制。
+
+### Build
+
+- 版本升級至 `2.8.3`。
+- 未新增 Chrome 權限。
+
+## [2.8.2] - 2026-10-26
+
+### Added
+
+- BYOK API 設定保存後自動發送短測試請求，驗證 API Key、Base URL 與文字模型，並回報測試結果。
+- 測試請求限制輸出長度並設有 15 秒逾時；保存成功與連線測試失敗會分開顯示。
+
+### Changed
+
+- AI 空間與 Options 設定頁的按鈕改為「保存並測試」，測試失敗時保留設定畫面以便修正。
+
+### Fixed
+
+- 修正 API 設定保存成功後無法立即確認金鑰／模型是否可用的問題。
+
+### Build
+
+- 版本升級至 `2.8.2`。
+- 未新增 Chrome 權限。
+
+## [2.8.1] - 2026-10-26
+
+### Added
+
+- BYOK API 設定提供本機保存，讓個人 API Key 不會透過 Chrome Sync 同步到其他裝置。
+
+### Fixed
+
+- 修正 BYOK API 設定因 Chrome Sync 儲存限制而無法保存的問題；API 金鑰與模型設定改存本機 `storage.local`。
+- 首次載入時相容讀取舊版 `storage.sync` 設定，成功遷移後清除舊同步項目；不新增 Chrome 權限。
+
+### Changed
+
+- Options 與 AI 空間共用同一套 API 設定讀寫流程，避免兩處設定不一致。
+
+### Build
+
+- 版本升級至 `2.8.1`。
+- 未新增 Chrome 權限。
+
 ## [2.8.0] - 2026-10-23
 
 ### Fixed

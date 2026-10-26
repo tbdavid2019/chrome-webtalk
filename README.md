@@ -38,6 +38,7 @@ WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webta
 
 ## 🆕 近期更新
 
+- 🔑 **多供應商 BYOK 與 Groq 免費起始額度 (v2.8.6)**：新安裝預填免費 Groq 起始 Key，先體驗摘要與對話；額度用完或 Key 失效時，可申請自己的 Groq Key，或切換 Google Gemini、xAI Grok、OpenAI API、DeepSeek、OpenRouter 及自訂 OpenAI 相容端點。各供應商的 Key 和模型會分開保存在目前裝置；按「取得模型」載入可用模型，保存後會執行短連線測試。修正空白的其他供應商設定不再誤用 Groq Key，設定載入前按重設會保留起始 Key，且非 JSON API 錯誤能顯示 HTTP 狀態、`/models/` Base URL 可正確呼叫聊天 API。Embed proxy 不提供無效的 BYOK 設定入口。OpenAI API 另計費，ChatGPT 訂閱不含 API 額度。未新增 Chrome 權限。
 - 🎨 **修復 CSS Reset、字型洩漏與邊框語法錯誤，100% 完整對齊 david888.com / 2md.aiurl.tw 視覺標準 (v2.8.0)**：
   - **CSS Reset 順序與字型繼承徹底修復**：修正 `all: initial !important` 執行次序，優先執行 reset 並注入 `--font-ui`、14px 字級、1.5 行高及語意色，杜絕 Shadow DOM 內部元件繼承系統預設字型（宋體 / Times New Roman）的問題。
   - **Chromium Shadow DOM `@font-face` 穿透與字重校準**：將 `@font-face` 的 `font-weight` 設為 `300 500`（兼顧 400/500 原生渲染與 600/700 粗體合成層次），並在 Content Script 初始化時將樣式同步注入 `document.head`，解決 Chromium 忽略 ShadowRoot 內 `@font-face` 的問題。
@@ -193,7 +194,7 @@ pnpm build
 - **房間如何形成**：內容腳本會把 `location.host` 轉十六進位作為房號（`src/domain/impls/ChatRoom.ts`），同一個網域的使用者都連到同一房間。
 - **即時傳輸**：Website 與 Extension 的公開訊息都走 WebRTC DataChannel；不再使用 Vercel WebSocket relay。
 - **歷史同步**：每個節點本地保留完整訊息；新 peer 加入時，舊 peer 依最後訊息時間批次推送近 `SYNC_HISTORY_MAX_DAYS`（預設 3 天）的紀錄，避免漏掉談話（`src/domain/ChatRoom.ts:332-470`）。
-- **本地儲存**：訊息歷史使用 IndexedDB；使用者設定使用 `chrome.storage.sync` 同步，頭像與不同網站頭像使用 `chrome.storage.local` 保存。這樣可避免頭像資料超過 Chrome Sync 的單筆容量限制。
+- **本地儲存**：訊息歷史使用 IndexedDB；一般使用者設定使用 `chrome.storage.sync` 同步，頭像、不同網站頭像及 BYOK API 設定使用 `chrome.storage.local` 保存。API 金鑰只留在目前裝置，不會透過 Chrome Sync 複製到其他裝置。
 
 ---
 

@@ -2,7 +2,6 @@ import { FC, useEffect, useState } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Button } from '@/components/ui/Button'
-import { browser } from 'wxt/browser'
 import { ToastImpl } from '@/domain/impls/Toast'
 import {
   FALLBACK_GROQ_API_KEY,
@@ -10,6 +9,10 @@ import {
   FALLBACK_GROQ_MODEL,
   FALLBACK_GROQ_VISION_MODEL
 } from '@/constants/apiDefaults'
+import { loadApiProviderSettings, loadApiSettings, saveApiSettings } from '@/utils/apiSettingsStorage'
+import { testAiConnection } from '@/utils/aiClient'
+import { API_PROVIDERS, getApiProvider, type ApiProvider } from '@/utils/apiProviders'
+import { fetchApiModels, type ApiModelOption } from '@/utils/apiModels'
 
 const DEFAULT_BASE_URL = FALLBACK_GROQ_BASE_URL
 const DEFAULT_MODEL = FALLBACK_GROQ_MODEL
@@ -17,28 +20,29 @@ const DEFAULT_VISION_MODEL = FALLBACK_GROQ_VISION_MODEL
 
 const ApiSettingsForm: FC = () => {
   const toast = ToastImpl.value
+  const [provider, setProvider] = useState<ApiProvider>('groq')
   const [apiKey, setApiKey] = useState(FALLBACK_GROQ_API_KEY)
   const [apiBaseURL, setApiBaseURL] = useState(DEFAULT_BASE_URL)
   const [apiModelName, setApiModelName] = useState(DEFAULT_MODEL)
   const [apiVisionModelName, setApiVisionModelName] = useState(DEFAULT_VISION_MODEL)
   const [loading, setLoading] = useState(false)
+  const [providerLoading, setProviderLoading] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState('')
+  const [models, setModels] = useState<ApiModelOption[]>([])
+  const [modelsLoading, setModelsLoading] = useState(false)
+  const [modelsStatus, setModelsStatus] = useState('')
   const [savedValues, setSavedValues] = useState({
-    apiKey: '',
+    provider: 'groq' as ApiProvider,
+    apiKey: FALLBACK_GROQ_API_KEY,
     apiBaseURL: DEFAULT_BASE_URL,
     apiModelName: DEFAULT_MODEL,
     apiVisionModelName: DEFAULT_VISION_MODEL
   })
 
   useEffect(() => {
-    browser.storage.sync
-      .get(['groqApiKey', 'groqApiBaseURL', 'groqModelName', 'groqVisionModelName'])
-      .then((res: Record<string, any>) => {
-        const nextValues = {
-          apiKey: (res.groqApiKey as string) ?? FALLBACK_GROQ_API_KEY,
-          apiBaseURL: (res.groqApiBaseURL as string) ?? DEFAULT_BASE_URL,
-          apiModelName: (res.groqModelName as string) ?? DEFAULT_MODEL,
-          apiVisionModelName: (res.groqVisionModelName as string) ?? DEFAULT_VISION_MODEL
-        }
+    loadApiSettings()
+      .then((nextValues) => {
+        setProvider(nextValues.provider)
         setApiKey(nextValues.apiKey)
         setApiBaseURL(nextValues.apiBaseURL)
         setApiModelName(nextValues.apiModelName)
@@ -52,10 +56,62 @@ const ApiSettingsForm: FC = () => {
   }, [toast])
 
   const handleReset = () => {
+    setProvider(savedValues.provider)
     setApiKey(savedValues.apiKey)
     setApiBaseURL(savedValues.apiBaseURL)
     setApiModelName(savedValues.apiModelName)
     setApiVisionModelName(savedValues.apiVisionModelName)
+    setModels([])
+    setModelsStatus('')
+    setConnectionStatus('')
+  }
+
+  const handleProviderChange = async (nextProvider: ApiProvider) => {
+    setProviderLoading(true)
+    setProvider(nextProvider)
+    setModels([])
+    setModelsStatus('')
+    setConnectionStatus('')
+    try {
+      const settings = await loadApiProviderSettings(nextProvider)
+      setApiKey(settings.apiKey)
+      setApiBaseURL(settings.apiBaseURL)
+      setApiModelName(settings.apiModelName)
+      setApiVisionModelName(settings.apiVisionModelName)
+    } catch (error) {
+      console.error('[WebTalk] 無法載入供應商設定', error)
+      setApiKey('')
+      setApiBaseURL(getApiProvider(nextProvider).baseURL)
+      setApiModelName('')
+      setApiVisionModelName('')
+      setModelsStatus('無法載入此供應商的已保存設定。')
+    } finally {
+      setProviderLoading(false)
+    }
+  }
+
+  const handleFetchModels = async () => {
+    const nextValues = {
+      provider,
+      apiKey: apiKey.trim(),
+      apiBaseURL: apiBaseURL.trim(),
+      apiModelName: apiModelName.trim(),
+      apiVisionModelName: apiVisionModelName.trim() || DEFAULT_VISION_MODEL
+    }
+    setModelsLoading(true)
+    setModelsStatus('正在驗證 API Key 並取得模型…')
+    try {
+      const availableModels = await fetchApiModels(nextValues)
+      setModels(availableModels)
+      setModelsStatus(`已取得 ${availableModels.length} 個模型。`)
+      if (!availableModels.some((model) => model.id === apiModelName)) setApiModelName(availableModels[0].id)
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error)
+      setModels([])
+      setModelsStatus(`取得模型失敗：${detail}`)
+    } finally {
+      setModelsLoading(false)
+    }
   }
 
   const handleSave = async () => {
@@ -63,25 +119,40 @@ const ApiSettingsForm: FC = () => {
       toast.error('Please enter API Key / 請輸入 API Key')
       return
     }
+    if (!apiBaseURL.trim() || !apiModelName.trim()) {
+      toast.error('Please enter an API Base URL and model / 請填寫 API Base URL 與模型名稱')
+      return
+    }
     setLoading(true)
+    setConnectionStatus('')
+    const nextValues = {
+      provider,
+      apiKey: apiKey.trim(),
+      apiBaseURL: apiBaseURL.trim(),
+      apiModelName: apiModelName.trim(),
+      apiVisionModelName: apiVisionModelName.trim() || apiModelName.trim()
+    }
     try {
-      await browser.storage.sync.set({
-        groqApiKey: apiKey.trim(),
-        groqApiBaseURL: apiBaseURL.trim() || DEFAULT_BASE_URL,
-        groqModelName: apiModelName.trim() || DEFAULT_MODEL,
-        groqVisionModelName: apiVisionModelName.trim() || DEFAULT_VISION_MODEL
-      })
-      const nextValues = {
-        apiKey: apiKey.trim(),
-        apiBaseURL: apiBaseURL.trim() || DEFAULT_BASE_URL,
-        apiModelName: apiModelName.trim() || DEFAULT_MODEL,
-        apiVisionModelName: apiVisionModelName.trim() || DEFAULT_VISION_MODEL
-      }
+      await saveApiSettings(nextValues)
       setSavedValues(nextValues)
-      toast.success('API settings saved! / API 設定已保存')
     } catch (error) {
       console.error('[WebTalk] 無法保存 API 設定', error)
       toast.error('Failed to save API settings / API 設定保存失敗')
+      setConnectionStatus('設定無法保存，請檢查瀏覽器儲存空間。')
+      setLoading(false)
+      return
+    }
+
+    setConnectionStatus('設定已保存，正在測試 API 連線…')
+    try {
+      await testAiConnection(nextValues)
+      setConnectionStatus('API 連線測試成功，設定已保存。')
+      toast.success('API connection test passed / API 連線測試成功')
+    } catch (error) {
+      console.error('[WebTalk] API 連線測試失敗', error)
+      const detail = error instanceof Error ? error.message : String(error)
+      setConnectionStatus(`設定已保存，但 API 測試失敗：${detail}`)
+      toast.error('Settings saved, but API connection test failed / 設定已保存，但 API 連線測試失敗')
     } finally {
       setLoading(false)
     }
@@ -92,28 +163,42 @@ const ApiSettingsForm: FC = () => {
       <div>
         <h2 className="text-xl font-semibold">API setting / AI 服務設定</h2>
         <p className="text-sm text-muted-foreground">
-          設定 Groq API Key 與模型參數，供 AI 摘要與對話使用。您可以前往{' '}
-          <a
-            href="https://console.groq.com/"
-            target="_blank"
-            rel="noreferrer"
-            className="text-primary hover:underline font-semibold"
-          >
-            Groq Console
-          </a>{' '}
-          取得 API Key。
+          選擇 AI 服務供應商，輸入 API Key 後可取得該金鑰可用的模型。OpenAI API 需另外計費，ChatGPT 訂閱不包含 API 額度。
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label className="font-semibold">
-          Groq API Key <span className="text-destructive">*</span>
+        <Label htmlFor="api-provider" className="font-semibold">Provider / 服務供應商</Label>
+        <select
+          id="api-provider"
+          value={provider}
+          disabled={providerLoading || loading}
+          onChange={(event) => void handleProviderChange(event.target.value as ApiProvider)}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          {API_PROVIDERS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="api-key" className="font-semibold flex items-center justify-between">
+          <span>{getApiProvider(provider).label} API Key <span className="text-destructive">*</span></span>
+          {getApiProvider(provider).keyURL && (
+            <a href={getApiProvider(provider).keyURL} target="_blank" rel="noreferrer" className="text-primary hover:underline font-semibold">
+              取得 API Key
+            </a>
+          )}
         </Label>
         <Input
+          id="api-key"
           type="password"
           value={apiKey}
-          placeholder="your Groq API key / 請輸入 Groq API Key"
-          onChange={(event) => setApiKey(event.target.value)}
+          placeholder={`請輸入 ${getApiProvider(provider).label} API Key`}
+          onChange={(event) => {
+            setApiKey(event.target.value)
+            setModels([])
+            setModelsStatus('')
+          }}
         />
       </div>
 
@@ -121,40 +206,62 @@ const ApiSettingsForm: FC = () => {
         <Label className="font-semibold">API Base URL / 伺服器位址</Label>
         <Input
           value={apiBaseURL}
-          placeholder={DEFAULT_BASE_URL}
-          onChange={(event) => setApiBaseURL(event.target.value)}
+          placeholder={getApiProvider(provider).baseURL || 'https://your-api.example/v1'}
+          onChange={(event) => {
+            setApiBaseURL(event.target.value)
+            setModels([])
+            setModelsStatus('')
+          }}
         />
-        <p className="text-xs text-muted-foreground">Default: {DEFAULT_BASE_URL}</p>
+        <p className="text-xs text-muted-foreground">
+          Default: {getApiProvider(provider).baseURL || 'Enter an OpenAI-compatible API base URL'}
+        </p>
       </div>
 
       <div className="space-y-2">
-        <Label className="font-semibold">Model Name / 模型名稱</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="api-model-name" className="font-semibold">Model Name / 模型名稱</Label>
+          <Button type="button" variant="outline" size="sm" onClick={handleFetchModels} disabled={modelsLoading || providerLoading || loading}>
+            {modelsLoading ? '讀取中…' : '取得模型'}
+          </Button>
+        </div>
         <Input
+          id="api-model-name"
+          list="api-model-options"
           value={apiModelName}
-          placeholder={DEFAULT_MODEL}
+          placeholder="從模型清單選擇，或輸入模型 ID"
           onChange={(event) => setApiModelName(event.target.value)}
         />
-        <p className="text-xs text-muted-foreground">Default: {DEFAULT_MODEL}</p>
+        <datalist id="api-model-options">
+          {models.map((model) => <option key={model.id} value={model.id}>{model.name || model.id}</option>)}
+        </datalist>
+        {modelsStatus && <p role="status" aria-live="polite" className="text-xs text-muted-foreground">{modelsStatus}</p>}
       </div>
 
       <div className="space-y-2">
         <Label className="font-semibold">Vision Model / 視覺模型</Label>
         <Input
+          list="api-model-options"
           value={apiVisionModelName}
-          placeholder={DEFAULT_VISION_MODEL}
+          placeholder="留白時沿用文字模型"
           onChange={(event) => setApiVisionModelName(event.target.value)}
         />
-        <p className="text-xs text-muted-foreground">Default: {DEFAULT_VISION_MODEL}</p>
+        <p className="text-xs text-muted-foreground">可選擇支援圖片輸入的模型；留白時沿用文字模型。</p>
       </div>
 
       <div className="flex justify-end gap-3">
-        <Button type="button" variant="secondary" onClick={handleReset} disabled={loading}>
+        <Button type="button" variant="secondary" onClick={handleReset} disabled={loading || providerLoading}>
           Reset / 重設
         </Button>
-        <Button type="button" onClick={handleSave} disabled={loading}>
-          {loading ? 'Saving...' : 'Save / 保存'}
+        <Button type="button" onClick={handleSave} disabled={loading || providerLoading}>
+          {loading ? 'Saving and testing...' : 'Save and test / 保存並測試'}
         </Button>
       </div>
+      {connectionStatus && (
+        <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
+          {connectionStatus}
+        </p>
+      )}
     </section>
   )
 }

@@ -105,7 +105,7 @@ export const requestAiChatReply = async (input: RequestAiChatReplyInput): Promis
     )
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`API呼叫失敗 (${message})。請檢查 Groq API 設定。`)
+    throw new Error(`API 呼叫失敗 (${message})。請檢查 AI 服務供應商、API Key 與模型設定。`)
   }
 }
 
