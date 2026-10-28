@@ -26,7 +26,9 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --config.minimum-release-age=0
+        env:
+          HUSKY: '0'
 
       - name: Build & Deploy Worker
         run: pnpm run deploy:worker:preview
