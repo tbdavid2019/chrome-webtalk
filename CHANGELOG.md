@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## [2.8.7] - 2026-10-28
+
+### Added
+
+- 無新增使用者功能。
+
+### Changed
+
+- 更新 Dependabot 警示相關套件，包含 Vite 6.4.4、WXT 0.20、Valibot、Handlebars、undici、tar、node-forge、moment 與轉移相依套件。
+- 將 WXT 匯入路徑與瀏覽器型別遷移至 0.20 API。
+
+### Fixed
+
+- 修補相依套件掃描辨識且已有安全版本的弱點。
+
+### Build
+
+- 版本升級至 `2.8.7`。
+- 未新增 Chrome 權限。
+
 ## [2.8.6] - 2026-10-26
 
 ### Fixed

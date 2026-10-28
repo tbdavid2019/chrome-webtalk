@@ -9,7 +9,7 @@ export default defineConfig({
   outDir: 'output',
   imports: false,
   entrypointsDir: 'app',
-  runner: {
+  webExt: {
     startUrls: ['https://david888.com/']
   },
   manifest: ({ browser }) => {

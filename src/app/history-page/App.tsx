@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { browser, Storage } from 'wxt/browser'
+import { browser, type Browser } from 'wxt/browser'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ChatMessage, SummaryHistoryEntry, HISTORY_STORAGE_KEY } from '@/types/summaryHistory'
@@ -26,7 +26,7 @@ const HistoryApp = () => {
 
   useEffect(() => {
     loadHistory()
-    const listener = (changes: Record<string, Storage.StorageChange>, areaName: string) => {
+    const listener = (changes: Record<string, Browser.storage.StorageChange>, areaName: string) => {
       if (areaName === 'local' && HISTORY_STORAGE_KEY in changes) {
         loadHistory()
       }

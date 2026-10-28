@@ -2,8 +2,8 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { Remesh } from 'remesh'
 import { RemeshRoot, RemeshScope } from 'remesh-react'
-import { defineContentScript } from 'wxt/sandbox'
-import { createShadowRootUi } from 'wxt/client'
+import { defineContentScript } from 'wxt/utils/define-content-script'
+import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root'
 
 import App from './App'
 import {

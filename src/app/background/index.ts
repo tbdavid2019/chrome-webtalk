@@ -1,7 +1,7 @@
 import { EVENT } from '@/constants/event'
 import { messenger } from '@/messenger'
-import { browser, Tabs } from 'wxt/browser'
-import { defineBackground } from 'wxt/sandbox'
+import { browser, type Browser } from 'wxt/browser'
+import { defineBackground } from 'wxt/utils/define-background'
 
 export default defineBackground({
   type: 'module',
@@ -14,7 +14,7 @@ export default defineBackground({
       }
     })
 
-    const historyNotificationTabs = new Map<string, Tabs.Tab>()
+    const historyNotificationTabs = new Map<string, { id?: number; url?: string; windowId?: number }>()
     messenger.onMessage(EVENT.OPTIONS_PAGE_OPEN, () => {
       browser.runtime.openOptionsPage()
     })
