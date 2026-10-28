@@ -9,7 +9,8 @@ overrides:
   'cross-spawn@<7': 6.0.6
   'cross-spawn@>=7 <8': 7.0.6
   'defu@<7': 6.1.5
-  'esbuild@<1': 0.25.0
+  'esbuild@<=0.24.2': 0.25.0
+  'esbuild@>=0.27.3 <0.28.1': 0.28.2
   'flatted@<4': 3.4.2
   'glob@>=10 <11': 10.5.0
   'glob@>=11 <12': 11.1.0

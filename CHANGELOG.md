@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## [2.8.10] - 2026-10-28
+
+### Added
+
+- 無新增使用者功能。
+
+### Changed
+
+- 限縮 Esbuild 安全覆寫範圍，讓 Wrangler 使用相容版本完成 Worker 打包，並將受影響的 Esbuild 0.27.x 更新至 0.28.2。
+
+### Fixed
+
+- 修正 Wrangler 打包時因 `import-source` feature 不相容而無法部署 Cloudflare Worker 的問題。
+
+### Build
+
+- 版本升級至 `2.8.10`。
+- 未新增 Chrome 權限。
+
 ## [2.8.8] - 2026-10-28
 
 ### Added
