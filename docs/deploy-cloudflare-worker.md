@@ -2,7 +2,15 @@
 
 Cloudflare Worker 預覽用獨立的 workers.dev 網域提供 Embed 靜態檔與站長指南。預覽 Worker 的 AI API route 會轉送到正式 Vercel API，正式 Vercel 網域與設定維持不變。
 
-## 部署
+## 自動部署 (GitHub Actions CI/CD)
+
+專案已配置 GitHub Actions 自動部屬工作流程（`.github/workflows/deploy-worker.yml`）。每次推送程式碼至 `main` 分支時，GitHub Actions 會自動執行 `pnpm run deploy:worker:preview`，完成 Embed 靜態資源建置並透過 Wrangler 自動部署到 Cloudflare Worker。
+
+### 必要的 GitHub Actions Secrets
+- `CLOUDFLARE_API_TOKEN`：Cloudflare API 權限 Token（具備 Cloudflare Workers 編輯權限）。
+- `CLOUDFLARE_ACCOUNT_ID`：Cloudflare Account ID（`379570860738dd1757ba7f67ef2bdffe`）。
+
+## 本機手動部署
 
 本機需先使用 Wrangler 登入 Cloudflare：
 

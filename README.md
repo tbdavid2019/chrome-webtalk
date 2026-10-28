@@ -38,6 +38,7 @@ WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webta
 
 ## 🆕 近期更新
 
+- 🚀 **Cloudflare Worker 自動化部署 CI/CD (v2.8.11)**：新增 GitHub Actions 自動部署工作流程（`.github/workflows/deploy-worker.yml`），推送到 `main` 分支時自動執行靜態建置並發布 Cloudflare Worker，實現與 Vercel 雙端同步自動更新；未新增 Chrome 權限。
 - ☁️ **Cloudflare Worker 部署修正 (v2.8.10)**：精確限定 Esbuild 安全覆寫，同時讓 Wrangler 使用相容打包版本；未新增 Chrome 權限。
 - 🔒 **套件發行與 Node 版本修正 (v2.8.8)**：更新 lodash、lodash-es 與 `@ungap/structured-clone`，移除已標記不建議使用的套件版本；最低 Node.js 版本調整為 20.19.0。未新增 Chrome 權限。
 - 🔐 **相依套件安全更新 (v2.8.7)**：更新 Dependabot 已有修補版本的受影響相依套件，並升級 Vite/WXT 建置工具鏈；未新增 Chrome 權限。

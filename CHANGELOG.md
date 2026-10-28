@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## [2.8.11] - 2026-10-28
+
+### Added
+
+- 新增 Cloudflare Worker 自動部署 GitHub Actions 工作流程（`.github/workflows/deploy-worker.yml`），支援推送到 `main` 分支時自動完成 Embed 靜態資源建置與 Worker 發布。
+
+### Changed
+
+- 更新 Cloudflare Worker 部署說明文件（`docs/deploy-cloudflare-worker.md`），補齊 GitHub Actions CI/CD 自動化與所需 Secrets 規範。
+
+### Fixed
+
+- 無修正問題。
+
+### Build
+
+- 版本升級至 `2.8.11`。
+- 未新增 Chrome 權限。
+
 ## [2.8.10] - 2026-10-28
 
 ### Added
