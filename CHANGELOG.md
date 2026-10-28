@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## [2.8.8] - 2026-10-28
+
+### Added
+
+- 無新增使用者功能。
+
+### Changed
+
+- 將 lodash、lodash-es 更新至 4.18.1，並將 `@ungap/structured-clone` 更新至 1.4.0。
+- 將 Node.js 最低版本同步調整為 20.19.0，符合 WXT 與 vite-node 工具鏈需求。
+
+### Fixed
+
+- 移除 lockfile 中被 npm 標示為不建議使用的 lodash 4.18.0 版本。
+- 修補 `@ungap/structured-clone` 1.2.0 的棄用安全警示。
+
+### Build
+
+- 版本升級至 `2.8.8`。
+- 未新增 Chrome 權限。
+
 ## [2.8.7] - 2026-10-28
 
 ### Added

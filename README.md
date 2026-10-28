@@ -38,6 +38,7 @@ WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webta
 
 ## 🆕 近期更新
 
+- 🔒 **套件發行與 Node 版本修正 (v2.8.8)**：更新 lodash、lodash-es 與 `@ungap/structured-clone`，移除已標記不建議使用的套件版本；最低 Node.js 版本調整為 20.19.0。未新增 Chrome 權限。
 - 🔐 **相依套件安全更新 (v2.8.7)**：更新 Dependabot 已有修補版本的受影響相依套件，並升級 Vite/WXT 建置工具鏈；未新增 Chrome 權限。
 - 🔑 **多供應商 BYOK 與 Groq 免費起始額度 (v2.8.6)**：新安裝預填免費 Groq 起始 Key，先體驗摘要與對話；額度用完或 Key 失效時，可申請自己的 Groq Key，或切換 Google Gemini、xAI Grok、OpenAI API、DeepSeek、OpenRouter 及自訂 OpenAI 相容端點。各供應商的 Key 和模型會分開保存在目前裝置；按「取得模型」載入可用模型，保存後會執行短連線測試。修正空白的其他供應商設定不再誤用 Groq Key，設定載入前按重設會保留起始 Key，且非 JSON API 錯誤能顯示 HTTP 狀態、`/models/` Base URL 可正確呼叫聊天 API。Embed proxy 不提供無效的 BYOK 設定入口。OpenAI API 另計費，ChatGPT 訂閱不含 API 額度。未新增 Chrome 權限。
 - 🎨 **修復 CSS Reset、字型洩漏與邊框語法錯誤，100% 完整對齊 david888.com / 2md.aiurl.tw 視覺標準 (v2.8.0)**：
