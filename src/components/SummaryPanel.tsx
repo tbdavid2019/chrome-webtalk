@@ -250,7 +250,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
   const historyEntryRef = useRef<SummaryHistoryEntry | null>(null)
   const text = LANG_MAP[language]
   const aiProxyEnabled = aiConfig.mode === 'proxy'
-  const hasApiKey = aiProxyEnabled || Boolean(apiKey.trim())
+  const hasApiKey = aiProxyEnabled || Boolean(apiKey.trim()) || apiProvider === 'groq'
   const aiTopicSuggestionsEnabled = userInfo?.aiTopicSuggestionsEnabled !== false
   const embedPanelStyle = isEmbed ? resolveEmbedPanelStyle(isMobile, mobilePlacement) : undefined
   const pageHost = useMemo(() => {
@@ -443,7 +443,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
     const trimmedApiKey = apiKey.trim()
     const trimmedBaseURL = apiBaseURL.trim()
     const trimmedModelName = apiModelName.trim()
-    if (!trimmedApiKey || !trimmedBaseURL || !trimmedModelName) {
+    if ((!trimmedApiKey && apiProvider !== 'groq') || !trimmedBaseURL || !trimmedModelName) {
       setApiConnectionStatus('請填寫 API Key、Base URL 和模型名稱。')
       return
     }
@@ -856,7 +856,7 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
               <div className="space-y-2">
                 <Label htmlFor="api-key" className="text-sm text-foreground/80 flex items-center justify-between">
                   <span>
-                    {getApiProvider(apiProvider).label} API Key <span className="text-destructive">*</span>
+                    {getApiProvider(apiProvider).label} API Key {apiProvider !== 'groq' && <span className="text-destructive">*</span>}
                   </span>
                   {getApiProvider(apiProvider).keyURL && (
                     <a
@@ -870,11 +870,16 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
                 <Input
                   id="api-key"
                   type="password"
-                  placeholder={`請輸入 ${getApiProvider(apiProvider).label} API Key`}
+                  placeholder={apiProvider === 'groq' ? '留空使用 WebTalk 免費額度，或輸入個人 Key' : `請輸入 ${getApiProvider(apiProvider).label} API Key`}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   className="text-sm"
                 />
+                {apiProvider === 'groq' && !apiKey.trim() && (
+                  <p className="text-xs text-primary/80">
+                    💡 目前模式：使用 WebTalk 免費體驗額度（由 Groq 提供），無需自備 Key。
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">

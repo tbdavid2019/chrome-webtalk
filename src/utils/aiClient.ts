@@ -1,6 +1,7 @@
 import { getPlatform } from '../platform/index.ts'
 import { loadApiSettings, type ApiSettings } from './apiSettingsStorage.ts'
 import type { AiToolDefinition } from './webmcp.ts'
+import { DEFAULT_AI_PROXY_ENDPOINT } from '../constants/apiDefaults.ts'
 
 export interface AiApiConfig {
   apiKey: string
@@ -78,16 +79,17 @@ export const requestAiCompletion = async (input: {
   signal?: AbortSignal
 }): Promise<AiCompletionResult> => {
   const stored = await loadAiApiConfig()
-  const isProxy = getPlatform().ai.mode === 'proxy'
-  const apiKey = (input.apiKey || stored.apiKey).trim()
-  const baseURL = (input.baseURL || stored.baseURL).trim().replace(/\/+$/, '').replace(/\/models$/i, '').replace(/\/+$/, '')
+  const rawApiKey = (input.apiKey ?? stored.apiKey).trim()
+  const isPlatformProxy = getPlatform().ai.mode === 'proxy'
+  const isStarterProxy = !isPlatformProxy && !rawApiKey
+  const isProxy = isPlatformProxy || isStarterProxy
+  const apiKey = isProxy ? '' : rawApiKey
+  const defaultBaseURL = isStarterProxy ? DEFAULT_AI_PROXY_ENDPOINT : stored.baseURL
+  const rawBaseURL = (input.baseURL || defaultBaseURL).trim()
+  const baseURL = rawBaseURL.replace(/\/+$/, '').replace(/\/models$/i, '').replace(/\/+$/, '')
   const preferredTextModel = (input.model || stored.model).trim()
   const preferredVisionModel = (input.visionModel || stored.visionModel).trim()
   const model = input.route === 'vision' ? preferredVisionModel : preferredTextModel
-
-  if (!isProxy && !apiKey) {
-    throw new Error('API key is required')
-  }
 
   const response = await fetch(isProxy ? baseURL : `${baseURL}/chat/completions`, {
     method: 'POST',

@@ -38,6 +38,8 @@ WebTalk Embed 有純聊天 `webtalk-chat.js` 與含 AI 摘要／對話的 `webta
 
 ## 🆕 近期更新
 
+- ⚡ **雲端免費 AI 體驗通道與開箱即用 (v2.8.13)**：新增透過 Cloudflare Worker 邊緣端點（`https://webtalk.david888.com/api/webtalk/ai`）提供免費 AI 體驗通道，新安裝使用者無需繁瑣申請或填寫 API Key 即可直接使用網頁摘要與對話；代碼與倉庫 100% 零私鑰暴露，徹底杜絕金鑰洩漏與 GitGuardian 警報。亦支援隨時自備金鑰（BYOK）使用 Groq、Gemini、OpenAI、DeepSeek 等個人帳號；未新增 Chrome 權限。
+
 - 🔐 **安全性修復：移除預置 Groq 起始金鑰，全面採用純 BYOK (v2.8.12)**：徹底移除套件內硬編碼之預設 Groq 起始金鑰，所有 AI 供應商均採純個人金鑰模式（BYOK），使用者首次使用時可透過內建引導連結至各供應商 Console 免費申請並填入個人 API Key；未新增 Chrome 權限。
 
 - 🚀 **Cloudflare Worker 自動化部署 CI/CD (v2.8.11)**：新增 GitHub Actions 自動部署工作流程（`.github/workflows/deploy-worker.yml`），推送到 `main` 分支時自動執行靜態建置並發布 Cloudflare Worker，實現與 Vercel 雙端同步自動更新；未新增 Chrome 權限。

@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [2.8.13] - 2026-10-29
+
+### Added
+
+- 🚀 **雲端免費 AI 代理體驗通道**：串接 Cloudflare Worker 邊緣端點（`https://webtalk.david888.com/api/webtalk/ai`），新安裝擴充套件之使用者無需自備或填寫 API Key 即可開箱即用享受 AI 網頁重點濃縮與問答對話。
+- AI 設定頁面新增提示與防呆，未填 Key 時自動以 WebTalk 免費體驗額度運行；亦可隨時輸入個人 Key 切換自備金鑰（BYOK）直連模式。
+
+### Build
+
+- 版本升級至 `2.8.13`。
+- 未新增 Chrome 權限。
+
 ## [2.8.12] - 2026-10-29
 
 ### Fixed

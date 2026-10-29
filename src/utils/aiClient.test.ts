@@ -139,3 +139,33 @@ test('reports HTTP status for a non-JSON API error response', async () => {
     configurePlatform(originalPlatform)
   }
 })
+
+test('routes to the WebTalk AI proxy when apiKey is empty', async () => {
+  const originalPlatform = getPlatform()
+  const originalFetch = globalThis.fetch
+  let requestUrl = ''
+  let requestHeaders: HeadersInit | undefined
+  configurePlatform(makePlatform({ provider: 'groq', apiKey: '' }))
+  globalThis.fetch = async (input, init) => {
+    requestUrl = String(input)
+    requestHeaders = init?.headers
+    return new Response(JSON.stringify({ choices: [{ message: { content: 'OK' } }] }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
+  try {
+    const result = await requestAiCompletion({
+      messages: [{ role: 'user', content: 'Hello' }],
+      apiKey: '',
+      model: 'openai/gpt-oss-120b'
+    })
+    assert.equal(requestUrl, 'https://webtalk.david888.com/api/webtalk/ai')
+    assert.equal(new Headers(requestHeaders).has('Authorization'), false)
+    assert.equal(result.content, 'OK')
+  } finally {
+    globalThis.fetch = originalFetch
+    configurePlatform(originalPlatform)
+  }
+})

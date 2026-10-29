@@ -115,7 +115,7 @@ const ApiSettingsForm: FC = () => {
   }
 
   const handleSave = async () => {
-    if (!apiKey.trim()) {
+    if (!apiKey.trim() && provider !== 'groq') {
       toast.error('Please enter API Key / 請輸入 API Key')
       return
     }
@@ -182,7 +182,7 @@ const ApiSettingsForm: FC = () => {
 
       <div className="space-y-2">
         <Label htmlFor="api-key" className="font-semibold flex items-center justify-between">
-          <span>{getApiProvider(provider).label} API Key <span className="text-destructive">*</span></span>
+          <span>{getApiProvider(provider).label} API Key {provider !== 'groq' && <span className="text-destructive">*</span>}</span>
           {getApiProvider(provider).keyURL && (
             <a href={getApiProvider(provider).keyURL} target="_blank" rel="noreferrer" className="text-primary hover:underline font-semibold">
               取得 API Key
@@ -193,13 +193,18 @@ const ApiSettingsForm: FC = () => {
           id="api-key"
           type="password"
           value={apiKey}
-          placeholder={`請輸入 ${getApiProvider(provider).label} API Key`}
+          placeholder={provider === 'groq' ? '留空使用 WebTalk 免費額度，或輸入個人 Key' : `請輸入 ${getApiProvider(provider).label} API Key`}
           onChange={(event) => {
             setApiKey(event.target.value)
             setModels([])
             setModelsStatus('')
           }}
         />
+        {provider === 'groq' && !apiKey.trim() && (
+          <p className="text-xs text-primary font-medium">
+            💡 目前模式：使用 WebTalk 免費體驗額度（由 Groq 提供），無需自備 Key。
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
