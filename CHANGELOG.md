@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [2.8.12] - 2026-10-29
+
+### Fixed
+
+- 🚨 **安全性緊急修復**：徹底移除套件中硬編碼的 Groq 起始 API Key（`FALLBACK_GROQ_API_KEY = ''`），恢復為純 BYOK（Bring Your Own Key）模式，避免公開 Repository 暴露憑證，杜絕 GitGuardian 與 GitHub Secret Scanning 警報。
+- AI 服務設定全面統一引導使用者於設定頁自行輸入各服務商金鑰（Groq、Google Gemini、xAI Grok、OpenAI、DeepSeek 等），不再預置任何共享私鑰。
+
+### Build
+
+- 版本升級至 `2.8.12`。
+- 未新增 Chrome 權限。
+
 ## [2.8.11] - 2026-10-28
 
 ### Added
